@@ -1,0 +1,210 @@
+#include "Graph.h"
+#include "util.cpp"
+
+Graph::Graph() = default;
+
+Graph::~Graph() {}
+
+void Graph::repr(std::vector<State*> states) {
+    for (int i = 0; i < states.size(); ++i) {
+        std::cout << "S" << i << "-> " << states[i]->str() << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+bool Graph::is_fail(std::vector<State*> const& states,
+                    std::string fail_condition) {
+    if (fail_condition == "DM") {
+        for (State* state : states) {
+            if (state->is_fail()) return true;
+        }
+
+        return false;
+    }
+    std::cout << "Unknown fail condition" << std::endl;
+    return true;
+}
+
+int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
+    int64_t visited_count = 0;
+    static int64_t arr[4];
+
+    int step_i = 0;
+    std::vector<State*> leaf_states{initial_state};
+    std::vector<State*> neighbors;
+    std::unordered_set<uint64_t> visited_hash;
+
+    bool res = true;
+
+    if (plot_graph) {
+        graphiz_setup(graph_output_path);
+    }
+
+    visited_hash.insert(leaf_states[0]->get_hash());
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    while (!leaf_states.empty()) {
+        if (is_fail(leaf_states, fail_condtion)) {
+            res = false;
+            break;
+        }
+
+        visited_count = visited_count + leaf_states.size();
+        std::cout << step_i << " " << leaf_states.size() << " " << visited_count
+                  << std::endl;
+
+        neighbors = get_neighbors(leaf_states, schedule);
+        step_i++;
+        leaf_states.clear();
+
+        for (State* neighbor : neighbors) {
+            uint64_t state_hash = neighbor->get_hash();
+            if (visited_hash.find(state_hash) == visited_hash.end()) {
+                visited_hash.insert(state_hash);
+                leaf_states.push_back(neighbor);
+            } else {
+                delete neighbor;
+            }
+        }
+    }
+
+    std::cout << "done " << res << std::endl;
+
+    visited_count = visited_count + leaf_states.size();
+    // std::cout << step_i << " " << leaf_states.size() << " " << visited_count
+    // << std::endl;
+
+    if (plot_graph) graphiz_teardown(graph_output_path);
+
+    if (!res)
+        for (State* elem : leaf_states) delete elem;
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+
+    arr[0] = int64_t(res);
+    arr[1] = visited_count;
+    arr[2] = duration.count();
+    arr[3] = step_i;
+
+    return arr;
+}
+
+void Graph::graphiz_setup(std::string path) {
+    std::ofstream o_file;
+    o_file.open(path);
+    o_file << "digraph G "
+              "{\n"
+              "node[shape=\"box\",style=\"rounded,filled\", "
+              "fontname=\"helvetica\"]"
+              "\n";
+
+    // initial_state
+    o_file << "tasks_info [ shape=\"plaintext\",style=\"\",label = <\n"
+              " <table bgcolor=\"black\" color=\"white\">\n"
+              "  <tr>\n"
+              "    <td bgcolor=\"white\">i</td>\n"
+              "    <td bgcolor=\"white\">T</td>\n"
+              "    <td bgcolor=\"white\">D</td>\n"
+              "    <td bgcolor=\"white\">X</td>\n"
+              "    <td bgcolor=\"white\">C1</td>\n"
+              "    <td bgcolor=\"white\">C2</td>\n"
+              "  </tr>\n";
+
+    for (int i = 0; i < initial_state->get_size(); ++i) {
+        Job* j = initial_state->get_job(i);
+        o_file << "  <tr>\n";
+        o_file << "    <td bgcolor=\"white\">" << i << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_T() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_D() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_X() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_C()[0] << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_C()[1] << "</td>\n";
+        o_file << "  </tr>\n";
+    }
+    o_file << " </table>\n"
+              "> ]\n\n";
+
+    o_file.close();
+}
+
+void Graph::graphiz_teardown(std::string path) { append_to_file(path, "\n}"); }
+
+std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
+                                         int (*schedule)(State*)) {
+    std::vector<State*> new_states;
+
+    for (State* current_state : leaf_states) {
+        State* current_state_bkp = new State(*current_state);
+
+        std::vector<State*> states_for_request;
+
+        std::cout << "start " << current_state->str() << std::endl;
+
+        // execution transition
+        int to_run = schedule(current_state);
+        current_state->run_tansition(to_run);
+        std::cout << "run " << current_state->str() << std::endl;
+        if (to_run == -1)
+            states_for_request.push_back(current_state);
+        else {
+            // completion transitions
+            State* current_state_signals = new State(*current_state);
+
+            current_state_signals->completion_transition(to_run, true);
+            std::cout << "comp true " << current_state_signals->str()
+                      << std::endl;
+            current_state->completion_transition(to_run, false);
+            std::cout << "comp fals " << current_state->str() << std::endl;
+
+            states_for_request.push_back(current_state);
+            if (current_state->get_hash() != current_state_signals->get_hash())
+                states_for_request.push_back(current_state_signals);
+        }
+
+        // submit transition
+        for (State* state_for_request : states_for_request) {
+            std::vector<int> eligibles_candidates =
+                state_for_request->get_eligibles();
+            std::vector<std::vector<int>> all_eligibles =
+                power_set(eligibles_candidates);
+            for (std::vector<int> const& current_eligibles : all_eligibles) {
+                State* submit_state = new State(*state_for_request);
+                submit_state->request_transition(current_eligibles);
+                new_states.push_back(submit_state);
+
+                std::cout << "request " << submit_state->str() << std::endl;
+
+                if (plot_graph) {
+                    connect_neighbor_graphviz(current_state_bkp, submit_state);
+                }
+            }
+            delete state_for_request;
+        }
+
+        delete current_state_bkp;
+    }
+
+    return new_states;
+}
+
+void Graph::connect_neighbor_graphviz(State* from, State* to) const {
+    std::string from_node_id;
+    std::string to_node_id;
+
+    from_node_id = from->get_node_id();
+    to_node_id = to->get_node_id();
+
+    std::string from_node_desc = from->dot_node(from_node_id);
+    std::string to_node_desc = to->dot_node(to_node_id);
+
+    std::stringstream edge_desc;
+
+    edge_desc << from_node_id << " -> " << to_node_id << std::endl;
+
+    append_to_file(graph_output_path, from_node_desc);
+    append_to_file(graph_output_path, to_node_desc);
+    append_to_file(graph_output_path, edge_desc.str());
+};

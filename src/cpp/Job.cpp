@@ -5,6 +5,11 @@ void Job::initialize() {
     rct = 0;
 }
 
+int Job::get_ttvd(float discount_factor) const {
+    if (X == 1) return get_ttd();
+    return nat - (T - D * discount_factor);
+};
+
 void Job::execute(bool run) {
     if (run) {
         rct--;
@@ -21,14 +26,14 @@ void Job::request(int crit) {
     nat = T;
 }
 
-void Job::critic(int current_crit, int next_crit) {
+void Job::critic(int current_crit, int next_crit, bool is_triggering) {
     if (current_crit == next_crit) {
         return;
     }
     if (X < next_crit) {
         terminate();
     } else {
-        if (is_active()) {
+        if (is_active() or is_triggering) {
             rct = rct + C[next_crit - 1] - C[current_crit - 1];
         }
     }
@@ -38,12 +43,27 @@ void Job::repr() const { std::cout << str() << std::endl; }
 
 std::string Job::str() const {
     std::stringstream ss;
-    ss << "(" << nat << ", " << rct << ")";
+    ss << "(" << rct << ", " << nat << ")";
     return ss.str();
 }
 
 std::string Job::dot_node() const {
     std::stringstream ss;
-    ss << "(" << nat << ", " << rct << ")";
+    // ss << "(" << rct << ", " << nat << ")";
+    ss << rct << "," << nat;
     return ss.str();
+}
+
+uint64_t Job::get_hash() const {
+    uint64_t hash = rct;
+    uint64_t factor = C[1] + 1;
+
+    hash = hash + nat * factor;
+    return hash;
+}
+
+uint64_t Job::get_hash_factor() const {
+    uint64_t factor = C[1] + 1;
+    factor = factor * (T + 1);
+    return factor;
 }

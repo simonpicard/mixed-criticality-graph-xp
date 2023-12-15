@@ -10,6 +10,17 @@ State::~State() {
     jobs.clear();
 }
 
+State::State(const State& other)
+    : crit(other.crit),
+      utilisation_of_level_at_level(other.utilisation_of_level_at_level) {
+    std::vector<Job*> jobs_;
+    for (int i = 0; i < other.jobs.size(); ++i) {
+        Job* clone = new Job(static_cast<Job*>(other.jobs[i]));
+        jobs_.push_back(clone);
+    }
+    jobs = jobs_;
+}
+
 std::vector<int> State::get_actives() const {
     std::vector<int> vect;
     for (int i = 0; i < jobs.size(); ++i) {
@@ -40,6 +51,16 @@ std::vector<int> State::get_eligibles() {
     return vect;
 }
 
+std::vector<int> State::get_tasks_of_level(int of_level) const {
+    std::vector<int> vect;
+    for (int i = 0; i < jobs.size(); ++i) {
+        if (jobs[i]->get_X() == of_level) {
+            vect.push_back(i);
+        }
+    }
+    return vect;
+}
+
 bool State::is_fail() const {
     for (Job* job : jobs) {
         if (job->is_deadline_miss()) return true;
@@ -47,18 +68,24 @@ bool State::is_fail() const {
     return false;
 }
 
-void State::run_tansition(std::vector<int> to_run) {
+void State::run_tansition(int to_run_index = -1) {
     for (int i = 0; i < jobs.size(); ++i) {
-        if (std::find(to_run.begin(), to_run.end(), i) != to_run.end()) {
-            jobs[i]->execute(true);
-        } else {
-            jobs[i]->execute(false);
-        }
+        jobs[i]->execute(i == to_run_index);
     }
 }
 
-void State::completion_transition() {
-    // TODO
+void State::completion_transition(int ran_index = -1,
+                                  bool signals_completion = false) {
+    if (ran_index == -1) return;
+
+    if (jobs[ran_index]->is_implicitly_completed(crit) or signals_completion) {
+        jobs[ran_index]->terminate();
+    } else if (jobs[ran_index]->get_rct() == 0) {
+        for (int i = 0; i < jobs.size(); ++i) {
+            jobs[i]->critic(crit, crit + 1, i == ran_index);
+        }
+        crit = 2;
+    }
 }
 
 void State::request_transition(std::vector<int> const& requestings) {
@@ -83,11 +110,15 @@ std::string State::dot_node(std::string node_id) const {
     std::stringstream ss;
 
     ss << node_id << " [label=<";
-    for (Job* job : jobs) {
-        ss << job->dot_node();
-        ss << " ";
+    // for (Job* job : jobs) {
+    //     ss << job->dot_node();
+    //     ss << " ";
+    // }
+    for (int i = 0; i < jobs.size(); ++i) {
+        ss << jobs[i]->dot_node();
+        if (i < jobs.size() - 1) ss << " ";
     }
-    ss << crit;
+    // ss << crit;
     ss << ">,";
     if (this->crit == 1)
         ss << "fillcolor=lightcyan";
@@ -99,4 +130,41 @@ std::string State::dot_node(std::string node_id) const {
     ss << "]" << std::endl;
 
     return ss.str();
+}
+
+uint64_t State::get_hash() const {
+    uint64_t hash = crit - 1;
+    uint64_t factor = 2;
+
+    for (Job* job : jobs) {
+        hash = hash + job->get_hash() * factor;
+        factor = factor * job->get_hash_factor();
+    }
+
+    return hash;
+}
+
+float State::compute_utilisation_of_level_at_level(int of_level,
+                                                   int at_level) const {
+    float utilisation = 0.0;
+    if (at_level > of_level) {
+        return utilisation;
+    }
+    for (Job* job : jobs) {
+        if (job->get_X() == of_level) {
+            utilisation += job->get_utilisation_at_level(at_level);
+        }
+    }
+    return utilisation;
+}
+
+void State::initialize() {
+    utilisation_of_level_at_level = std::vector<std::vector<float>>{
+        std::vector<float>{compute_utilisation_of_level_at_level(1, 1),
+                           compute_utilisation_of_level_at_level(1, 2)},
+        std::vector<float>{compute_utilisation_of_level_at_level(2, 1),
+                           compute_utilisation_of_level_at_level(2, 2)}};
+
+    relativity = utilisation_of_level_at_level[1][0] /
+                 (1.0 - utilisation_of_level_at_level[0][0]);
 }
