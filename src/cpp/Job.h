@@ -37,7 +37,7 @@ class Job {
     int get_nat() const { return nat; };
 
     int get_ttd() const { return nat - (T - D); };
-    int get_ttvd(float discount_factor) const;
+    float get_ttvd(float discount_factor) const;
     int get_laxity() const { return get_ttd() - rct; };
 
     bool is_active() const { return rct > 0; };
@@ -51,7 +51,7 @@ class Job {
     bool is_discarded(int crit) const { return X < crit; };
 
     void execute(bool run);
-    void terminate() { rct = 0; }
+    void terminate();
     void request(int crit);
     void critic(int current_crit, int next_crit, bool is_triggering);
 

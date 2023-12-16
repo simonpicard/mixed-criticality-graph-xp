@@ -5,9 +5,9 @@ void Job::initialize() {
     rct = 0;
 }
 
-int Job::get_ttvd(float discount_factor) const {
-    if (X == 1) return get_ttd();
-    return nat - (T - D * discount_factor);
+float Job::get_ttvd(float discount_factor) const {
+    if (X == 1) return (float)get_ttd();
+    return 1.0 * nat - (1.0 * T - D * discount_factor);
 };
 
 void Job::execute(bool run) {
@@ -20,6 +20,8 @@ void Job::execute(bool run) {
         nat = std::max(nat - 1, 0);
     }
 }
+
+void Job::terminate() { rct = 0; }
 
 void Job::request(int crit) {
     rct = C[crit - 1];

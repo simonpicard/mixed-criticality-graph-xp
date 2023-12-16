@@ -11,14 +11,19 @@ State::~State() {
 }
 
 State::State(const State& other)
-    : crit(other.crit),
-      utilisation_of_level_at_level(other.utilisation_of_level_at_level) {
+    : crit(other.crit), relativity(other.relativity) {
     std::vector<Job*> jobs_;
     for (int i = 0; i < other.jobs.size(); ++i) {
         Job* clone = new Job(static_cast<Job*>(other.jobs[i]));
         jobs_.push_back(clone);
     }
     jobs = jobs_;
+
+    utilisation_of_level_at_level = std::vector<std::vector<float>>{
+        std::vector<float>{other.get_utilisation_of_level_at_level(1, 1),
+                           other.get_utilisation_of_level_at_level(1, 2)},
+        std::vector<float>{other.get_utilisation_of_level_at_level(2, 1),
+                           other.get_utilisation_of_level_at_level(2, 2)}};
 }
 
 std::vector<int> State::get_actives() const {

@@ -7,14 +7,14 @@
 #include <vector>
 
 int main(int argc, char** argv) {
-    std::cout << "Hello, World!" << std::endl;
-
     Job* j = new Job(3, 3, 2, std::vector<int>{2, 3});
     Job* j2 = new Job(3, 3, 1, std::vector<int>{1, 1});
 
     State* s = new State(std::vector<Job*>{j, j2});
 
-    Graph g(s, "./test.dot");
+    std::cout << s->get_relativity() << std::endl;
+
+    Graph g(s, "./test.dot", 2);
 
     g.bfs(&Scheduler::edfvd);
 

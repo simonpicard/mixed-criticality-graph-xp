@@ -14,10 +14,12 @@ class Graph {
     Graph();
     ~Graph();
 
-    Graph(State* initial_state_, std::string graph_output_path_ = "")
+    Graph(State* initial_state_, std::string graph_output_path_ = "",
+          int verbose_ = 0)
         : initial_state(initial_state_),
           graph_output_path(graph_output_path_),
-          plot_graph(graph_output_path_ != ""){};
+          plot_graph(graph_output_path_ != ""),
+          verbose(verbose_){};
 
     std::vector<State*> get_neighbors(std::vector<State*> leaf_states,
                                       int (*schedule)(State*));
@@ -37,7 +39,7 @@ class Graph {
     State* initial_state;
     std::string graph_output_path;
     bool plot_graph;
-    bool ac_hash = false;
+    int verbose;
 };
 
 #endif
