@@ -16,9 +16,13 @@ bool Graph::is_fail(std::vector<State*> const& states,
                     std::string fail_condition) {
     if (fail_condition == "DM") {
         for (State* state : states) {
-            if (state->is_fail()) return true;
+            if (state->is_fail()) {
+                if (verbose >= 2) {
+                    std::cout << "│└ FAIL  " << state->str() << std::endl;
+                }
+                return true;
+            }
         }
-
         return false;
     }
     std::cout << "Unknown fail condition" << std::endl;
@@ -48,17 +52,50 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
         std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
 
     while (!leaf_states.empty()) {
-        if (is_fail(leaf_states, fail_condtion)) {
-            res = false;
-            break;
-        }
-
-        visited_count = visited_count + leaf_states.size();
         if (verbose >= 1)
             std::cout << "├" << (verbose >= 2 ? "┬" : "")
                       << " Depth: " << step_i << ", visited: " << visited_count
                       << ", leaf state size: " << leaf_states.size()
                       << std::endl;
+
+        if (is_fail(leaf_states, fail_condtion)) {
+            res = false;
+            break;
+        }
+
+        bool unsafe_found = false;
+        for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
+            for (int i = 0; i < leaf_states.size(); ++i) {
+                if (unsafe_oracle(leaf_states[i])) {
+                    if (verbose >= 2) {
+                        std::cout << "│└ UNSAFE  " << leaf_states[i]->str()
+                                  << std::endl;
+                    }
+                    res = false;
+                    unsafe_found = true;
+                    break;
+                }
+            }
+            if (unsafe_found) break;
+        }
+        if (unsafe_found) break;
+
+        for (std::function<bool(State*)> safe_oracle : safe_oracles) {
+            if (verbose >= 2) {
+                for (int i = leaf_states.size() - 1; i >= 0; --i) {
+                    if (safe_oracle(leaf_states[i])) {
+                        std::cout << "│├ SAFE " << leaf_states[i]->str()
+                                  << std::endl;
+                    }
+                }
+            }
+
+            leaf_states.erase(std::remove_if(leaf_states.begin(),
+                                             leaf_states.end(), safe_oracle),
+                              leaf_states.end());
+        }
+
+        visited_count = visited_count + leaf_states.size();
 
         neighbors = get_neighbors(leaf_states, schedule);
         step_i++;
@@ -238,8 +275,20 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     from_node_id = from->get_node_id();
     to_node_id = to->get_node_id();
 
+    std::string to_node_arg = "";
+    for (std::function<bool(State*)> safe_oracle : safe_oracles) {
+        if (safe_oracle(to)) {
+            to_node_arg = ",color=green,penwidth=5";
+        }
+    }
+    for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
+        if (unsafe_oracle(to)) {
+            to_node_arg = ",color=red,penwidth=5";
+        }
+    }
+
     std::string from_node_desc = from->dot_node(from_node_id);
-    std::string to_node_desc = to->dot_node(to_node_id);
+    std::string to_node_desc = to->dot_node(to_node_id, to_node_arg);
 
     std::stringstream edge_desc;
 

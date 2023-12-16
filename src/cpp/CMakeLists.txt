@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 include(CTest)
 enable_testing()
 
-add_executable(mcs main.cpp State.cpp Job.cpp Graph.cpp Scheduler.cpp)
+add_executable(mcs main.cpp State.cpp Job.cpp Graph.cpp Scheduler.cpp SafeOracle.cpp UnsafeOracle.cpp)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

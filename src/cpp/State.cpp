@@ -111,19 +111,16 @@ std::string State::str() const {
     return ss.str();
 }
 
-std::string State::dot_node(std::string node_id) const {
+std::string State::dot_node(std::string node_id,
+                            std::string extra_node_arg) const {
     std::stringstream ss;
 
     ss << node_id << " [label=<";
-    // for (Job* job : jobs) {
-    //     ss << job->dot_node();
-    //     ss << " ";
-    // }
+
     for (int i = 0; i < jobs.size(); ++i) {
         ss << jobs[i]->dot_node();
         if (i < jobs.size() - 1) ss << " ";
     }
-    // ss << crit;
     ss << ">,";
     if (this->crit == 1)
         ss << "fillcolor=lightcyan";
@@ -131,6 +128,8 @@ std::string State::dot_node(std::string node_id) const {
         ss << "fillcolor=lightyellow";
 
     if (this->is_fail()) ss << ",color=orchid,penwidth=5";
+
+    ss << extra_node_arg;
 
     ss << "]" << std::endl;
 

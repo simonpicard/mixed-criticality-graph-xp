@@ -15,11 +15,15 @@ class Graph {
     ~Graph();
 
     Graph(State* initial_state_, std::string graph_output_path_ = "",
-          int verbose_ = 0)
+          int verbose_ = 0,
+          std::vector<std::function<bool(State*)>> safe_oracles_ = {},
+          std::vector<std::function<bool(State*)>> unsafe_oracles_ = {})
         : initial_state(initial_state_),
           graph_output_path(graph_output_path_),
           plot_graph(graph_output_path_ != ""),
-          verbose(verbose_){};
+          verbose(verbose_),
+          safe_oracles(safe_oracles_),
+          unsafe_oracles(unsafe_oracles_){};
 
     std::vector<State*> get_neighbors(std::vector<State*> leaf_states,
                                       int (*schedule)(State*));
@@ -40,6 +44,9 @@ class Graph {
     std::string graph_output_path;
     bool plot_graph;
     int verbose;
+
+    std::vector<std::function<bool(State*)>> safe_oracles;
+    std::vector<std::function<bool(State*)>> unsafe_oracles;
 };
 
 #endif

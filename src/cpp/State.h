@@ -34,12 +34,14 @@ class State {
     int get_crit() const { return crit; };
     void set_crit(int crit_) { crit = crit_; };
     Job* get_job(int i) { return jobs[i]; };
+    std::vector<Job*> get_jobs() { return jobs; };
     int get_size() const { return jobs.size(); };
     float get_relativity() const { return relativity; };
 
     void repr() const;
     std::string str() const;
-    std::string dot_node(std::string node_id) const;
+    std::string dot_node(std::string node_id,
+                         std::string extra_node_arg = "") const;
 
     uint64_t get_hash() const;
     std::string get_node_id() const { return std::to_string(get_hash()); };
