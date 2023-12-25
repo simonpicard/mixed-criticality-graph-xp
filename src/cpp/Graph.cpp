@@ -12,46 +12,40 @@ void Graph::repr(std::vector<State*> states) {
     std::cout << std::endl;
 }
 
-bool Graph::is_fail(std::vector<State*> const& states,
-                    std::string fail_condition) {
-    if (fail_condition == "DM") {
-        for (State* state : states) {
-            if (state->is_fail()) {
-                if (verbose >= 2) {
-                    std::cout << "│└ FAIL  " << state->str() << std::endl;
-                }
-                return true;
+bool Graph::is_fail(std::vector<State*> const& states) {
+    for (State* state : states) {
+        if (state->is_fail()) {
+            if (verbose >= 2) {
+                std::cout << "│└ FAIL  " << state->str() << std::endl;
             }
+            return true;
         }
-        return false;
     }
-    std::cout << "Unknown fail condition" << std::endl;
+    return false;
     return true;
 }
 
-int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
-    int64_t visited_count = 0;
+int64_t* Graph::bfs() {
     static int64_t arr[4];
 
-    int step_i = 0;
     std::vector<State*> leaf_states{initial_state};
     std::vector<State*> neighbors;
     std::unordered_set<uint64_t> visited_hash;
 
-    bool res = true;
-
-    graphiz_setup(graph_output_path);
-
     visited_hash.insert(leaf_states[0]->get_hash());
 
+    int64_t visited_count = 0;
+    int step_i = 0;
+    bool res = true;
     auto start = std::chrono::high_resolution_clock::now();
 
+    graphiz_setup(graph_output_path);
     log_start();
 
     while (!leaf_states.empty()) {
         log_step(step_i, visited_count, leaf_states.size());
 
-        if (is_fail(leaf_states, fail_condtion)) {
+        if (is_fail(leaf_states)) {
             res = false;
             break;
         }
@@ -86,7 +80,7 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
 
         visited_count = visited_count + leaf_states.size();
 
-        neighbors = get_neighbors(leaf_states, schedule);
+        neighbors = get_neighbors(leaf_states);
         step_i++;
         leaf_states.clear();
 
@@ -103,8 +97,6 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
 
     visited_count = visited_count + leaf_states.size();
 
-    graphiz_teardown(graph_output_path);
-
     if (!res)
         for (State* elem : leaf_states) delete elem;
 
@@ -112,6 +104,7 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
     std::chrono::milliseconds duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
+    graphiz_teardown(graph_output_path);
     log_end(res, visited_count, step_i, duration);
 
     arr[0] = int64_t(res);
@@ -122,8 +115,7 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
     return arr;
 }
 
-std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
-                                         int (*schedule)(State*)) {
+std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states) {
     std::vector<State*> new_states;
 
     for (int leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
@@ -146,9 +138,10 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
         current_state->run_tansition(to_run);
         log_run(current_state, leaf_hiearchy_other_char);
 
-        if (to_run == -1)
+        if (to_run == -1) {  // if no states are scheduled, no states can
+                             // complete and we move to request transitions
             states_for_request.push_back(current_state);
-        else {
+        } else {
             // completion transitions
             State* current_state_signals = new State(*current_state);
 
@@ -164,6 +157,7 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
             }
         }
 
+        // request transitions
         for (int i = 0; i < states_for_request.size(); ++i) {
             State* state_for_request = states_for_request[i];
 

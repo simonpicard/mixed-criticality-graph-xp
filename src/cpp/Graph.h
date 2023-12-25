@@ -14,23 +14,22 @@ class Graph {
     Graph();
     ~Graph();
 
-    Graph(State* initial_state_, std::string graph_output_path_ = "",
-          int verbose_ = 0,
+    Graph(State* initial_state_, std::function<int(State*)> schedule_,
+          std::string graph_output_path_ = "", int verbose_ = 0,
           std::vector<std::function<bool(State*)>> safe_oracles_ = {},
           std::vector<std::function<bool(State*)>> unsafe_oracles_ = {})
         : initial_state(initial_state_),
+          schedule(schedule_),
           graph_output_path(graph_output_path_),
           plot_graph(graph_output_path_ != ""),
           verbose(verbose_),
           safe_oracles(safe_oracles_),
           unsafe_oracles(unsafe_oracles_){};
 
-    int64_t* bfs(int (*schedule)(State*), std::string fail_condtion = "DM");
+    int64_t* bfs();
+    std::vector<State*> get_neighbors(std::vector<State*> leaf_states);
 
-    std::vector<State*> get_neighbors(std::vector<State*> leaf_states,
-                                      int (*schedule)(State*));
-
-    bool is_fail(std::vector<State*> const& states, std::string fail_condtion);
+    bool is_fail(std::vector<State*> const& states);
 
     static void repr(std::vector<State*> states);
 
@@ -56,6 +55,7 @@ class Graph {
     bool plot_graph;
     int verbose;
 
+    std::function<int(State*)> schedule;
     std::vector<std::function<bool(State*)>> safe_oracles;
     std::vector<std::function<bool(State*)>> unsafe_oracles;
 };
