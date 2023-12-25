@@ -29,39 +29,6 @@ bool Graph::is_fail(std::vector<State*> const& states,
     return true;
 }
 
-void Graph::log_start() {
-    if (verbose >= 0)
-        std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
-}
-
-void Graph::log_end(bool res, int64_t visited_count, int step_i,
-                    std::chrono::milliseconds duration) {
-    if (verbose >= 0)
-        std::cout << "╘══ Automaton is " << (res ? "SAFE" : "UNSAFE")
-                  << " | visited " << visited_count << " states | depth "
-                  << step_i << " | time " << duration.count() << " ms ═══"
-                  << std::endl;
-}
-
-void Graph::log_step(int step_i, int64_t visited_count, int leaf_states_size) {
-    if (verbose >= 1)
-        std::cout << "├" << (verbose >= 2 ? "┬" : "") << " Depth: " << step_i
-                  << ", visited: " << visited_count
-                  << ", leaf state size: " << leaf_states_size << std::endl;
-}
-
-void Graph::log_unsafe(State* unsafe_state) {
-    if (verbose >= 2) {
-        std::cout << "│└ UNSAFE  " << unsafe_state->str() << std::endl;
-    }
-}
-
-void Graph::log_safe(State* safe_state) {
-    if (verbose >= 2) {
-        std::cout << "│├ SAFE  " << safe_state->str() << std::endl;
-    }
-}
-
 int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
     int64_t visited_count = 0;
     static int64_t arr[4];
@@ -155,84 +122,6 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
     return arr;
 }
 
-void Graph::graphiz_setup(std::string path) {
-    if (!plot_graph) {
-        return;
-    }
-
-    std::ofstream o_file;
-    o_file.open(path);
-    o_file << "digraph G "
-              "{\n"
-              "node[shape=\"box\",style=\"rounded,filled\", "
-              "fontname=\"helvetica\"]"
-              "\n";
-
-    // initial_state
-    o_file << "tasks_info [ shape=\"plaintext\",style=\"\",label = <\n"
-              " <table bgcolor=\"black\" color=\"white\">\n"
-              "  <tr>\n"
-              "    <td bgcolor=\"white\">i</td>\n"
-              "    <td bgcolor=\"white\">T</td>\n"
-              "    <td bgcolor=\"white\">D</td>\n"
-              "    <td bgcolor=\"white\">X</td>\n"
-              "    <td bgcolor=\"white\">C1</td>\n"
-              "    <td bgcolor=\"white\">C2</td>\n"
-              "  </tr>\n";
-
-    for (int i = 0; i < initial_state->get_size(); ++i) {
-        Job* j = initial_state->get_job(i);
-        o_file << "  <tr>\n";
-        o_file << "    <td bgcolor=\"white\">" << i << "</td>\n";
-        o_file << "    <td bgcolor=\"white\">" << j->get_T() << "</td>\n";
-        o_file << "    <td bgcolor=\"white\">" << j->get_D() << "</td>\n";
-        o_file << "    <td bgcolor=\"white\">" << j->get_X() << "</td>\n";
-        o_file << "    <td bgcolor=\"white\">" << j->get_C()[0] << "</td>\n";
-        o_file << "    <td bgcolor=\"white\">" << j->get_C()[1] << "</td>\n";
-        o_file << "  </tr>\n";
-    }
-    o_file << " </table>\n"
-              "> ]\n\n";
-
-    o_file.close();
-}
-
-void Graph::graphiz_teardown(std::string path) {
-    if (!plot_graph) {
-        return;
-    }
-    append_to_file(path, "\n}");
-}
-
-void Graph::log_start(State* state, std::string second_hiearchy_char) {
-    if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << "┬ ";
-        std::cout << "START " << state->str() << std::endl;
-    }
-}
-
-void Graph::log_run(State* state, std::string second_hiearchy_char) {
-    if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << "├ ";
-        std::cout << "RUN " << state->str() << std::endl;
-    }
-}
-
-void Graph::log_completion(State* state, std::string second_hiearchy_char) {
-    if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << "├ ";
-        std::cout << "COMPLETION " << state->str() << std::endl;
-    }
-}
-
-void Graph::log_request(State* state, std::string second_hiearchy_char,
-                        std::string third_hiearchy_char) {
-    if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << third_hiearchy_char;
-        std::cout << " REQUEST " << state->str() << std::endl;
-    }
-}
-
 std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
                                          int (*schedule)(State*)) {
     std::vector<State*> new_states;
@@ -307,6 +196,57 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
     return new_states;
 }
 
+// GRAPHIZ FUNCTIONS
+
+void Graph::graphiz_setup(std::string path) {
+    if (!plot_graph) {
+        return;
+    }
+
+    std::ofstream o_file;
+    o_file.open(path);
+    o_file << "digraph G "
+              "{\n"
+              "node[shape=\"box\",style=\"rounded,filled\", "
+              "fontname=\"helvetica\"]"
+              "\n";
+
+    // initial_state
+    o_file << "tasks_info [ shape=\"plaintext\",style=\"\",label = <\n"
+              " <table bgcolor=\"black\" color=\"white\">\n"
+              "  <tr>\n"
+              "    <td bgcolor=\"white\">i</td>\n"
+              "    <td bgcolor=\"white\">T</td>\n"
+              "    <td bgcolor=\"white\">D</td>\n"
+              "    <td bgcolor=\"white\">X</td>\n"
+              "    <td bgcolor=\"white\">C1</td>\n"
+              "    <td bgcolor=\"white\">C2</td>\n"
+              "  </tr>\n";
+
+    for (int i = 0; i < initial_state->get_size(); ++i) {
+        Job* j = initial_state->get_job(i);
+        o_file << "  <tr>\n";
+        o_file << "    <td bgcolor=\"white\">" << i << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_T() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_D() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_X() << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_C()[0] << "</td>\n";
+        o_file << "    <td bgcolor=\"white\">" << j->get_C()[1] << "</td>\n";
+        o_file << "  </tr>\n";
+    }
+    o_file << " </table>\n"
+              "> ]\n\n";
+
+    o_file.close();
+}
+
+void Graph::graphiz_teardown(std::string path) {
+    if (!plot_graph) {
+        return;
+    }
+    append_to_file(path, "\n}");
+}
+
 void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     if (!plot_graph) {
         return;
@@ -341,3 +281,67 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     append_to_file(graph_output_path, to_node_desc);
     append_to_file(graph_output_path, edge_desc.str());
 };
+
+// LOGGING FUNCTIONS
+
+void Graph::log_start() {
+    if (verbose >= 0)
+        std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
+}
+
+void Graph::log_end(bool res, int64_t visited_count, int step_i,
+                    std::chrono::milliseconds duration) {
+    if (verbose >= 0)
+        std::cout << "╘══ Automaton is " << (res ? "SAFE" : "UNSAFE")
+                  << " | visited " << visited_count << " states | depth "
+                  << step_i << " | time " << duration.count() << " ms ═══"
+                  << std::endl;
+}
+
+void Graph::log_step(int step_i, int64_t visited_count, int leaf_states_size) {
+    if (verbose >= 1)
+        std::cout << "├" << (verbose >= 2 ? "┬" : "") << " Depth: " << step_i
+                  << ", visited: " << visited_count
+                  << ", leaf state size: " << leaf_states_size << std::endl;
+}
+
+void Graph::log_unsafe(State* unsafe_state) {
+    if (verbose >= 2) {
+        std::cout << "│└ UNSAFE  " << unsafe_state->str() << std::endl;
+    }
+}
+
+void Graph::log_safe(State* safe_state) {
+    if (verbose >= 2) {
+        std::cout << "│├ SAFE  " << safe_state->str() << std::endl;
+    }
+}
+
+void Graph::log_start(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "┬ ";
+        std::cout << "START " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_run(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "RUN " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_completion(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "COMPLETION " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_request(State* state, std::string second_hiearchy_char,
+                        std::string third_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << third_hiearchy_char;
+        std::cout << " REQUEST " << state->str() << std::endl;
+    }
+}

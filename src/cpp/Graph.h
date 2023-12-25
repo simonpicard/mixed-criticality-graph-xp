@@ -25,10 +25,10 @@ class Graph {
           safe_oracles(safe_oracles_),
           unsafe_oracles(unsafe_oracles_){};
 
+    int64_t* bfs(int (*schedule)(State*), std::string fail_condtion = "DM");
+
     std::vector<State*> get_neighbors(std::vector<State*> leaf_states,
                                       int (*schedule)(State*));
-
-    int64_t* bfs(int (*schedule)(State*), std::string fail_condtion = "DM");
 
     bool is_fail(std::vector<State*> const& states, std::string fail_condtion);
 
@@ -36,7 +36,6 @@ class Graph {
 
     void graphiz_setup(std::string path);
     void graphiz_teardown(std::string path);
-
     void connect_neighbor_graphviz(State* from, State* to) const;
 
     void log_start();
