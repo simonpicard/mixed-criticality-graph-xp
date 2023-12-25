@@ -29,6 +29,39 @@ bool Graph::is_fail(std::vector<State*> const& states,
     return true;
 }
 
+void Graph::log_start() {
+    if (verbose >= 0)
+        std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
+}
+
+void Graph::log_end(bool res, int64_t visited_count, int step_i,
+                    std::chrono::milliseconds duration) {
+    if (verbose >= 0)
+        std::cout << "╘══ Automaton is " << (res ? "SAFE" : "UNSAFE")
+                  << " | visited " << visited_count << " states | depth "
+                  << step_i << " | time " << duration.count() << " ms ═══"
+                  << std::endl;
+}
+
+void Graph::log_step(int step_i, int64_t visited_count, int leaf_states_size) {
+    if (verbose >= 1)
+        std::cout << "├" << (verbose >= 2 ? "┬" : "") << " Depth: " << step_i
+                  << ", visited: " << visited_count
+                  << ", leaf state size: " << leaf_states_size << std::endl;
+}
+
+void Graph::log_unsafe(State* unsafe_state) {
+    if (verbose >= 2) {
+        std::cout << "│└ UNSAFE  " << unsafe_state->str() << std::endl;
+    }
+}
+
+void Graph::log_safe(State* safe_state) {
+    if (verbose >= 2) {
+        std::cout << "│├ SAFE  " << safe_state->str() << std::endl;
+    }
+}
+
 int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
     int64_t visited_count = 0;
     static int64_t arr[4];
@@ -40,23 +73,16 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
 
     bool res = true;
 
-    if (plot_graph) {
-        graphiz_setup(graph_output_path);
-    }
+    graphiz_setup(graph_output_path);
 
     visited_hash.insert(leaf_states[0]->get_hash());
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    if (verbose >= 0)
-        std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
+    log_start();
 
     while (!leaf_states.empty()) {
-        if (verbose >= 1)
-            std::cout << "├" << (verbose >= 2 ? "┬" : "")
-                      << " Depth: " << step_i << ", visited: " << visited_count
-                      << ", leaf state size: " << leaf_states.size()
-                      << std::endl;
+        log_step(step_i, visited_count, leaf_states.size());
 
         if (is_fail(leaf_states, fail_condtion)) {
             res = false;
@@ -67,10 +93,7 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
         for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
             for (int i = 0; i < leaf_states.size(); ++i) {
                 if (unsafe_oracle(leaf_states[i])) {
-                    if (verbose >= 2) {
-                        std::cout << "│└ UNSAFE  " << leaf_states[i]->str()
-                                  << std::endl;
-                    }
+                    log_unsafe(leaf_states[i]);
                     res = false;
                     unsafe_found = true;
                     break;
@@ -84,8 +107,7 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
             if (verbose >= 2) {
                 for (int i = leaf_states.size() - 1; i >= 0; --i) {
                     if (safe_oracle(leaf_states[i])) {
-                        std::cout << "│├ SAFE " << leaf_states[i]->str()
-                                  << std::endl;
+                        log_safe(leaf_states[i]);
                     }
                 }
             }
@@ -114,20 +136,16 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
 
     visited_count = visited_count + leaf_states.size();
 
-    if (plot_graph) graphiz_teardown(graph_output_path);
+    graphiz_teardown(graph_output_path);
 
     if (!res)
         for (State* elem : leaf_states) delete elem;
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration =
+    std::chrono::milliseconds duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
-    if (verbose >= 0)
-        std::cout << "╘══ Automaton is " << (res ? "SAFE" : "UNSAFE")
-                  << " | visited " << visited_count << " states | depth "
-                  << step_i << " | time " << duration.count() << " ms ═══"
-                  << std::endl;
+    log_end(res, visited_count, step_i, duration);
 
     arr[0] = int64_t(res);
     arr[1] = visited_count;
@@ -138,6 +156,10 @@ int64_t* Graph::bfs(int (*schedule)(State*), std::string fail_condtion) {
 }
 
 void Graph::graphiz_setup(std::string path) {
+    if (!plot_graph) {
+        return;
+    }
+
     std::ofstream o_file;
     o_file.open(path);
     o_file << "digraph G "
@@ -175,7 +197,41 @@ void Graph::graphiz_setup(std::string path) {
     o_file.close();
 }
 
-void Graph::graphiz_teardown(std::string path) { append_to_file(path, "\n}"); }
+void Graph::graphiz_teardown(std::string path) {
+    if (!plot_graph) {
+        return;
+    }
+    append_to_file(path, "\n}");
+}
+
+void Graph::log_start(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "┬ ";
+        std::cout << "START " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_run(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "RUN " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_completion(State* state, std::string second_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "COMPLETION " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_request(State* state, std::string second_hiearchy_char,
+                        std::string third_hiearchy_char) {
+    if (verbose >= 2) {
+        std::cout << "│" << second_hiearchy_char << third_hiearchy_char;
+        std::cout << " REQUEST " << state->str() << std::endl;
+    }
+}
 
 std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
                                          int (*schedule)(State*)) {
@@ -193,18 +249,13 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
             is_last_leaf ? std::string("└") : std::string("├");
         std::string leaf_hiearchy_other_char =
             is_last_leaf ? std::string(" ") : std::string("│");
-        if (verbose >= 2) {
-            std::cout << "│" << leaf_hiearchy_start_char << "┬ ";
-            std::cout << "START " << current_state->str() << std::endl;
-        }
+
+        log_start(current_state, leaf_hiearchy_start_char);
 
         // execution transition
         int to_run = schedule(current_state);
         current_state->run_tansition(to_run);
-        if (verbose >= 2) {
-            std::cout << "│" << leaf_hiearchy_other_char << "├ ";
-            std::cout << "RUN " << current_state->str() << std::endl;
-        }
+        log_run(current_state, leaf_hiearchy_other_char);
 
         if (to_run == -1)
             states_for_request.push_back(current_state);
@@ -212,19 +263,16 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
             // completion transitions
             State* current_state_signals = new State(*current_state);
 
-            current_state_signals->completion_transition(to_run, true);
             current_state->completion_transition(to_run, false);
-            if (verbose >= 2) {
-                std::cout << "│" << leaf_hiearchy_other_char << "├ ";
-                std::cout << "COMPLETION " << current_state->str() << std::endl;
-                std::cout << "│" << leaf_hiearchy_other_char << "├ ";
-                std::cout << "COMPLETION " << current_state_signals->str()
-                          << std::endl;
-            }
-
+            log_completion(current_state, leaf_hiearchy_other_char);
             states_for_request.push_back(current_state);
-            if (current_state->get_hash() != current_state_signals->get_hash())
+
+            current_state_signals->completion_transition(to_run, true);
+            if (current_state->get_hash() !=
+                current_state_signals->get_hash()) {
                 states_for_request.push_back(current_state_signals);
+                log_completion(current_state_signals, leaf_hiearchy_other_char);
+            }
         }
 
         for (int i = 0; i < states_for_request.size(); ++i) {
@@ -242,22 +290,13 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
                 submit_state->request_transition(current_eligibles);
                 new_states.push_back(submit_state);
 
-                if (verbose >= 2) {
-                    std::cout << "│" << leaf_hiearchy_other_char;
-
-                    if (i == states_for_request.size() - 1 and
-                        j == all_eligibles.size() - 1)
-                        std::cout << "└";
-                    else
-                        std::cout << "├";
-
-                    std::cout << " REQUEST " << submit_state->str()
-                              << std::endl;
-                }
-
-                if (plot_graph) {
-                    connect_neighbor_graphviz(current_state_bkp, submit_state);
-                }
+                bool is_last_request = i == states_for_request.size() - 1 and
+                                       j == all_eligibles.size() - 1;
+                std::string third_hiearchy_char =
+                    is_last_request ? std::string("└") : std::string("├");
+                log_request(submit_state, leaf_hiearchy_other_char,
+                            third_hiearchy_char);
+                connect_neighbor_graphviz(current_state_bkp, submit_state);
             }
             delete state_for_request;
         }
@@ -269,6 +308,10 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states,
 }
 
 void Graph::connect_neighbor_graphviz(State* from, State* to) const {
+    if (!plot_graph) {
+        return;
+    }
+
     std::string from_node_id;
     std::string to_node_id;
 

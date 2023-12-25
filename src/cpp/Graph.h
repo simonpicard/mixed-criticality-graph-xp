@@ -39,6 +39,18 @@ class Graph {
 
     void connect_neighbor_graphviz(State* from, State* to) const;
 
+    void log_start();
+    void log_end(bool res, int64_t visited_count, int step_i,
+                 std::chrono::milliseconds duration);
+    void log_step(int step_i, int64_t visited_count, int leaf_states_size);
+    void log_unsafe(State* unsafe_state);
+    void log_safe(State* safe_state);
+    void log_start(State* state, std::string second_hiearchy_char);
+    void log_run(State* state, std::string second_hiearchy_char);
+    void log_completion(State* state, std::string second_hiearchy_char);
+    void log_request(State* state, std::string second_hiearchy_char,
+                     std::string third_hiearchy_char);
+
    protected:
     State* initial_state;
     std::string graph_output_path;
