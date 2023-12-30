@@ -333,6 +333,14 @@ void Graph::log_safe(State* safe_state) {
     }
 }
 
+std::string Graph::get_second_hiearchy_char(bool is_last_leaf) {
+    return is_last_leaf ? std::string(" ") : std::string("│");
+}
+
+std::string Graph::get_third_hiearchy_char(bool is_last_request) {
+    return is_last_request ? std::string("└") : std::string("├");
+}
+
 void Graph::log_start(State* state, bool is_last_leaf) {
     std::string second_hiearchy_char =
         is_last_leaf ? std::string("└") : std::string("├");
@@ -343,30 +351,25 @@ void Graph::log_start(State* state, bool is_last_leaf) {
 }
 
 void Graph::log_run(State* state, bool is_last_leaf) {
-    std::string second_hiearchy_char =
-        is_last_leaf ? std::string(" ") : std::string("│");
     if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << "├ ";
         std::cout << "RUN " << state->str() << std::endl;
     }
 }
 
 void Graph::log_completion(State* state, bool is_last_leaf) {
-    std::string second_hiearchy_char =
-        is_last_leaf ? std::string(" ") : std::string("│");
     if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << "├ ";
+        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << "├ ";
         std::cout << "COMPLETION " << state->str() << std::endl;
     }
 }
 
 void Graph::log_request(State* state, bool is_last_leaf, bool is_last_request) {
-    std::string second_hiearchy_char =
-        is_last_leaf ? std::string(" ") : std::string("│");
     std::string third_hiearchy_char =
         is_last_request ? std::string("└") : std::string("├");
     if (verbose >= 2) {
-        std::cout << "│" << second_hiearchy_char << third_hiearchy_char;
+        std::cout << "│" << get_second_hiearchy_char(is_last_leaf)
+                  << get_third_hiearchy_char(is_last_request);
         std::cout << " REQUEST " << state->str() << std::endl;
     }
 }
