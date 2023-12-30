@@ -26,28 +26,40 @@ class Graph {
           safe_oracles(safe_oracles_),
           unsafe_oracles(unsafe_oracles_){};
 
-    int64_t* bfs();
-    std::vector<State*> get_neighbors(std::vector<State*> leaf_states);
-
     bool is_fail(std::vector<State*> const& states);
+    void run_tansition(State* state, int to_run);
+    std::vector<State*> completion_transition(State* state, int to_run);
+    std::vector<State*> request_transition(std::vector<State*> const& states);
 
-    static void repr(std::vector<State*> states);
+    bool has_unsafe(std::vector<State*> const& states);
+    void handle_safe(std::vector<State*>& states);
+
+    void handle_run_tansition(State* state, int to_run, bool is_last_leaf);
+    std::vector<State*> handle_completion_transition(State* state, int to_run,
+                                                     bool is_last_leaf);
+    std::vector<State*> handle_request_transition(
+        std::vector<State*> const& states, bool is_last_leaf,
+        State* original_leaf_state);
+
+    std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
+
+    int64_t* bfs();
 
     void graphiz_setup(std::string path);
     void graphiz_teardown(std::string path);
     void connect_neighbor_graphviz(State* from, State* to) const;
 
-    void log_start();
-    void log_end(bool res, int64_t visited_count, int step_i,
-                 std::chrono::milliseconds duration);
+    static void repr(std::vector<State*> states);
+    void log_start_search();
+    void log_end_search(bool res, int64_t visited_count, int step_i,
+                        std::chrono::milliseconds duration);
     void log_step(int step_i, int64_t visited_count, int leaf_states_size);
     void log_unsafe(State* unsafe_state);
     void log_safe(State* safe_state);
-    void log_start(State* state, std::string second_hiearchy_char);
-    void log_run(State* state, std::string second_hiearchy_char);
-    void log_completion(State* state, std::string second_hiearchy_char);
-    void log_request(State* state, std::string second_hiearchy_char,
-                     std::string third_hiearchy_char);
+    void log_start(State* state, bool is_last_leaf);
+    void log_run(State* state, bool is_last_leaf);
+    void log_completion(State* state, bool is_last_leaf);
+    void log_request(State* state, bool is_last_leaf, bool is_last_request);
 
    protected:
     State* initial_state;

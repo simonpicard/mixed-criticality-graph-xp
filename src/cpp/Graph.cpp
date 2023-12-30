@@ -3,14 +3,7 @@
 
 Graph::Graph() = default;
 
-Graph::~Graph() {}
-
-void Graph::repr(std::vector<State*> states) {
-    for (int i = 0; i < states.size(); ++i) {
-        std::cout << "S" << i << "-> " << states[i]->str() << std::endl;
-    }
-    std::cout << std::endl;
-}
+Graph::~Graph() { delete initial_state; }
 
 bool Graph::is_fail(std::vector<State*> const& states) {
     for (State* state : states) {
@@ -22,13 +15,140 @@ bool Graph::is_fail(std::vector<State*> const& states) {
         }
     }
     return false;
-    return true;
+}
+
+void Graph::run_tansition(State* state, int to_run) {
+    state->run_tansition(to_run);
+}
+
+std::vector<State*> Graph::completion_transition(State* state, int to_run) {
+    State* state_signals = new State(*state);
+    state->completion_transition(to_run, false);
+    state_signals->completion_transition(to_run, true);
+    if (state->get_hash() != state_signals->get_hash()) {
+        return std::vector<State*>{state, state_signals};
+    }
+    delete state_signals;
+    return std::vector<State*>{state};
+}
+
+std::vector<State*> Graph::request_transition(
+    std::vector<State*> const& states) {
+    std::vector<State*> new_states;
+
+    for (State* current_state : states) {
+        std::vector<int> eligibles_candidates = current_state->get_eligibles();
+        std::vector<std::vector<int>> all_eligibles =
+            power_set(eligibles_candidates);
+
+        for (std::vector<int> const& current_eligibles : all_eligibles) {
+            State* request_state = new State(*current_state);
+            request_state->request_transition(current_eligibles);
+            new_states.push_back(request_state);
+        }
+        delete current_state;
+    }
+
+    return new_states;
+}
+
+bool Graph::has_unsafe(std::vector<State*> const& states) {
+    for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
+        for (State* current_state : states) {
+            if (unsafe_oracle(current_state)) {
+                log_unsafe(current_state);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Graph::handle_safe(std::vector<State*>& states) {
+    for (std::function<bool(State*)> safe_oracle : safe_oracles) {
+        if (verbose >= 2) {
+            for (State* current_state : states) {
+                if (safe_oracle(current_state)) {
+                    log_safe(current_state);
+                }
+            }
+        }
+
+        states.erase(std::remove_if(states.begin(), states.end(), safe_oracle),
+                     states.end());
+    }
+}
+
+void Graph::handle_run_tansition(State* state, int to_run, bool is_last_leaf) {
+    if (to_run > -1) {
+        run_tansition(state, to_run);
+        log_run(state, is_last_leaf);
+    }
+}
+
+std::vector<State*> Graph::handle_completion_transition(State* state,
+                                                        int to_run,
+                                                        bool is_last_leaf) {
+    if (to_run > -1) {
+        std::vector<State*> completion_states =
+            completion_transition(state, to_run);
+        for (State* new_state : completion_states) {
+            log_completion(new_state, is_last_leaf);
+        }
+        return completion_states;
+    }
+    return std::vector<State*>{state};
+}
+
+std::vector<State*> Graph::handle_request_transition(
+    std::vector<State*> const& states, bool is_last_leaf,
+    State* original_leaf_state) {
+    std::vector<State*> request_states = request_transition(states);
+
+    for (int i = 0; i < request_states.size(); ++i) {
+        State* request_state = request_states[i];
+        log_request(request_state, is_last_leaf,
+                    i == request_states.size() - 1);
+        connect_neighbor_graphviz(original_leaf_state, request_state);
+    }
+
+    return request_states;
+}
+
+std::vector<State*> Graph::get_neighbors(
+    std::vector<State*> const& leaf_states) {
+    std::vector<State*> new_states;
+
+    for (int leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
+        State* current_state = leaf_states[leaf_i];
+        State* original_leaf_state = new State(*current_state);
+
+        // verbose setup
+        bool is_last_leaf = leaf_i == leaf_states.size() - 1;
+        log_start(current_state, is_last_leaf);
+
+        // apply all three transitions
+        int to_run = schedule(current_state);
+        handle_run_tansition(current_state, to_run, is_last_leaf);
+        std::vector<State*> states_for_request =
+            handle_completion_transition(current_state, to_run, is_last_leaf);
+        std::vector<State*> request_state = handle_request_transition(
+            states_for_request, is_last_leaf, original_leaf_state);
+
+        delete original_leaf_state;
+
+        // add new states
+        new_states.insert(new_states.end(), request_state.begin(),
+                          request_state.end());
+    }
+
+    return new_states;
 }
 
 int64_t* Graph::bfs() {
     static int64_t arr[4];
 
-    std::vector<State*> leaf_states{initial_state};
+    std::vector<State*> leaf_states{new State(*initial_state)};
     std::vector<State*> neighbors;
     std::unordered_set<uint64_t> visited_hash;
 
@@ -36,52 +156,25 @@ int64_t* Graph::bfs() {
 
     int64_t visited_count = 0;
     int step_i = 0;
-    bool res = true;
+    bool automaton_is_safe = true;
     auto start = std::chrono::high_resolution_clock::now();
 
     graphiz_setup(graph_output_path);
-    log_start();
+    log_start_search();
 
     while (!leaf_states.empty()) {
         log_step(step_i, visited_count, leaf_states.size());
 
-        if (is_fail(leaf_states)) {
-            res = false;
-            break;
-        }
+        automaton_is_safe =
+            not(is_fail(leaf_states) or has_unsafe(leaf_states));
+        if (not automaton_is_safe) break;
 
-        bool unsafe_found = false;
-        for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
-            for (int i = 0; i < leaf_states.size(); ++i) {
-                if (unsafe_oracle(leaf_states[i])) {
-                    log_unsafe(leaf_states[i]);
-                    res = false;
-                    unsafe_found = true;
-                    break;
-                }
-            }
-            if (unsafe_found) break;
-        }
-        if (unsafe_found) break;
-
-        for (std::function<bool(State*)> safe_oracle : safe_oracles) {
-            if (verbose >= 2) {
-                for (int i = leaf_states.size() - 1; i >= 0; --i) {
-                    if (safe_oracle(leaf_states[i])) {
-                        log_safe(leaf_states[i]);
-                    }
-                }
-            }
-
-            leaf_states.erase(std::remove_if(leaf_states.begin(),
-                                             leaf_states.end(), safe_oracle),
-                              leaf_states.end());
-        }
-
-        visited_count = visited_count + leaf_states.size();
+        handle_safe(leaf_states);
 
         neighbors = get_neighbors(leaf_states);
+
         step_i++;
+        visited_count = visited_count + leaf_states.size();
         leaf_states.clear();
 
         for (State* neighbor : neighbors) {
@@ -95,9 +188,7 @@ int64_t* Graph::bfs() {
         }
     }
 
-    visited_count = visited_count + leaf_states.size();
-
-    if (!res)
+    if (!automaton_is_safe)
         for (State* elem : leaf_states) delete elem;
 
     auto stop = std::chrono::high_resolution_clock::now();
@@ -105,89 +196,13 @@ int64_t* Graph::bfs() {
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
     graphiz_teardown(graph_output_path);
-    log_end(res, visited_count, step_i, duration);
+    log_end_search(automaton_is_safe, visited_count, step_i, duration);
 
-    arr[0] = int64_t(res);
+    arr[0] = int64_t(automaton_is_safe);
     arr[1] = visited_count;
     arr[2] = duration.count();
     arr[3] = step_i;
-
     return arr;
-}
-
-std::vector<State*> Graph::get_neighbors(std::vector<State*> leaf_states) {
-    std::vector<State*> new_states;
-
-    for (int leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
-        State* current_state = leaf_states[leaf_i];
-        State* current_state_bkp = new State(*current_state);
-
-        std::vector<State*> states_for_request;
-
-        // verbose char
-        bool is_last_leaf = leaf_i == leaf_states.size() - 1;
-        std::string leaf_hiearchy_start_char =
-            is_last_leaf ? std::string("└") : std::string("├");
-        std::string leaf_hiearchy_other_char =
-            is_last_leaf ? std::string(" ") : std::string("│");
-
-        log_start(current_state, leaf_hiearchy_start_char);
-
-        // execution transition
-        int to_run = schedule(current_state);
-        current_state->run_tansition(to_run);
-        log_run(current_state, leaf_hiearchy_other_char);
-
-        if (to_run == -1) {  // if no states are scheduled, no states can
-                             // complete and we move to request transitions
-            states_for_request.push_back(current_state);
-        } else {
-            // completion transitions
-            State* current_state_signals = new State(*current_state);
-
-            current_state->completion_transition(to_run, false);
-            log_completion(current_state, leaf_hiearchy_other_char);
-            states_for_request.push_back(current_state);
-
-            current_state_signals->completion_transition(to_run, true);
-            if (current_state->get_hash() !=
-                current_state_signals->get_hash()) {
-                states_for_request.push_back(current_state_signals);
-                log_completion(current_state_signals, leaf_hiearchy_other_char);
-            }
-        }
-
-        // request transitions
-        for (int i = 0; i < states_for_request.size(); ++i) {
-            State* state_for_request = states_for_request[i];
-
-            std::vector<int> eligibles_candidates =
-                state_for_request->get_eligibles();
-            std::vector<std::vector<int>> all_eligibles =
-                power_set(eligibles_candidates);
-
-            for (int j = 0; j < all_eligibles.size(); ++j) {
-                std::vector<int> const& current_eligibles = all_eligibles[j];
-
-                State* submit_state = new State(*state_for_request);
-                submit_state->request_transition(current_eligibles);
-                new_states.push_back(submit_state);
-
-                bool is_last_request = i == states_for_request.size() - 1 and
-                                       j == all_eligibles.size() - 1;
-                std::string third_hiearchy_char =
-                    is_last_request ? std::string("└") : std::string("├");
-                log_request(submit_state, leaf_hiearchy_other_char,
-                            third_hiearchy_char);
-                connect_neighbor_graphviz(current_state_bkp, submit_state);
-            }
-            delete state_for_request;
-        }
-
-        delete current_state_bkp;
-    }
-
-    return new_states;
 }
 
 // GRAPHIZ FUNCTIONS
@@ -278,18 +293,25 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
 
 // LOGGING FUNCTIONS
 
-void Graph::log_start() {
+void Graph::repr(std::vector<State*> states) {
+    for (int i = 0; i < states.size(); ++i) {
+        std::cout << "S" << i << "-> " << states[i]->str() << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void Graph::log_start_search() {
     if (verbose >= 0)
         std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
 }
 
-void Graph::log_end(bool res, int64_t visited_count, int step_i,
-                    std::chrono::milliseconds duration) {
+void Graph::log_end_search(bool automaton_is_safe, int64_t visited_count,
+                           int step_i, std::chrono::milliseconds duration) {
     if (verbose >= 0)
-        std::cout << "╘══ Automaton is " << (res ? "SAFE" : "UNSAFE")
-                  << " | visited " << visited_count << " states | depth "
-                  << step_i << " | time " << duration.count() << " ms ═══"
-                  << std::endl;
+        std::cout << "╘══ Automaton is "
+                  << (automaton_is_safe ? "SAFE" : "UNSAFE") << " | visited "
+                  << visited_count << " states | depth " << step_i << " | time "
+                  << duration.count() << " ms ═══" << std::endl;
 }
 
 void Graph::log_step(int step_i, int64_t visited_count, int leaf_states_size) {
@@ -311,29 +333,38 @@ void Graph::log_safe(State* safe_state) {
     }
 }
 
-void Graph::log_start(State* state, std::string second_hiearchy_char) {
+void Graph::log_start(State* state, bool is_last_leaf) {
+    std::string second_hiearchy_char =
+        is_last_leaf ? std::string("└") : std::string("├");
     if (verbose >= 2) {
         std::cout << "│" << second_hiearchy_char << "┬ ";
         std::cout << "START " << state->str() << std::endl;
     }
 }
 
-void Graph::log_run(State* state, std::string second_hiearchy_char) {
+void Graph::log_run(State* state, bool is_last_leaf) {
+    std::string second_hiearchy_char =
+        is_last_leaf ? std::string(" ") : std::string("│");
     if (verbose >= 2) {
         std::cout << "│" << second_hiearchy_char << "├ ";
         std::cout << "RUN " << state->str() << std::endl;
     }
 }
 
-void Graph::log_completion(State* state, std::string second_hiearchy_char) {
+void Graph::log_completion(State* state, bool is_last_leaf) {
+    std::string second_hiearchy_char =
+        is_last_leaf ? std::string(" ") : std::string("│");
     if (verbose >= 2) {
         std::cout << "│" << second_hiearchy_char << "├ ";
         std::cout << "COMPLETION " << state->str() << std::endl;
     }
 }
 
-void Graph::log_request(State* state, std::string second_hiearchy_char,
-                        std::string third_hiearchy_char) {
+void Graph::log_request(State* state, bool is_last_leaf, bool is_last_request) {
+    std::string second_hiearchy_char =
+        is_last_leaf ? std::string(" ") : std::string("│");
+    std::string third_hiearchy_char =
+        is_last_request ? std::string("└") : std::string("├");
     if (verbose >= 2) {
         std::cout << "│" << second_hiearchy_char << third_hiearchy_char;
         std::cout << " REQUEST " << state->str() << std::endl;
