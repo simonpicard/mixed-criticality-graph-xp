@@ -44,7 +44,11 @@ class State {
                          std::string extra_node_arg = "") const;
 
     uint64_t get_hash() const;
+    uint64_t get_hash_idle() const;
+    std::vector<int> get_ordered_idle_nats() const;
+    std::pair<u_int64_t, std::vector<int>> get_idle_nats_pair() const;
     std::string get_node_id() const { return std::to_string(get_hash()); };
+    std::string get_node_idle_id() const;
 
     float get_utilisation_of_level_at_level(int of_level, int at_level) const {
         return utilisation_of_level_at_level[of_level - 1][at_level - 1];

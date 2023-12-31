@@ -60,7 +60,7 @@ uint64_t Job::get_hash() const {
     uint64_t hash = rct;
     uint64_t factor = C[1] + 1;
 
-    hash = hash + nat * factor;
+    hash += nat * factor;
     return hash;
 }
 
@@ -68,4 +68,13 @@ uint64_t Job::get_hash_factor() const {
     uint64_t factor = C[1] + 1;
     factor = factor * (T + 1);
     return factor;
+}
+
+uint64_t Job::get_hash_idle() const {
+    uint64_t hash = rct;
+    uint64_t factor = C[1] + 1;
+
+    if (rct > 0) hash += nat * factor;
+
+    return hash;
 }

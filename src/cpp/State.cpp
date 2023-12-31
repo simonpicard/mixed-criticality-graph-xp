@@ -136,18 +136,6 @@ std::string State::dot_node(std::string node_id,
     return ss.str();
 }
 
-uint64_t State::get_hash() const {
-    uint64_t hash = crit - 1;
-    uint64_t factor = 2;
-
-    for (Job* job : jobs) {
-        hash = hash + job->get_hash() * factor;
-        factor = factor * job->get_hash_factor();
-    }
-
-    return hash;
-}
-
 float State::compute_utilisation_of_level_at_level(int of_level,
                                                    int at_level) const {
     float utilisation = 0.0;
@@ -171,4 +159,63 @@ void State::initialize() {
 
     relativity = utilisation_of_level_at_level[1][0] /
                  (1.0 - utilisation_of_level_at_level[0][0]);
+}
+
+uint64_t State::get_hash() const {
+    uint64_t hash = crit - 1;
+    uint64_t factor = 2;
+
+    for (Job* job : jobs) {
+        hash = hash + job->get_hash() * factor;
+        factor = factor * job->get_hash_factor();
+    }
+
+    return hash;
+}
+
+uint64_t State::get_hash_idle() const {
+    uint64_t hash = crit - 1;
+    uint64_t factor = 2;
+
+    for (Job* job : jobs) {
+        hash = hash + job->get_hash_idle() * factor;
+        factor = factor * job->get_hash_factor();
+    }
+
+    return hash;
+}
+
+std::vector<int> State::get_ordered_idle_nats() const {
+    std::vector<int> nats;
+
+    for (Job* job : jobs) {
+        if (not job->is_active()) nats.push_back(job->get_nat());
+    }
+
+    return nats;
+}
+
+std::pair<u_int64_t, std::vector<int>> State::get_idle_nats_pair() const {
+    std::vector<int> nats;
+    uint64_t hash = 0;
+    uint64_t factor = 1;
+
+    for (Job* job : jobs) {
+        if (not job->is_active()) {
+            nats.push_back(job->get_nat());
+            factor *= job->get_T();
+            hash += job->get_nat();
+        }
+    }
+
+    return std::pair<u_int64_t, std::vector<int>>(hash, nats);
+}
+
+std::string State::get_node_idle_id() const {
+    std::stringstream ss;
+    ss << "n_" << this->get_hash_idle();
+    for (int nat : this->get_ordered_idle_nats()) {
+        ss << "_" << nat;
+    }
+    return ss.str();
 }

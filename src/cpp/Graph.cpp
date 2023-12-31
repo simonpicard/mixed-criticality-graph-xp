@@ -90,10 +90,14 @@ std::vector<State*> Graph::handle_completion_transition(State* state,
                                                         int to_run,
                                                         bool is_last_leaf) {
     if (to_run > -1) {
+        u_int64_t original_hash = state->get_hash();
         std::vector<State*> completion_states =
             completion_transition(state, to_run);
-        for (State* new_state : completion_states) {
-            log_completion(new_state, is_last_leaf);
+
+        if (completion_states.size() > 1) {
+            for (State* new_state : completion_states) {
+                log_completion(new_state, is_last_leaf);
+            }
         }
         return completion_states;
     }
@@ -146,13 +150,7 @@ std::vector<State*> Graph::get_neighbors(
 }
 
 int64_t* Graph::bfs() {
-    static int64_t arr[4];
-
-    std::vector<State*> leaf_states{new State(*initial_state)};
-    std::vector<State*> neighbors;
-    std::unordered_set<uint64_t> visited_hash;
-
-    visited_hash.insert(leaf_states[0]->get_hash());
+    use_graphviz_idle_id = false;
 
     int64_t visited_count = 0;
     int step_i = 0;
@@ -161,6 +159,12 @@ int64_t* Graph::bfs() {
 
     graphiz_setup(graph_output_path);
     log_start_search();
+
+    std::vector<State*> leaf_states{new State(*initial_state)};
+    std::vector<State*> neighbors;
+
+    std::unordered_set<uint64_t> visited_hashes;
+    visited_hashes.insert(leaf_states[0]->get_hash());
 
     while (!leaf_states.empty()) {
         log_step(step_i, visited_count, leaf_states.size());
@@ -179,8 +183,8 @@ int64_t* Graph::bfs() {
 
         for (State* neighbor : neighbors) {
             uint64_t state_hash = neighbor->get_hash();
-            if (visited_hash.find(state_hash) == visited_hash.end()) {
-                visited_hash.insert(state_hash);
+            if (visited_hashes.find(state_hash) == visited_hashes.end()) {
+                visited_hashes.insert(state_hash);
                 leaf_states.push_back(neighbor);
             } else {
                 delete neighbor;
@@ -198,10 +202,157 @@ int64_t* Graph::bfs() {
     graphiz_teardown(graph_output_path);
     log_end_search(automaton_is_safe, visited_count, step_i, duration);
 
+    static int64_t arr[4];
+
     arr[0] = int64_t(automaton_is_safe);
-    arr[1] = visited_count;
-    arr[2] = duration.count();
-    arr[3] = step_i;
+    arr[1] = step_i;
+    arr[2] = visited_count;
+    arr[3] = duration.count();
+    return arr;
+}
+
+bool pairwise_smaller_all(std::vector<int> a, std::vector<int> b) {
+    if (a.size() != b.size()) {
+        std::cout << "a" << std::endl;
+        for (int i : a) {
+            std::cout << i << std::endl;
+        }
+        std::cout << "b" << std::endl;
+        for (int i : b) {
+            std::cout << i << std::endl;
+        }
+    }
+    for (unsigned int i = 0; i < a.size(); i++) {
+        if (a[i] > b[i]) return false;
+    }
+    return true;
+}
+
+int64_t* Graph::acbfs() {
+    use_graphviz_idle_id = true;
+
+    int64_t visited_count = 0;
+    int step_i = 0;
+    bool automaton_is_safe = true;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    graphiz_setup(graph_output_path);
+    log_start_search();
+
+    std::vector<State*> leaf_states{new State(*initial_state)};
+    std::vector<State*> neighbors;
+
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::vector<int>>>
+        visited_hashes;
+
+    uint64_t initial_state_hash = initial_state->get_hash_idle();
+    std::pair<uint64_t, std::vector<int>> initial_state_idle_nats_pair =
+        initial_state->get_idle_nats_pair();
+
+    visited_hashes[initial_state_hash] =
+        std::unordered_map<uint64_t, std::vector<int>>(
+            {{initial_state_idle_nats_pair.first,
+              initial_state_idle_nats_pair.second}});
+
+    while (!leaf_states.empty()) {
+        log_step(step_i, visited_count, leaf_states.size());
+
+        automaton_is_safe =
+            not(is_fail(leaf_states) or has_unsafe(leaf_states));
+        if (not automaton_is_safe) break;
+
+        handle_safe(leaf_states);
+
+        neighbors = get_neighbors(leaf_states);
+
+        step_i++;
+        visited_count = visited_count + leaf_states.size();
+        leaf_states.clear();
+
+        for (State* neighbor : neighbors) {
+            uint64_t neighbor_hash = neighbor->get_hash_idle();
+
+            std::pair<uint64_t, std::vector<int>> neighbor_idle_nats_pair =
+                neighbor->get_idle_nats_pair();
+
+            uint64_t& neighbor_idle_nats_hash = neighbor_idle_nats_pair.first;
+            std::vector<int>& neighbor_idle_nats_vector =
+                neighbor_idle_nats_pair.second;
+
+            if (visited_hashes.find(neighbor_hash) == visited_hashes.end()) {
+                // this arrangement of active jobs and their respecting rct has
+                // not been visited earlier so no visited state can simulate the
+                // neighbor
+
+                visited_hashes[neighbor_hash] =
+                    std::unordered_map<uint64_t, std::vector<int>>(
+                        {{neighbor_idle_nats_hash, neighbor_idle_nats_vector}});
+                leaf_states.push_back(neighbor);
+
+            } else {
+                // this arrangement of active jobs and their respecting rct has
+                // been visited earlier and wether this neighbor is simulated or
+                // not depends on the value of its nats
+                bool neighbor_is_simulated = false;
+                std::vector<u_int64_t> visited_is_simulated_hashes;
+
+                if (visited_hashes[neighbor_hash].find(
+                        neighbor_idle_nats_hash) !=
+                    visited_hashes[neighbor_hash].end()) {
+                    // this exact state has already been visited and we do not
+                    // need to explore it
+                    delete neighbor;
+                } else {
+                    for (const auto& [visited_idle_nat_hash,
+                                      visited_idle_nat_vector] :
+                         visited_hashes[neighbor_hash]) {
+                        if (pairwise_smaller_all(visited_idle_nat_vector,
+                                                 neighbor_idle_nats_vector)) {
+                            neighbor_is_simulated = true;
+                            simulate_neighbor_graphviz(neighbor,
+                                                       visited_idle_nat_vector);
+                            break;
+                        }
+                        if (pairwise_smaller_all(neighbor_idle_nats_vector,
+                                                 visited_idle_nat_vector)) {
+                            // this neighbor simulates some previously visited
+                            // states which can safely be removed from memory
+                            visited_is_simulated_hashes.push_back(
+                                visited_idle_nat_hash);
+                        }
+                    }
+                    for (u_int64_t const& key : visited_is_simulated_hashes) {
+                        visited_hashes[neighbor_hash].erase(key);
+                    }
+                    if (!neighbor_is_simulated) {
+                        visited_hashes[neighbor_hash][neighbor_idle_nats_hash] =
+                            neighbor_idle_nats_vector;
+                        leaf_states.push_back(neighbor);
+                    } else {
+                        log_simulated(neighbor);
+                        delete neighbor;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!automaton_is_safe)
+        for (State* elem : leaf_states) delete elem;
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+
+    graphiz_teardown(graph_output_path);
+    log_end_search(automaton_is_safe, visited_count, step_i, duration);
+
+    static int64_t arr[4];
+    arr[0] = int64_t(automaton_is_safe);
+    arr[1] = step_i;
+    arr[2] = visited_count;
+    arr[3] = duration.count();
+
     return arr;
 }
 
@@ -247,6 +398,27 @@ void Graph::graphiz_setup(std::string path) {
               "> ]\n\n";
 
     o_file.close();
+
+    std::stringstream legend;
+    legend << "legend_nat_rct "
+           << "[label=<rct,nat>,fillcolor=white]" << std::endl;
+    legend << "legend_lo "
+           << "[label=<LO>,fillcolor=lightcyan]" << std::endl;
+    legend << "legend_hi "
+           << "[label=<HI>,fillcolor=lightyellow]" << std::endl;
+    legend << "legend_fail "
+           << "[label=<fail>,color=orchid,fillcolor=white,penwidth=5]"
+           << std::endl;
+    legend << "legend_simulated "
+           << "[label=<simulated>,color=blue,fillcolor=white,penwidth=5]"
+           << std::endl;
+    legend << "legend_safe "
+           << "[label=<safe>,color=green,fillcolor=white,penwidth=5]"
+           << std::endl;
+    legend << "legend_unsafe "
+           << "[label=<unsafe>,color=red,fillcolor=white,penwidth=5]"
+           << std::endl;
+    append_to_file(graph_output_path, legend.str());
 }
 
 void Graph::graphiz_teardown(std::string path) {
@@ -263,19 +435,25 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
 
     std::string from_node_id;
     std::string to_node_id;
-
-    from_node_id = from->get_node_id();
-    to_node_id = to->get_node_id();
+    if (not use_graphviz_idle_id) {
+        from_node_id = from->get_node_id();
+        to_node_id = to->get_node_id();
+    } else {
+        from_node_id = from->get_node_idle_id();
+        to_node_id = to->get_node_idle_id();
+    }
 
     std::string to_node_arg = "";
     for (std::function<bool(State*)> safe_oracle : safe_oracles) {
         if (safe_oracle(to)) {
             to_node_arg = ",color=green,penwidth=5";
+            break;
         }
     }
     for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
         if (unsafe_oracle(to)) {
             to_node_arg = ",color=red,penwidth=5";
+            break;
         }
     }
 
@@ -290,6 +468,27 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     append_to_file(graph_output_path, to_node_desc);
     append_to_file(graph_output_path, edge_desc.str());
 };
+
+void Graph::simulate_neighbor_graphviz(State* neighbor,
+                                       std::vector<int> nats) const {
+    std::stringstream simulator_hash;
+    simulator_hash << "n_";
+    simulator_hash << neighbor->get_hash_idle();
+    for (int nat : nats) {
+        simulator_hash << "_" << nat;
+    }
+
+    std::stringstream set_simulated_state_border;
+    set_simulated_state_border << neighbor->get_node_idle_id()
+                               << " [color=blue,penwidth=5]" << std::endl;
+    append_to_file(graph_output_path, set_simulated_state_border.str());
+
+    std::stringstream connect_simulated_state;
+    connect_simulated_state << neighbor->get_node_idle_id() << " -> "
+                            << simulator_hash.str() << " [style=\"dashed\"]"
+                            << std::endl;
+    // append_to_file(graph_output_path, connect_simulated_state.str());
+}
 
 // LOGGING FUNCTIONS
 
@@ -371,5 +570,11 @@ void Graph::log_request(State* state, bool is_last_leaf, bool is_last_request) {
         std::cout << "│" << get_second_hiearchy_char(is_last_leaf)
                   << get_third_hiearchy_char(is_last_request);
         std::cout << " REQUEST " << state->str() << std::endl;
+    }
+}
+
+void Graph::log_simulated(State* simulated_state) {
+    if (verbose >= 2) {
+        std::cout << "├ SIMULATED " << simulated_state->str() << std::endl;
     }
 }
