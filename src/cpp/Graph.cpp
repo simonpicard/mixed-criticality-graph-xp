@@ -150,14 +150,14 @@ std::vector<State*> Graph::get_neighbors(
 }
 
 void Graph::initialize_search(bool use_idle_antichain_current) {
+    log_start_search();
+    graphiz_setup();
+
     automaton_is_safe = true;
     use_idle_antichain = use_idle_antichain_current;
     visited_count = 0;
     automaton_depth = 0;
     start = std::chrono::high_resolution_clock::now();
-
-    graphiz_setup();
-    log_start_search();
 }
 
 int64_t* Graph::finalize_search() {
