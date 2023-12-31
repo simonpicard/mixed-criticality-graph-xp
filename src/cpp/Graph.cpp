@@ -400,22 +400,23 @@ void Graph::graphiz_setup(std::string path) {
     o_file.close();
 
     std::stringstream legend;
+    legend << "legend_nat_rct "
+           << "[label=<rct,nat>,fillcolor=white]" << std::endl;
     legend << "legend_lo "
-           << "[label=<crit=LO>,fillcolor=lightcyan]" << std::endl;
+           << "[label=<LO>,fillcolor=lightcyan]" << std::endl;
     legend << "legend_hi "
-           << "[label=<crit=HI>,fillcolor=lightyellow]" << std::endl;
+           << "[label=<HI>,fillcolor=lightyellow]" << std::endl;
     legend << "legend_fail "
-           << "[label=<state is fail>,color=orchid,fillcolor=white,penwidth=5]"
+           << "[label=<fail>,color=orchid,fillcolor=white,penwidth=5]"
            << std::endl;
-    legend
-        << "legend_simulated "
-        << "[label=<state is simulated>,color=blue,fillcolor=white,penwidth=5]"
-        << std::endl;
+    legend << "legend_simulated "
+           << "[label=<simulated>,color=blue,fillcolor=white,penwidth=5]"
+           << std::endl;
     legend << "legend_safe "
-           << "[label=<state is safe>,color=green,fillcolor=white,penwidth=5]"
+           << "[label=<safe>,color=green,fillcolor=white,penwidth=5]"
            << std::endl;
     legend << "legend_unsafe "
-           << "[label=<state is unsafe>,color=red,fillcolor=white,penwidth=5]"
+           << "[label=<unsafe>,color=red,fillcolor=white,penwidth=5]"
            << std::endl;
     append_to_file(graph_output_path, legend.str());
 }
