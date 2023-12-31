@@ -44,6 +44,7 @@ class Graph {
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
     void initialize_search(bool use_idle_antichain_current);
+    int64_t* finalize_search();
 
     int64_t* bfs();
     int64_t* acbfs();
@@ -58,7 +59,7 @@ class Graph {
 
     static void repr(std::vector<State*> states);
     void log_start_search();
-    void log_end_search(std::chrono::milliseconds duration);
+    void log_end_search();
     void log_step(int leaf_states_size);
     void log_unsafe(State* unsafe_state);
     void log_safe(State* safe_state);
@@ -85,6 +86,7 @@ class Graph {
     int automaton_depth;
     u_int64_t visited_count;
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
+    std::chrono::milliseconds duration;
 };
 
 #endif

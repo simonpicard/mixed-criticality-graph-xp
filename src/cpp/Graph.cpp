@@ -155,13 +155,31 @@ void Graph::initialize_search(bool use_idle_antichain_current) {
     visited_count = 0;
     automaton_depth = 0;
     start = std::chrono::high_resolution_clock::now();
+
+    graphiz_setup(graph_output_path);
+    log_start_search();
+}
+
+int64_t* Graph::finalize_search() {
+    auto stop = std::chrono::high_resolution_clock::now();
+    duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+
+    graphiz_teardown(graph_output_path);
+    log_end_search();
+
+    static int64_t result[4];
+
+    result[0] = int64_t(automaton_is_safe);
+    result[1] = automaton_depth;
+    result[2] = visited_count;
+    result[3] = duration.count();
+
+    return result;
 }
 
 int64_t* Graph::bfs() {
     initialize_search(false);
-
-    graphiz_setup(graph_output_path);
-    log_start_search();
 
     std::vector<State*> leaf_states{new State(*initial_state)};
     std::vector<State*> neighbors;
@@ -185,9 +203,10 @@ int64_t* Graph::bfs() {
         leaf_states.clear();
 
         for (State* neighbor : neighbors) {
-            uint64_t state_hash = neighbor->get_hash();
-            if (visited_hashes.find(state_hash) == visited_hashes.end()) {
-                visited_hashes.insert(state_hash);
+            uint64_t neighbor_hash = neighbor->get_hash();
+            if (visited_hashes.find(neighbor_hash) == visited_hashes.end()) {
+                // the state has not been explored yet
+                visited_hashes.insert(neighbor_hash);
                 leaf_states.push_back(neighbor);
             } else {
                 delete neighbor;
@@ -195,23 +214,12 @@ int64_t* Graph::bfs() {
         }
     }
 
-    if (!automaton_is_safe)
-        for (State* elem : leaf_states) delete elem;
+    int64_t* result = finalize_search();
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::chrono::milliseconds duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    // not empty if automaton is unsafe
+    for (State* unexplored_state : leaf_states) delete unexplored_state;
 
-    graphiz_teardown(graph_output_path);
-    log_end_search(duration);
-
-    static int64_t arr[4];
-
-    arr[0] = int64_t(automaton_is_safe);
-    arr[1] = automaton_depth;
-    arr[2] = visited_count;
-    arr[3] = duration.count();
-    return arr;
+    return result;
 }
 
 bool pairwise_smaller_all(std::vector<int> a, std::vector<int> b) {
@@ -235,9 +243,6 @@ bool pairwise_smaller_all(std::vector<int> a, std::vector<int> b) {
 int64_t* Graph::acbfs() {
     initialize_search(true);
 
-    graphiz_setup(graph_output_path);
-    log_start_search();
-
     std::vector<State*> leaf_states{new State(*initial_state)};
     std::vector<State*> neighbors;
 
@@ -245,13 +250,13 @@ int64_t* Graph::acbfs() {
         visited_hashes;
 
     uint64_t initial_state_hash = initial_state->get_hash_idle();
-    std::pair<uint64_t, std::vector<int>> initial_state_idle_nats_pair =
+    uint64_t initial_state_idle_nats_hash;
+    std::vector<int> initial_state_idle_nats_vector;
+    std::tie(initial_state_idle_nats_hash, initial_state_idle_nats_vector) =
         initial_state->get_idle_nats_pair();
 
-    visited_hashes[initial_state_hash] =
-        std::unordered_map<uint64_t, std::vector<int>>(
-            {{initial_state_idle_nats_pair.first,
-              initial_state_idle_nats_pair.second}});
+    visited_hashes[initial_state_hash][initial_state_idle_nats_hash] =
+        initial_state_idle_nats_vector;
 
     while (!leaf_states.empty()) {
         log_step(leaf_states.size());
@@ -271,12 +276,10 @@ int64_t* Graph::acbfs() {
         for (State* neighbor : neighbors) {
             uint64_t neighbor_hash = neighbor->get_hash_idle();
 
-            std::pair<uint64_t, std::vector<int>> neighbor_idle_nats_pair =
+            uint64_t neighbor_idle_nats_hash;
+            std::vector<int> neighbor_idle_nats_vector;
+            std::tie(neighbor_idle_nats_hash, neighbor_idle_nats_vector) =
                 neighbor->get_idle_nats_pair();
-
-            uint64_t& neighbor_idle_nats_hash = neighbor_idle_nats_pair.first;
-            std::vector<int>& neighbor_idle_nats_vector =
-                neighbor_idle_nats_pair.second;
 
             if (visited_hashes.find(neighbor_hash) == visited_hashes.end()) {
                 // this arrangement of active jobs and their respecting rct has
@@ -336,23 +339,12 @@ int64_t* Graph::acbfs() {
         }
     }
 
-    if (!automaton_is_safe)
-        for (State* elem : leaf_states) delete elem;
+    int64_t* result = finalize_search();
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::chrono::milliseconds duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    // not empty if automaton is unsafe
+    for (State* unexplored_state : leaf_states) delete unexplored_state;
 
-    graphiz_teardown(graph_output_path);
-    log_end_search(duration);
-
-    static int64_t arr[4];
-    arr[0] = int64_t(automaton_is_safe);
-    arr[1] = automaton_depth;
-    arr[2] = visited_count;
-    arr[3] = duration.count();
-
-    return arr;
+    return result;
 }
 
 // GRAPHIZ FUNCTIONS
@@ -514,7 +506,7 @@ void Graph::log_start_search() {
                   << "Breadth First Search" << std::endl;
 }
 
-void Graph::log_end_search(std::chrono::milliseconds duration) {
+void Graph::log_end_search() {
     if (verbose >= 0)
         std::cout << "└██ Automaton is "
                   << (automaton_is_safe ? "SAFE" : "UNSAFE") << " | visited "
