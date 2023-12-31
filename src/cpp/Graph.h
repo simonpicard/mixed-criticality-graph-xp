@@ -43,21 +43,24 @@ class Graph {
 
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
+    void initialize_search(bool use_idle_antichain_current);
+    int64_t* finalize_search();
+
     int64_t* bfs();
     int64_t* acbfs();
 
-    void graphiz_setup(std::string path);
-    void graphiz_teardown(std::string path);
-    void connect_neighbors_graphviz(std::vector<State*> from_list,
-                                    State* to) const;
+    void graphiz_setup();
+    void graphiz_teardown();
+    void connect_neighbor_graphviz(State* from_, State* to) const;
+    void connect_neighbors_graphviz(State* from,
+                                    std::vector<State*> to_list) const;
     void simulate_neighbor_graphviz(State* neighbor,
                                     std::vector<int> nats) const;
 
     static void repr(std::vector<State*> states);
     void log_start_search();
-    void log_end_search(bool res, int64_t visited_count, int step_i,
-                        std::chrono::milliseconds duration);
-    void log_step(int step_i, int64_t visited_count, int leaf_states_size);
+    void log_end_search();
+    void log_step(int leaf_states_size);
     void log_unsafe(State* unsafe_state);
     void log_safe(State* safe_state);
     void log_start(State* state, bool is_last_leaf);
@@ -73,11 +76,17 @@ class Graph {
     std::string graph_output_path;
     bool plot_graph;
     int verbose;
-    bool use_graphviz_idle_id;
 
     std::function<int(State*)> schedule;
     std::vector<std::function<bool(State*)>> safe_oracles;
     std::vector<std::function<bool(State*)>> unsafe_oracles;
+
+    bool automaton_is_safe;
+    bool use_idle_antichain;
+    int automaton_depth;
+    u_int64_t visited_count;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+    std::chrono::milliseconds duration;
 };
 
 #endif
