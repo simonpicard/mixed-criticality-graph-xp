@@ -398,6 +398,26 @@ void Graph::graphiz_setup(std::string path) {
               "> ]\n\n";
 
     o_file.close();
+
+    std::stringstream legend;
+    legend << "legend_lo "
+           << "[label=<crit=LO>,fillcolor=lightcyan]" << std::endl;
+    legend << "legend_hi "
+           << "[label=<crit=HI>,fillcolor=lightyellow]" << std::endl;
+    legend << "legend_fail "
+           << "[label=<state is fail>,color=orchid,fillcolor=white,penwidth=5]"
+           << std::endl;
+    legend
+        << "legend_simulated "
+        << "[label=<state is simulated>,color=blue,fillcolor=white,penwidth=5]"
+        << std::endl;
+    legend << "legend_safe "
+           << "[label=<state is safe>,color=green,fillcolor=white,penwidth=5]"
+           << std::endl;
+    legend << "legend_unsafe "
+           << "[label=<state is unsafe>,color=red,fillcolor=white,penwidth=5]"
+           << std::endl;
+    append_to_file(graph_output_path, legend.str());
 }
 
 void Graph::graphiz_teardown(std::string path) {
@@ -458,12 +478,14 @@ void Graph::simulate_neighbor_graphviz(State* neighbor,
     }
 
     std::stringstream set_simulated_state_border;
-    set_simulated_state_border << neighbor->get_node_idle_id() << " [color=blue,penwidth=5]" << std::endl;
+    set_simulated_state_border << neighbor->get_node_idle_id()
+                               << " [color=blue,penwidth=5]" << std::endl;
     append_to_file(graph_output_path, set_simulated_state_border.str());
 
     std::stringstream connect_simulated_state;
-    connect_simulated_state << neighbor->get_node_idle_id() << " -> " << simulator_hash.str()
-       << " [style=\"dashed\"]" << std::endl;
+    connect_simulated_state << neighbor->get_node_idle_id() << " -> "
+                            << simulator_hash.str() << " [style=\"dashed\"]"
+                            << std::endl;
     // append_to_file(graph_output_path, connect_simulated_state.str());
 }
 
