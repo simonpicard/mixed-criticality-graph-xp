@@ -23,12 +23,8 @@ int main(int argc, char** argv) {
     std::vector<std::function<bool(State*)>> unsafe_oracles{
         &UnsafeOracle::laxity};
 
-    // Graph g(s, "./test.dot", 2);
-    Graph g(s, "./test.dot", 2, safe_oracles, unsafe_oracles);
-    // Graph g(s, "./test.dot", 2, safe_oracles);
-
-    g.bfs(&Scheduler::edfvd);
-    // g.bfs(&Scheduler::lwlf);
+    Graph g(s, &Scheduler::lwlf, "./test.dot", 2, safe_oracles, unsafe_oracles);
+    g.bfs();
 
     return 0;
 }
