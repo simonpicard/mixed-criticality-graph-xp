@@ -101,15 +101,13 @@ std::vector<State*> Graph::handle_completion_transition(State* state,
 }
 
 std::vector<State*> Graph::handle_request_transition(
-    std::vector<State*> const& states, bool is_last_leaf,
-    State* original_leaf_state) {
+    std::vector<State*> const& states, bool is_last_leaf) {
     std::vector<State*> request_states = request_transition(states);
 
     for (int i = 0; i < request_states.size(); ++i) {
         State* request_state = request_states[i];
         log_request(request_state, is_last_leaf,
                     i == request_states.size() - 1);
-        connect_neighbor_graphviz(original_leaf_state, request_state);
     }
 
     return request_states;
@@ -132,8 +130,10 @@ std::vector<State*> Graph::get_neighbors(
         handle_run_tansition(current_state, to_run, is_last_leaf);
         std::vector<State*> states_for_request =
             handle_completion_transition(current_state, to_run, is_last_leaf);
-        std::vector<State*> request_state = handle_request_transition(
-            states_for_request, is_last_leaf, original_leaf_state);
+        std::vector<State*> request_state =
+            handle_request_transition(states_for_request, is_last_leaf);
+
+        connect_neighbors_graphviz(request_state, original_leaf_state);
 
         delete original_leaf_state;
 
@@ -290,6 +290,16 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     append_to_file(graph_output_path, to_node_desc);
     append_to_file(graph_output_path, edge_desc.str());
 };
+
+void Graph::connect_neighbors_graphviz(std::vector<State*> from_list,
+                                       State* to) const {
+    if (!plot_graph) {
+        return;
+    }
+    for (State* from : from_list) {
+        connect_neighbor_graphviz(from, to);
+    }
+}
 
 // LOGGING FUNCTIONS
 

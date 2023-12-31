@@ -38,8 +38,7 @@ class Graph {
     std::vector<State*> handle_completion_transition(State* state, int to_run,
                                                      bool is_last_leaf);
     std::vector<State*> handle_request_transition(
-        std::vector<State*> const& states, bool is_last_leaf,
-        State* original_leaf_state);
+        std::vector<State*> const& states, bool is_last_leaf);
 
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
@@ -48,6 +47,8 @@ class Graph {
     void graphiz_setup(std::string path);
     void graphiz_teardown(std::string path);
     void connect_neighbor_graphviz(State* from, State* to) const;
+    void connect_neighbors_graphviz(std::vector<State*> from_list,
+                                    State* to) const;
 
     static void repr(std::vector<State*> states);
     void log_start_search();
