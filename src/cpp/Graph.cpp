@@ -156,7 +156,7 @@ void Graph::initialize_search(bool use_idle_antichain_current) {
     automaton_depth = 0;
     start = std::chrono::high_resolution_clock::now();
 
-    graphiz_setup(graph_output_path);
+    graphiz_setup();
     log_start_search();
 }
 
@@ -165,7 +165,7 @@ int64_t* Graph::finalize_search() {
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
-    graphiz_teardown(graph_output_path);
+    graphiz_teardown();
     log_end_search();
 
     static int64_t result[4];
@@ -349,13 +349,13 @@ int64_t* Graph::acbfs() {
 
 // GRAPHIZ FUNCTIONS
 
-void Graph::graphiz_setup(std::string path) {
+void Graph::graphiz_setup() {
     if (!plot_graph) {
         return;
     }
 
     std::ofstream o_file;
-    o_file.open(path);
+    o_file.open(graph_output_path);
     o_file << "digraph G "
               "{\n"
               "node[shape=\"box\",style=\"rounded,filled\", "
@@ -412,11 +412,11 @@ void Graph::graphiz_setup(std::string path) {
     append_to_file(graph_output_path, legend.str());
 }
 
-void Graph::graphiz_teardown(std::string path) {
+void Graph::graphiz_teardown() {
     if (!plot_graph) {
         return;
     }
-    append_to_file(path, "\n}");
+    append_to_file(graph_output_path, "\n}");
 }
 
 void Graph::connect_neighbor_graphviz(State* from, State* to) const {
