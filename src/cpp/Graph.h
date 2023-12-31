@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <unordered_map>
 #include <unordered_set>
 
 #pragma once
@@ -43,12 +44,14 @@ class Graph {
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
     int64_t* bfs();
+    int64_t* acbfs();
 
     void graphiz_setup(std::string path);
     void graphiz_teardown(std::string path);
-    void connect_neighbor_graphviz(State* from, State* to) const;
     void connect_neighbors_graphviz(std::vector<State*> from_list,
                                     State* to) const;
+    void simulate_neighbor_graphviz(State* neighbor,
+                                    std::vector<int> nats) const;
 
     static void repr(std::vector<State*> states);
     void log_start_search();
@@ -61,6 +64,7 @@ class Graph {
     void log_run(State* state, bool is_last_leaf);
     void log_completion(State* state, bool is_last_leaf);
     void log_request(State* state, bool is_last_leaf, bool is_last_request);
+    void log_simulated(State* state);
     std::string get_second_hiearchy_char(bool is_last_leaf);
     std::string get_third_hiearchy_char(bool is_last_request);
 
@@ -69,6 +73,7 @@ class Graph {
     std::string graph_output_path;
     bool plot_graph;
     int verbose;
+    bool use_graphviz_idle_id;
 
     std::function<int(State*)> schedule;
     std::vector<std::function<bool(State*)>> safe_oracles;

@@ -68,6 +68,7 @@ class Job {
 
     uint64_t get_hash() const;
     uint64_t get_hash_factor() const;
+    uint64_t get_hash_idle() const;
 
    private:
     int T;
