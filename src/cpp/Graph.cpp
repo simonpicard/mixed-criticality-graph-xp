@@ -149,13 +149,16 @@ std::vector<State*> Graph::get_neighbors(
     return new_states;
 }
 
-int64_t* Graph::bfs() {
-    use_graphviz_idle_id = false;
+void Graph::initialize_search(bool use_idle_antichain_current) {
+    automaton_is_safe = true;
+    use_idle_antichain = use_idle_antichain_current;
+    visited_count = 0;
+    automaton_depth = 0;
+    start = std::chrono::high_resolution_clock::now();
+}
 
-    int64_t visited_count = 0;
-    int step_i = 0;
-    bool automaton_is_safe = true;
-    auto start = std::chrono::high_resolution_clock::now();
+int64_t* Graph::bfs() {
+    initialize_search(false);
 
     graphiz_setup(graph_output_path);
     log_start_search();
@@ -167,7 +170,7 @@ int64_t* Graph::bfs() {
     visited_hashes.insert(leaf_states[0]->get_hash());
 
     while (!leaf_states.empty()) {
-        log_step(step_i, visited_count, leaf_states.size());
+        log_step(leaf_states.size());
 
         automaton_is_safe =
             not(is_fail(leaf_states) or has_unsafe(leaf_states));
@@ -177,7 +180,7 @@ int64_t* Graph::bfs() {
 
         neighbors = get_neighbors(leaf_states);
 
-        step_i++;
+        automaton_depth++;
         visited_count = visited_count + leaf_states.size();
         leaf_states.clear();
 
@@ -200,12 +203,12 @@ int64_t* Graph::bfs() {
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
     graphiz_teardown(graph_output_path);
-    log_end_search(automaton_is_safe, visited_count, step_i, duration);
+    log_end_search(duration);
 
     static int64_t arr[4];
 
     arr[0] = int64_t(automaton_is_safe);
-    arr[1] = step_i;
+    arr[1] = automaton_depth;
     arr[2] = visited_count;
     arr[3] = duration.count();
     return arr;
@@ -213,6 +216,7 @@ int64_t* Graph::bfs() {
 
 bool pairwise_smaller_all(std::vector<int> a, std::vector<int> b) {
     if (a.size() != b.size()) {
+        // if this happens there is a bug in the code about antichain max set
         std::cout << "a" << std::endl;
         for (int i : a) {
             std::cout << i << std::endl;
@@ -229,12 +233,7 @@ bool pairwise_smaller_all(std::vector<int> a, std::vector<int> b) {
 }
 
 int64_t* Graph::acbfs() {
-    use_graphviz_idle_id = true;
-
-    int64_t visited_count = 0;
-    int step_i = 0;
-    bool automaton_is_safe = true;
-    auto start = std::chrono::high_resolution_clock::now();
+    initialize_search(true);
 
     graphiz_setup(graph_output_path);
     log_start_search();
@@ -255,7 +254,7 @@ int64_t* Graph::acbfs() {
               initial_state_idle_nats_pair.second}});
 
     while (!leaf_states.empty()) {
-        log_step(step_i, visited_count, leaf_states.size());
+        log_step(leaf_states.size());
 
         automaton_is_safe =
             not(is_fail(leaf_states) or has_unsafe(leaf_states));
@@ -265,7 +264,7 @@ int64_t* Graph::acbfs() {
 
         neighbors = get_neighbors(leaf_states);
 
-        step_i++;
+        automaton_depth++;
         visited_count = visited_count + leaf_states.size();
         leaf_states.clear();
 
@@ -345,11 +344,11 @@ int64_t* Graph::acbfs() {
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
     graphiz_teardown(graph_output_path);
-    log_end_search(automaton_is_safe, visited_count, step_i, duration);
+    log_end_search(duration);
 
     static int64_t arr[4];
     arr[0] = int64_t(automaton_is_safe);
-    arr[1] = step_i;
+    arr[1] = automaton_depth;
     arr[2] = visited_count;
     arr[3] = duration.count();
 
@@ -435,7 +434,7 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
 
     std::string from_node_id;
     std::string to_node_id;
-    if (not use_graphviz_idle_id) {
+    if (not use_idle_antichain) {
         from_node_id = from->get_node_id();
         to_node_id = to->get_node_id();
     } else {
@@ -511,21 +510,22 @@ void Graph::repr(std::vector<State*> states) {
 
 void Graph::log_start_search() {
     if (verbose >= 0)
-        std::cout << "╒══ Start Breadth First Search ═══" << std::endl;
+        std::cout << "┌██ Start " << (use_idle_antichain ? "Antichain " : "")
+                  << "Breadth First Search" << std::endl;
 }
 
-void Graph::log_end_search(bool automaton_is_safe, int64_t visited_count,
-                           int step_i, std::chrono::milliseconds duration) {
+void Graph::log_end_search(std::chrono::milliseconds duration) {
     if (verbose >= 0)
-        std::cout << "╘══ Automaton is "
+        std::cout << "└██ Automaton is "
                   << (automaton_is_safe ? "SAFE" : "UNSAFE") << " | visited "
-                  << visited_count << " states | depth " << step_i << " | time "
-                  << duration.count() << " ms ═══" << std::endl;
+                  << visited_count << " states | depth " << automaton_depth
+                  << " | time " << duration.count() << " ms" << std::endl;
 }
 
-void Graph::log_step(int step_i, int64_t visited_count, int leaf_states_size) {
+void Graph::log_step(int leaf_states_size) {
     if (verbose >= 1)
-        std::cout << "├" << (verbose >= 2 ? "┬" : "") << " Depth: " << step_i
+        std::cout << "├" << (verbose >= 2 ? "┬" : "")
+                  << " Depth: " << automaton_depth
                   << ", visited: " << visited_count
                   << ", leaf state size: " << leaf_states_size << std::endl;
 }
