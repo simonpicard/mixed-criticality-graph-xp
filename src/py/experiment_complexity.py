@@ -1,7 +1,10 @@
+import argparse
+from datetime import datetime
+
 import pandas as pd
 
+import EDFVD
 import SetGenerator
-from sufficientCond import EDFVD
 
 
 def get_ts_str_cpp(ts):
@@ -12,7 +15,7 @@ def get_ts_str_cpp(ts):
     return res
 
 
-def generate_for_complex():
+def generate_for_complex(task_sets_output, header_output):
     pHI = 0.5  # probability HI task
     rHI = 2.5  # if task is HI, then C_HI in [C_LO, rHI * C_LO]
     Tmax = 12
@@ -52,10 +55,38 @@ def generate_for_complex():
                 print("duplicated")
 
     ts_str_cpp = f"{ts_id}\n" + ts_str_cpp
-    df_c.to_csv("task_cplx_header_v2.csv", index=False)
-    with open("task_cplx_input_v2.txt", "w") as text_file:
+    df_c.to_csv(header_output, index=False)
+    with open(task_sets_output, "w") as text_file:
         text_file.write(ts_str_cpp)
 
 
+def read_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--type", "-t", help="type of set generation [statespace, performance]", type=str, required=True
+    )
+    parser.add_argument(
+        "--task_sets_output",
+        "-o",
+        help="path to txt output with task sets description (.txt)",
+        type=str,
+        required=False,
+        default=f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets.txt",
+    )
+    parser.add_argument(
+        "--header_output",
+        "-c",
+        help="path to csv output with task sets header (.csv)",
+        type=str,
+        required=False,
+        default=f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets.csv",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    generate_for_complex()
+    args = read_args()
+    if args.type == "statespace":
+        generate_for_complex(args.task_sets_output, args.header_output)
+    else:
+        print("unknown type")
