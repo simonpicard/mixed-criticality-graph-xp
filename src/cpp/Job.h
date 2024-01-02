@@ -13,7 +13,9 @@ class Job {
     Job() = default;
 
     Job(int T_, int D_, int X_, std::vector<int> const& C_, int p_ = 0)
-        : T(T_), D(D_), X(X_), C(std::move(C_)), p(p_){};
+        : T(T_), D(D_), X(X_), C(std::move(C_)), p(p_) {
+        initialize();
+    };
 
     explicit Job(Job* other)
         : T(other->T),
@@ -63,6 +65,7 @@ class Job {
     };
 
     std::string str() const;
+    std::string str_task() const;
     std::string dot_node() const;
     void repr() const;
 

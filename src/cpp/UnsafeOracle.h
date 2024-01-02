@@ -9,6 +9,7 @@
 class UnsafeOracle {
    public:
     static bool laxity(State* state);
+    static bool worst_laxity(State* state);
 };
 
 #endif

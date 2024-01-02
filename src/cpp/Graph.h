@@ -68,6 +68,7 @@ class Graph {
     void log_completion(State* state, bool is_last_leaf);
     void log_request(State* state, bool is_last_leaf, bool is_last_request);
     void log_simulated(State* state);
+    void log_visited(State* state);
     std::string get_second_hiearchy_char(bool is_last_leaf);
     std::string get_third_hiearchy_char(bool is_last_request);
 

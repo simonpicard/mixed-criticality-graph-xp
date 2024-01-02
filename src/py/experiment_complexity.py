@@ -15,26 +15,21 @@ def get_ts_str_cpp(ts):
     return res
 
 
-def generate_for_complex(task_sets_output, header_output):
-    pHI = 0.5  # probability HI task
-    rHI = 2.5  # if task is HI, then C_HI in [C_LO, rHI * C_LO]
-    Tmax = 12
-    nbTs = [2, 3, 4]
-
+def generate_for_complex(
+    task_sets_output, header_output, pHI=0.5, rHI=2.5, maxT=24, nbTs=[2, 3, 4, 5], n_ts_per_nbt=200
+):
     df_c = pd.DataFrame()
 
     ts_id = 0
 
     ts_str_cpp = ""
 
-    n_ts_per_nbt = 100
-
     for nb_t in nbTs:
         created_ts = set()
         i = 0
         while i < n_ts_per_nbt:
             print(nb_t, i)
-            sg = SetGenerator.SetGenerator(pHI, rHI, -1, Tmax, 0, nb_t)
+            sg = SetGenerator.SetGenerator(pHI, rHI, -1, maxT, 0, nb_t)
             ts = sg.generateSetPerformance(nb_t)
             flat_ts = tuple([item for sublist in ts.tasks.values for item in sublist])
             if flat_ts not in created_ts:
@@ -81,12 +76,62 @@ def read_args():
         required=False,
         default=f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets.csv",
     )
+    parser.add_argument(
+        "--hi_probability",
+        "-phi",
+        help="probability of tasks being high-criticality",
+        type=float,
+        required=False,
+        default=0.5,
+    )
+    parser.add_argument(
+        "--hi_ratio",
+        "-rhi",
+        help="the maximum ratio between high- and low-criticality execution time",
+        type=float,
+        required=False,
+        default=2.5,
+    )
+    parser.add_argument(
+        "-n",
+        "--n_task",
+        nargs="+",
+        help="list of the number of tasks per task set",
+        type=int,
+        required=False,
+        default=[2, 3, 4],
+    )
+    parser.add_argument(
+        "-N",
+        "--n_expirment_per_n_task",
+        help="amout of task sets to generate for each number of tasks",
+        required=False,
+        type=int,
+        default=100,
+    )
+    parser.add_argument(
+        "-max_t",
+        "--maximum_period",
+        help="maximum period",
+        required=False,
+        type=int,
+        default=20,
+    )
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = read_args()
     if args.type == "statespace":
-        generate_for_complex(args.task_sets_output, args.header_output)
+        generate_for_complex(
+            args.task_sets_output,
+            args.header_output,
+            args.hi_probability,
+            args.hi_ratio,
+            args.maximum_period,
+            args.n_task,
+            args.n_expirment_per_n_task,
+        )
     else:
         print("unknown type")

@@ -80,10 +80,9 @@ void Graph::handle_safe(std::vector<State*>& states) {
 }
 
 void Graph::handle_run_tansition(State* state, int to_run, bool is_last_leaf) {
-    if (to_run > -1) {
-        run_tansition(state, to_run);
-        log_run(state, is_last_leaf);
-    }
+    u_int64_t original_state_hash = state->get_hash();
+    run_tansition(state, to_run);
+    if (state->get_hash() != original_state_hash) log_run(state, is_last_leaf);
 }
 
 std::vector<State*> Graph::handle_completion_transition(State* state,
@@ -150,13 +149,14 @@ std::vector<State*> Graph::get_neighbors(
 }
 
 void Graph::initialize_search(bool use_idle_antichain_current) {
-    log_start_search();
-    graphiz_setup();
-
     automaton_is_safe = true;
     use_idle_antichain = use_idle_antichain_current;
     visited_count = 0;
     automaton_depth = 0;
+
+    log_start_search();
+    graphiz_setup();
+
     start = std::chrono::high_resolution_clock::now();
 }
 
@@ -303,6 +303,9 @@ int64_t* Graph::acbfs() {
                     visited_hashes[neighbor_hash].end()) {
                     // this exact state has already been visited and we do not
                     // need to explore it
+
+                    log_visited(neighbor);
+
                     delete neighbor;
                 } else {
                     for (const auto& [visited_idle_nat_hash,
@@ -578,5 +581,11 @@ void Graph::log_request(State* state, bool is_last_leaf, bool is_last_request) {
 void Graph::log_simulated(State* simulated_state) {
     if (verbose >= 2) {
         std::cout << "├ SIMULATED " << simulated_state->str() << std::endl;
+    }
+}
+
+void Graph::log_visited(State* visited_state) {
+    if (verbose >= 3) {
+        std::cout << "├ ALREADY VISITED " << visited_state->str() << std::endl;
     }
 }
