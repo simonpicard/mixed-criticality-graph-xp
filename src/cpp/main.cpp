@@ -90,23 +90,23 @@ void output_file_setup(std::string const& output_path) {
 void dev_main() {
     // Job* j = new Job(3, 3, 2, std::vector<int>{2, 3});
     // Job* j2 = new Job(3, 3, 1, std::vector<int>{1, 1});
-    Job* j = new Job(5, 5, 2, std::vector<int>{1, 5});
-    Job* j2 = new Job(5, 5, 1, std::vector<int>{4, 4});
+    // Job* j = new Job(5, 5, 2, std::vector<int>{1, 5});
+    // Job* j2 = new Job(5, 5, 1, std::vector<int>{4, 4});
 
-    State* s = new State(std::vector<Job*>{j, j2});
-    // State* s = new State(std::vector<Job*>{
-    //     new Job(11, 11, 2, std::vector<int>{2, 3}),
-    //     new Job(12, 12, 1, std::vector<int>{6, 6}),
-    //     new Job(3, 3, 2, std::vector<int>{1, 2}),
-    // });
+    // State* s = new State(std::vector<Job*>{j, j2});
+    State* s = new State(std::vector<Job*>{
+        new Job(11, 11, 2, std::vector<int>{2, 3}),
+        new Job(12, 12, 1, std::vector<int>{6, 6}),
+        new Job(3, 3, 2, std::vector<int>{1, 2}),
+    });
 
     std::vector<std::function<bool(State*)>> safe_oracles{
         &SafeOracle::all_idle_hi};
     std::vector<std::function<bool(State*)>> unsafe_oracles{
-        &UnsafeOracle::laxity};
+        &UnsafeOracle::all_interference};
 
-    Graph g(s, &Scheduler::lwlf, "./test.dot", 1, safe_oracles, unsafe_oracles);
-    g.bfs();
+    Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
+    // g.bfs();
     g.acbfs();
 }
 
