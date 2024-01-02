@@ -49,6 +49,13 @@ std::string Job::str() const {
     return ss.str();
 }
 
+std::string Job::str_task() const {
+    std::stringstream ss;
+    ss << "T=" << T << ", D=" << D << ", X=" << X << ", C={" << C[0] << ", "
+       << C[1] << "}";
+    return ss.str();
+}
+
 std::string Job::dot_node() const {
     std::stringstream ss;
     // ss << "(" << rct << ", " << nat << ")";

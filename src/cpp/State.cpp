@@ -111,6 +111,17 @@ std::string State::str() const {
     return ss.str();
 }
 
+std::string State::str_tasks() const {
+    std::stringstream ss;
+    int i = 0;
+    for (Job* job : jobs) {
+        ss << "J" << i << " -> ";
+        ss << job->str_task() << std::endl;
+        ++i;
+    }
+    return ss.str();
+}
+
 std::string State::dot_node(std::string node_id,
                             std::string extra_node_arg) const {
     std::stringstream ss;
@@ -204,7 +215,7 @@ std::pair<u_int64_t, std::vector<int>> State::get_idle_nats_pair() const {
         if (not job->is_active()) {
             nats.push_back(job->get_nat());
             factor *= job->get_T();
-            hash += job->get_nat();
+            hash += job->get_nat() * factor;
         }
     }
 

@@ -40,6 +40,7 @@ class State {
 
     void repr() const;
     std::string str() const;
+    std::string str_tasks() const;
     std::string dot_node(std::string node_id,
                          std::string extra_node_arg = "") const;
 
