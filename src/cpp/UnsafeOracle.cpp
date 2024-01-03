@@ -22,6 +22,7 @@ bool UnsafeOracle::interference(State* state) {
         if (job->is_active()) {
             int ttd = job->get_ttd();
             int total_rct = job->get_rct();
+            bool forecast_one_step_ahead = false;
             for (int j = 0; j < state->get_jobs().size(); j++) {
                 if (i == j) continue;
                 Job* other_job = state->get_jobs()[j];
@@ -30,6 +31,13 @@ bool UnsafeOracle::interference(State* state) {
                 if (other_ttd <= ttd) {
                     total_rct += other_job->get_rct();
                     other_ttd += other_job->get_T();
+                }
+                if (other_ttd <= ttd and not forecast_one_step_ahead) {
+                    total_rct -=
+                        1;  // in this situation, we are going to look at what
+                            // jobs will be emited at the next transition, thus
+                            // we need to integrate that a job will be executed
+                    forecast_one_step_ahead = true;
                 }
                 while (other_ttd <= ttd) {
                     total_rct += other_job->get_C()[state->get_crit() - 1];
@@ -53,7 +61,7 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
             int total_rct =
                 job->get_rct() +
                 (job->get_C()[crit - 1] - job->get_C()[state->get_crit() - 1]);
-            ;
+            bool forecast_one_step_ahead = false;
             for (int j = 0; j < state->get_jobs().size(); j++) {
                 if (i == j) continue;
                 Job* other_job = state->get_jobs()[j];
@@ -66,6 +74,10 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
                             (other_job->get_C()[crit - 1] -
                              other_job->get_C()[state->get_crit() - 1]);
                     other_ttd += other_job->get_T();
+                }
+                if (other_ttd <= ttd and not forecast_one_step_ahead) {
+                    total_rct -= 1;
+                    forecast_one_step_ahead = true;
                 }
                 while (other_ttd <= ttd) {
                     total_rct += other_job->get_C()[crit - 1];
