@@ -438,16 +438,18 @@ void Graph::connect_neighbor_graphviz(State* from, State* to) const {
     }
 
     std::string to_node_arg = "";
-    for (std::function<bool(State*)> safe_oracle : safe_oracles) {
-        if (safe_oracle(to)) {
-            to_node_arg = ",color=green,penwidth=5";
-            break;
+    if (!to->is_fail()) {
+        for (std::function<bool(State*)> safe_oracle : safe_oracles) {
+            if (safe_oracle(to)) {
+                to_node_arg = ",color=green,penwidth=5";
+                break;
+            }
         }
-    }
-    for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
-        if (unsafe_oracle(to)) {
-            to_node_arg = ",color=red,penwidth=5";
-            break;
+        for (std::function<bool(State*)> unsafe_oracle : unsafe_oracles) {
+            if (unsafe_oracle(to)) {
+                to_node_arg = ",color=red,penwidth=5";
+                break;
+            }
         }
     }
 

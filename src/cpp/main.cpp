@@ -102,14 +102,11 @@ void dev_main() {
 
     std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;
 
-    // safe_oracles = {&SafeOracle::all_idle_hi};
-    // unsafe_oracles = {&UnsafeOracle::worst_interference};
+    safe_oracles = {&SafeOracle::all_idle_hi};
+    unsafe_oracles = {&UnsafeOracle::worst_interference};
 
-    safe_oracles = {&SafeOracle::hi_inteference};
-    unsafe_oracles = {};
-
-    Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
-    // g.bfs();
+    Graph g(s, &Scheduler::reduce_interference, "./test.dot", 3, safe_oracles,
+            unsafe_oracles);
     g.acbfs();
 }
 

@@ -38,6 +38,9 @@ class State {
     int get_size() const { return jobs.size(); };
     float get_relativity() const { return relativity; };
 
+    int get_interference_laxity(int target_crit, int i) const;
+    float get_interference_laxity_float(int target_crit, int i) const;
+
     void repr() const;
     std::string str() const;
     std::string str_tasks() const;
