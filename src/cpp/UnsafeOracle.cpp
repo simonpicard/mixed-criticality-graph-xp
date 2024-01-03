@@ -22,11 +22,13 @@ bool UnsafeOracle::interference(State* state) {
         if (job->is_active()) {
             int ttd = job->get_ttd();
             int total_rct = job->get_rct();
+            bool all_other_idle = false;
             for (int j = 0; j < state->get_jobs().size(); j++) {
                 if (i == j) continue;
                 Job* other_job = state->get_jobs()[j];
                 if (other_job->is_discarded(state->get_crit())) continue;
                 int other_ttd = other_job->get_ttd();
+                all_other_idle |= !other_job->is_active();
                 if (other_ttd <= ttd) {
                     total_rct += other_job->get_rct();
                     other_ttd += other_job->get_T();
@@ -35,8 +37,12 @@ bool UnsafeOracle::interference(State* state) {
                     total_rct += other_job->get_C()[state->get_crit() - 1];
                     other_ttd += other_job->get_T();
                 }
-                if (total_rct > ttd) return true;
             }
+            if (all_other_idle) total_rct -= 1;
+            // if all other jobs are idle, then the job will be executed before
+            // other jobs can emit and increase the load TODO check this for
+            // other cases
+            if (total_rct > ttd) return true;
         }
     }
 
@@ -53,12 +59,13 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
             int total_rct =
                 job->get_rct() +
                 (job->get_C()[crit - 1] - job->get_C()[state->get_crit() - 1]);
-            ;
+            bool all_other_idle = false;
             for (int j = 0; j < state->get_jobs().size(); j++) {
                 if (i == j) continue;
                 Job* other_job = state->get_jobs()[j];
                 if (other_job->is_discarded(crit)) continue;
                 int other_ttd = other_job->get_ttd();
+                all_other_idle |= !other_job->is_active();
                 if (other_ttd <= ttd) {
                     if (other_job->is_active())
                         total_rct +=
@@ -71,8 +78,9 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
                     total_rct += other_job->get_C()[crit - 1];
                     other_ttd += other_job->get_T();
                 }
-                if (total_rct > ttd) return true;
             }
+            if (all_other_idle) total_rct -= 1;
+            if (total_rct > ttd) return true;
         }
     }
 
