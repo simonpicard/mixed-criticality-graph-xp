@@ -48,7 +48,7 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
 
     for (int i = 0; i < state->get_jobs().size(); i++) {
         Job* job = state->get_jobs()[i];
-        if (job->is_active() && job->get_X() >= crit) {
+        if (job->is_active() && !job->is_discarded(crit)) {
             int ttd = job->get_ttd();
             int total_rct =
                 job->get_rct() +
@@ -83,4 +83,8 @@ bool UnsafeOracle::all_interference(State* state) {
     if (interference_at_level(state, 1)) return true;
     if (interference_at_level(state, 2)) return true;
     return false;
+}
+
+bool UnsafeOracle::worst_interference(State* state) {
+    return interference_at_level(state, 2);
 }

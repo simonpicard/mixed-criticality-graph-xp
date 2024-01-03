@@ -103,7 +103,7 @@ void dev_main() {
     std::vector<std::function<bool(State*)>> safe_oracles{
         &SafeOracle::all_idle_hi};
     std::vector<std::function<bool(State*)>> unsafe_oracles{
-        &UnsafeOracle::all_interference};
+        &UnsafeOracle::worst_interference};
 
     Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
     // g.bfs();
