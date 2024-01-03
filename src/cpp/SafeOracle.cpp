@@ -7,3 +7,8 @@ bool SafeOracle::all_idle_hi(State* state) {
     }
     return true;
 }
+
+bool SafeOracle::hi_inteference(State* state) {
+    if (state->get_crit() == 1) return false;
+    return !UnsafeOracle::interference(state);
+}

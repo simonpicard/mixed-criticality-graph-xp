@@ -100,10 +100,13 @@ void dev_main() {
         new Job(3, 3, 2, std::vector<int>{1, 2}),
     });
 
-    std::vector<std::function<bool(State*)>> safe_oracles{
-        &SafeOracle::all_idle_hi};
-    std::vector<std::function<bool(State*)>> unsafe_oracles{
-        &UnsafeOracle::worst_interference};
+    std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;
+
+    // safe_oracles = {&SafeOracle::all_idle_hi};
+    // unsafe_oracles = {&UnsafeOracle::worst_interference};
+
+    safe_oracles = {&SafeOracle::hi_inteference};
+    unsafe_oracles = {};
 
     Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
     // g.bfs();
