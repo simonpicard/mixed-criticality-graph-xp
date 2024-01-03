@@ -267,13 +267,13 @@ int State::get_interference_laxity(int target_crit, int i) const {
                     (ttd - other_ttd) / other_job->get_T();  // integer division
                 total_rct += other_job->get_C()[target_crit - 1] * n;
             }
-        }
 
-        // smae as above if using a while loop
-        // while (other_ttd <= ttd) {
-        //     total_rct += other_job->get_C()[target_crit - 1];
-        //     other_ttd += other_job->get_T();
-        // }
+            // same as above if using a while loop
+            // while (other_ttd <= ttd) {
+            //     total_rct += other_job->get_C()[target_crit - 1];
+            //     other_ttd += other_job->get_T();
+            // }
+        }
     }
     return ttd - total_rct;
 }
