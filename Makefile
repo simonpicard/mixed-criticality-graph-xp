@@ -1,7 +1,13 @@
-install-py:
-	python3.11 -m venv ./src/py/.venv
-	./src/py/.venv/bin/pip install --upgrade pip
-	./src/py/.venv/bin/pip install -r ./src/py/requirements.txt
+VENV = ./src/py/.venv
+
+default: all
+
+$(VENV):
+	python3.11 -m venv $(VENV)
+	$(VENV)/bin/pip install --upgrade pip
+
+install-py: $(VENV)
+	$(VENV)/bin/pip install -r ./src/py/requirements.txt
 
 make-cpp:
 	$(MAKE) -C ./src/cpp/build
@@ -16,9 +22,9 @@ install-all:
 	make install-cpp
 
 xp-statespace-small:
-	./src/py/.venv/bin/python src/py/experiment.py -t statespace -o statespace_def.txt -c statespace_header.csv -phi 0.5 -rhi 2.5 -n 2 3 -N 50 -max_t 20
+	$(VENV)/bin/python src/py/experiment.py -t statespace -o statespace_def.txt -c statespace_header.csv -phi 0.5 -rhi 2.5 -n 2 3 -N 50 -max_t 20
 	./src/cpp/build/mcs antichain statespace_def.txt statespace_res.csv
-	./src/py/.venv/bin/jupyter notebook src/py/notebooks/plot_statespace.ipynb
+	$(VENV)/bin/jupyter notebook src/py/notebooks/plot_statespace.ipynb
 
 all:
 	make install-all
