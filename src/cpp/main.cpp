@@ -38,6 +38,124 @@ void statespace_antichain_experiment(State* initial_state, int test_case_id,
     output_file.close();
 };
 
+void statespace_oracle_experiment(State* initial_state, int test_case_id,
+                                  std::string output_path) {
+    std::ofstream output_file;
+    output_file.open(output_path, std::ios::in | std::ios::out | std::ios::ate);
+
+    std::stringstream search_result_csv_line;
+    int64_t* search_result;
+
+    Graph g(initial_state, &Scheduler::edfvd, "", -1, {}, {});
+
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,None,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.set_safe_oracle(&SafeOracle::all_idle_hi);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,all_idle_hi,None,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.clear_safe_oracle();
+    g.set_unsafe_oracle(&UnsafeOracle::worst_interference);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,None,worst_interference,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.clear_unsafe_oracle();
+    g.set_unsafe_oracle(&UnsafeOracle::laxity);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,laxity,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.clear_unsafe_oracle();
+    g.set_unsafe_oracle(&UnsafeOracle::worst_laxity);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,worst_laxity,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    output_file.close();
+};
+
+void scheduling_performance_experiment(State* initial_state, int test_case_id,
+                                       std::string output_path) {
+    std::ofstream output_file;
+    output_file.open(output_path, std::ios::in | std::ios::out | std::ios::ate);
+
+    std::stringstream search_result_csv_line;
+    int64_t* search_result;
+
+    Graph g(new State(*initial_state), &Scheduler::edfvd, "", -1,
+            {&SafeOracle::all_idle_hi}, {&UnsafeOracle::worst_interference});
+
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,all_idle_hi,worst_interference,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    Graph g2(new State(*initial_state), &Scheduler::lwlf, "", -1,
+             {&SafeOracle::all_idle_hi}, {&UnsafeOracle::worst_interference});
+
+    search_result = g2.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,LWLF,all_idle_hi,worst_interference,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    Graph g3(new State(*initial_state), &Scheduler::reduce_interference, "", -1,
+             {&SafeOracle::all_idle_hi}, {&UnsafeOracle::worst_interference});
+
+    search_result = g3.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,RI,all_idle_hi,worst_interference,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    output_file.close();
+
+    delete initial_state;
+};
+
 void read_task_sets(std::string const& input_path,
                     std::string const& output_path,
                     std::function<void(State*, int, std::string)> experiment,
@@ -125,14 +243,18 @@ int main(int argc, char** argv) {
 
         if (xp_type == "antichain") {
             experiment = statespace_antichain_experiment;
+        } else if (xp_type == "scheduling") {
+            experiment = scheduling_performance_experiment;
+        } else if (xp_type == "oracle") {
+            experiment = statespace_oracle_experiment;
         } else {
             std::cout << "Unknown experiment type: " << xp_type << std::endl;
             return 0;
         }
 
         output_file_setup(output_path);
-        read_task_sets(input_path, output_path, statespace_antichain_experiment,
-                       offset, n_experiments);
+        read_task_sets(input_path, output_path, experiment, offset,
+                       n_experiments);
     } else {
         std::cout << "Usage: ./main <xp_type> <input_path> <output_path>"
                   << std::endl;
