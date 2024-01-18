@@ -230,3 +230,91 @@ std::string State::get_node_idle_id() const {
     }
     return ss.str();
 }
+
+int State::get_interference_laxity(int target_crit, int i) const {
+    if (target_crit < crit) return 999999999;
+
+    Job* job = jobs[i];
+    if (!job->is_active() || job->is_discarded(target_crit)) return 999999999;
+
+    int ttd = job->get_ttd();
+    int total_rct = job->get_rct() +
+                    (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
+    for (int j = 0; j < jobs.size(); j++) {
+        if (i == j) continue;
+        Job* other_job = jobs[j];
+        if (other_job->is_discarded(target_crit)) continue;
+        // this need to be reviewed
+        // this need to be tested for D < T
+        int other_ttd = other_job->get_ttd();
+        if (other_ttd <= ttd) {
+            if (other_job->is_active()) {
+                total_rct += other_job->get_rct() +
+                             (other_job->get_C()[target_crit - 1] -
+                              other_job->get_C()[crit - 1]);
+                other_ttd += other_job->get_T();
+            } else {
+                int other_nat = other_job->get_nat();
+                if (other_nat == 0) {
+                    other_nat = 1;  // other job will emit at next tick earliest
+                }
+                other_ttd = other_nat + other_job->get_D();
+            }
+
+            if (other_ttd <= ttd) {
+                int n = 1;
+                n +=
+                    (ttd - other_ttd) / other_job->get_T();  // integer division
+                total_rct += other_job->get_C()[target_crit - 1] * n;
+            }
+
+            // same as above if using a while loop
+            // while (other_ttd <= ttd) {
+            //     total_rct += other_job->get_C()[target_crit - 1];
+            //     other_ttd += other_job->get_T();
+            // }
+        }
+    }
+    return ttd - total_rct;
+}
+
+float State::get_interference_laxity_float(int target_crit, int i) const {
+    // experimental
+    if (target_crit < crit) return 999999999;
+
+    Job* job = jobs[i];
+    if (!job->is_active() || job->is_discarded(target_crit)) return 999999999;
+
+    float ttd = job->get_ttd();
+    float total_rct = job->get_rct() +
+                      (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
+    for (int j = 0; j < jobs.size(); j++) {
+        if (i == j) continue;
+        Job* other_job = jobs[j];
+        if (other_job->is_discarded(target_crit)) continue;
+        // this need to be reviewed
+        // this need to be tested for D < T
+        float other_ttd = other_job->get_ttd();
+        if (other_ttd <= ttd) {
+            if (other_job->is_active()) {
+                total_rct += other_job->get_rct() +
+                             (other_job->get_C()[target_crit - 1] -
+                              other_job->get_C()[crit - 1]);
+                other_ttd += other_job->get_T();
+            } else {
+                int other_nat = other_job->get_nat();
+                if (other_nat == 0) {
+                    other_nat = 1;  // other job will emit at next tick earliest
+                }
+                other_ttd = other_nat + other_job->get_D();
+            }
+
+            if (other_ttd <= ttd) {
+                float n = 1;
+                n += (ttd - other_ttd) / other_job->get_T();  // float division
+                total_rct += other_job->get_C()[target_crit - 1] * n;
+            }
+        }
+    }
+    return ttd - total_rct;
+}

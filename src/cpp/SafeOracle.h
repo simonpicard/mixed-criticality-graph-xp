@@ -1,6 +1,7 @@
 #ifndef SAFEORACLE_H
 #define SAFEORACLE_H
 #include "State.h"
+#include "UnsafeOracle.h"
 #include <iostream>
 #include <vector>
 
@@ -9,6 +10,7 @@
 class SafeOracle {
    public:
     static bool all_idle_hi(State* state);
+    static bool hi_interference(State* state);
 };
 
 #endif

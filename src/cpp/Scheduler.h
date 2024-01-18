@@ -10,6 +10,7 @@ class Scheduler {
    public:
     static int edfvd(State* state);
     static int lwlf(State* state);
+    static int reduce_interference(State* state);
 };
 
 #endif
