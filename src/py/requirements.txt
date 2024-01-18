@@ -5,3 +5,4 @@ matplotlib==3.8.2
 seaborn==0.13.1
 ipykernel==6.28.0
 tqdm==4.66.1
+jupyter==1.0.0
