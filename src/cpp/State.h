@@ -13,8 +13,8 @@ class State {
     State() = default;
     ~State();
 
-    explicit State(std::vector<Job*> const& jobs_)
-        : jobs(std::move(jobs_)), crit(1) {
+    explicit State(std::vector<Job*> const& jobs)
+        : jobs(std::move(jobs)), crit(LO) {
         initialize();
     };
 
@@ -31,8 +31,9 @@ class State {
     void completion_transition(int ran_index, bool signals_completion);
     void request_transition(std::vector<int> const& requestings);
 
-    int get_crit() const { return crit; };
-    void set_crit(int crit_) { crit = crit_; };
+    size_t n() const { return jobs.size(); }
+    Criticality get_crit() const { return crit; };
+    void set_crit(Criticality crit) { crit = crit; };
     Job* get_job(int i) { return jobs[i]; };
     std::vector<Job*> get_jobs() { return jobs; };
     int get_size() const { return jobs.size(); };
@@ -60,7 +61,7 @@ class State {
 
    private:
     std::vector<Job*> jobs;
-    int crit;
+    Criticality crit;
     int max_crit;
 
     float compute_utilisation_of_level_at_level(int of_level,

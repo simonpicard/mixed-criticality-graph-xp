@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:23.10
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -52,6 +52,12 @@ RUN yes | unminimize
 ARG USER_NAME=user
 ARG UID
 ARG GID
+# Remove user with uid:gid=${UID}:${GID} if it already exists.
+RUN grep :${UID}:${GID}: /etc/passwd && \
+    (grep :${UID}:${GID}: /etc/passwd | \
+     cut -d ':' -f 1 | \
+     xargs userdel --remove) || \
+    true
 RUN groupadd -g ${GID} ${USER_NAME}
 RUN adduser --disabled-password --uid $UID --gid $GID --gecos "" ${USER_NAME}
 RUN adduser ${USER_NAME} sudo

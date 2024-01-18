@@ -89,7 +89,7 @@ void State::completion_transition(int ran_index = -1,
         for (int i = 0; i < jobs.size(); ++i) {
             jobs[i]->critic(crit, crit + 1, i == ran_index);
         }
-        crit = 2;
+        crit = HI;
     }
 }
 

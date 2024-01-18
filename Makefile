@@ -10,11 +10,11 @@ install-py: $(VENV)
 	$(VENV)/bin/pip install -r ./src/py/requirements.txt
 
 make-cpp:
-	$(MAKE) -C ./src/cpp/build
+	$(MAKE) -C ./src/cpp/build -j$(nproc) VERBOSE=1
 
 install-cpp:
 	mkdir -p ./src/cpp/build
-	cmake -S ./src/cpp -B ./src/cpp/build
+	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B ./src/cpp/build
 	make-cpp
 
 install-all:
