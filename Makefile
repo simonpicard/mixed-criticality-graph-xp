@@ -15,7 +15,7 @@ make-cpp:
 install-cpp:
 	mkdir -p ./src/cpp/build
 	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B ./src/cpp/build
-	make-cpp
+	make make-cpp
 
 install-all:
 	make install-py
