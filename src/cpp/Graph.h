@@ -49,6 +49,15 @@ class Graph {
     int64_t* bfs();
     int64_t* acbfs();
 
+    void set_safe_oracle(std::function<bool(State*)> safe_oracle) {
+        safe_oracles = {safe_oracle};
+    }
+    void set_unsafe_oracle(std::function<bool(State*)> unsafe_oracle) {
+        unsafe_oracles = {unsafe_oracle};
+    }
+    void clear_safe_oracle() { safe_oracles.clear(); }
+    void clear_unsafe_oracle() { unsafe_oracles.clear(); }
+
     void graphiz_setup();
     void graphiz_teardown();
     void connect_neighbor_graphviz(State* from_, State* to) const;
