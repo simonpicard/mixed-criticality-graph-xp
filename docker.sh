@@ -1,4 +1,4 @@
 #!/bin/sh
 set -ex
 
-.docker/build-run.sh make
+.docker/build-run.sh $@
