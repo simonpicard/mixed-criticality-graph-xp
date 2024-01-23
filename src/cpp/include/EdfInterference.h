@@ -93,7 +93,6 @@ bool _unsafe_edf_task_interference(
 bool unsafe_edf_system_interference(State* state) {
     const size_t n = state->get_jobs().size();
     for (size_t i = 0; i < n; ++i) {
-        std::cout<<"i="<<i<<std::endl;
         if (_unsafe_edf_task_interference(i, state, edf_interference)) {
             return true;
         }

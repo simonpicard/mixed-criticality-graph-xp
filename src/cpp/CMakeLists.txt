@@ -17,18 +17,17 @@ set(
         #"-Werror"
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/) # TODO move all headers in include/ & remove this line
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_compile_options("${WFLAGS}")
 
 set(
     CPP_SOURCES
-        State.cpp
-        Job.cpp
-        Graph.cpp
-        Scheduler.cpp
-        SafeOracle.cpp
-        UnsafeOracle.cpp
+        src/State.cpp
+        src/Job.cpp
+        src/Graph.cpp
+        src/Scheduler.cpp
+        src/SafeOracle.cpp
+        src/UnsafeOracle.cpp
 )
 
 add_executable(${PROJECT_NAME} ${CPP_SOURCES} main.cpp)
