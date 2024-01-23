@@ -4,6 +4,7 @@
 #include "State.h"
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>

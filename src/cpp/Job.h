@@ -1,10 +1,13 @@
 #ifndef JOB_H
 #define JOB_H
+
+#include "Types.h"
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #pragma once
 
@@ -12,8 +15,8 @@ class Job {
    public:
     Job() = default;
 
-    Job(int T_, int D_, int X_, std::vector<int> const& C_, int p_ = 0)
-        : T(T_), D(D_), X(X_), C(std::move(C_)), p(p_) {
+    Job(int T, int D, int X, std::vector<int> const& C, int p = 0)
+        : T(T), D(D), X(X), C(std::move(C)), p(p) {
         initialize();
     };
 
@@ -33,6 +36,7 @@ class Job {
     int get_D() const { return D; };
     int get_X() const { return X; };
     std::vector<int> get_C() const { return C; };
+    int get_C(Criticality criticality) const { return C[criticality-1]; };
     int get_p() const { return p; };
 
     int get_rct() const { return rct; };
