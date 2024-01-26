@@ -23,7 +23,7 @@ install-all:
 
 xp-statespace-small:
 	$(VENV)/bin/python src/py/experiment.py -t statespace -o statespace_def.txt -c statespace_header.csv -phi 0.5 -rhi 2.5 -n 2 3 -N 50 -max_t 20
-	./src/cpp/build/mcs antichain statespace_def.txt statespace_res.csv
+	./src/cpp/build/evaluation_mcs antichain statespace_def.txt statespace_res.csv
 	$(VENV)/bin/jupyter notebook src/py/notebooks/plot_statespace.ipynb
 
 all:

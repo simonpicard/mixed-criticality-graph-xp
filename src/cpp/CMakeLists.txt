@@ -30,7 +30,7 @@ set(
         src/UnsafeOracle.cpp
 )
 
-add_executable(${PROJECT_NAME} ${CPP_SOURCES} main.cpp)
+add_executable(evaluation_mcs ${CPP_SOURCES} evaluation.cpp)
 add_executable(edf_safe ${CPP_SOURCES} edf_safe.cpp)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
