@@ -22,10 +22,18 @@ install-all:
 	make install-cpp
 
 xp-statespace-small:
-	$(VENV)/bin/python src/py/experiment.py -t statespace -o statespace_def.txt -c statespace_header.csv -phi 0.5 -rhi 2.5 -n 2 3 -N 50 -max_t 20
-	./src/cpp/build/evaluation_mcs antichain statespace_def.txt statespace_res.csv
+	make generate-xp-tasks-small
+	./src/cpp/build/evaluation_mcs antichain xp_tasks_small_def.txt xp_tasks_small_sim.csv
+	MCS_HEADER_FILE=xp_tasks_small_header.csv; \
+	MCS_SIMULATION_FILE=xp_tasks_small_sim.csv; \
 	$(VENV)/bin/jupyter notebook src/py/notebooks/plot_statespace.ipynb
 
 all:
 	make install-all
 	make xp-statespace-small
+
+generate-xp-utilisation:
+	$(VENV)/bin/python src/py/experiment.py -t utilisation -o xp_utilisation_def.txt -c xp_utilisation_header.csv -phi 0.5 -rhi 2.5 -ta 3 -u 0.6 -U 1 -us 0.01 -ss 100 -max_t 100 -max_c_lo 40
+
+generate-xp-tasks-small:
+	$(VENV)/bin/python src/py/experiment.py -t n_tasks -o xp_tasks_small_def.txt -c xp_tasks_small_header.csv -phi 0.5 -rhi 2.5 -tas 2 3 -s 50 -max_t 20 -max_c_lo 10

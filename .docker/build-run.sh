@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ex
 
-root_dir=$(readlink -e "$(dirname "$(readlink -e "$0")")/..")
+root_dir=$(greadlink -e "$(dirname "$(greadlink -e "$0")")/..")
 
 image_name=mcgraphxp
 

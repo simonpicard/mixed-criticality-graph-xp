@@ -17,12 +17,13 @@ def get_ts_str_cpp(ts):
     return res
 
 
-def generate_for_complex(
+def generate_per_n_tasks(
     task_sets_output=None,
     header_output=None,
     p_HI=0.5,
     r_HI=2.5,
     max_T=24,
+    max_C_LO=20,
     task_amounts=[2, 3, 4, 5],
     set_per_amount=200,
 ):
@@ -42,8 +43,8 @@ def generate_for_complex(
             created_ts = set()
             i = 0
             while i < set_per_amount:
-                sg = SetGenerator.SetGenerator(p_HI, r_HI, -1, max_T, 0, nb_t)
-                ts = sg.generateSetPerformance(nb_t)
+                sg = SetGenerator.SetGenerator(p_HI, r_HI, max_C_LO, max_T, 0, nb_t)
+                ts = sg.generateAnySetU()
                 flat_ts = tuple([item for sublist in ts.tasks.values for item in sublist])
                 if flat_ts not in created_ts:
                     created_ts.add(flat_ts)
@@ -68,7 +69,7 @@ def generate_for_complex(
         text_file.write(ts_str_cpp)
 
 
-def generate_for_scheduling(
+def generate_per_utilisation(
     task_sets_output=None,
     header_output=None,
     p_HI=0.5,
@@ -100,7 +101,7 @@ def generate_for_scheduling(
     total_t = len(utilisations) * sets_per_step
 
     generated_tasks = {u: 0 for u in utilisations}
-    pbars = {u: tqdm(total=sets_per_step, desc=f"TS:{u}%") for u in utilisations}
+    pbars = {u: tqdm(total=sets_per_step, desc=f"TS:{u*100:.0f}%") for u in utilisations}
 
     sg = SetGenerator.SetGenerator(p_HI, r_HI, max_C_LO, max_T, 0, task_amount)
     current_t = 0
@@ -111,7 +112,6 @@ def generate_for_scheduling(
         index = difference_array.argmin()
         target_u = utilisations[index]
         u_error = difference_array[index]
-        # print(u_error)
 
         if ts_u >= from_u and ts_u <= to_u and u_error < 0.001:
             if generated_tasks[target_u] < sets_per_step:
@@ -143,9 +143,7 @@ def generate_for_scheduling(
 
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--type", "-t", help="type of set generation [statespace, performance]", type=str, required=True
-    )
+    parser.add_argument("--type", "-t", help="type of set generation [n_tasks, utilisation]", type=str, required=True)
     parser.add_argument(
         "--task_sets_output",
         "-o",
@@ -257,18 +255,19 @@ def read_args():
 
 if __name__ == "__main__":
     args = read_args()
-    if args.type == "statespace":
-        generate_for_complex(
+    if args.type == "n_tasks":
+        generate_per_n_tasks(
             args.task_sets_output,
             args.header_output,
             args.hi_probability,
             args.hi_ratio,
             args.maximum_period,
+            args.maximum_wcet_lo,
             args.task_amounts,
             args.set_per_amount,
         )
-    elif args.type == "scheduling":
-        generate_for_scheduling(
+    elif args.type == "utilisation":
+        generate_per_utilisation(
             args.task_sets_output,
             args.header_output,
             args.hi_probability,
