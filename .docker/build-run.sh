@@ -43,7 +43,7 @@ docker run \
   --volume "${root_dir}:${guest_ws_dir}" \
   --workdir ${guest_ws_dir} \
   --env OUT=out \
-  --network=host \
   --user "${uid}:${gid}" \
+  -p 8888:8888 \
    "${image_name}" \
    $@
