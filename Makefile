@@ -1,21 +1,21 @@
-VENV = ./src/py/.venv
+VENV = ./src/py/.venv-$(shell uname -m)
+CPP_BUILD = ./src/cpp/build-$(shell uname -m)
 
 default: all
 
 $(VENV):
-	python3.11 -m venv $(VENV)
+	python3 -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
+
+$(CPP_BUILD):
+	mkdir -p $(CPP_BUILD)
+	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B $(CPP_BUILD)
 
 install-py: $(VENV)
 	$(VENV)/bin/pip install -r ./src/py/requirements.txt
 
-make-cpp:
-	$(MAKE) -C ./src/cpp/build -j$(nproc) VERBOSE=1
-
-install-cpp:
-	mkdir -p ./src/cpp/build
-	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B ./src/cpp/build
-	make make-cpp
+install-cpp: $(CPP_BUILD)
+	$(MAKE) -C $(CPP_BUILD) -j$(nproc) VERBOSE=1
 
 install-all:
 	make install-py

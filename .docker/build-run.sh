@@ -1,7 +1,24 @@
 #!/bin/sh
 set -ex
 
-root_dir=$(greadlink -e "$(dirname "$(greadlink -e "$0")")/..")
+# Readlink compatibility function
+readlinkf() {
+    local target
+    target=$1
+
+    cd "$(dirname "$target")" || exit
+    target=$(basename "$target")
+
+    while [[ -L $target ]]; do
+        target=$(readlink "$target")
+        cd "$(dirname "$target")" || exit
+        target=$(basename "$target")
+    done
+
+    echo "$(pwd -P)/$target"
+}
+
+root_dir=$(readlinkf "$(dirname "$(readlinkf "$0")")/..")
 
 image_name=mcgraphxp
 
