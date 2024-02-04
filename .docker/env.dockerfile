@@ -52,6 +52,12 @@ RUN yes | unminimize
 ARG USER_NAME=user
 ARG UID
 ARG GID
+# Remove group with gid=${GID} if it already exists.
+RUN grep :${GID}: /etc/group && \
+    (grep :${GID}: /etc/group | \
+     cut -d ':' -f 1 | \
+     xargs groupdel) || \
+    true
 # Remove user with uid:gid=${UID}:${GID} if it already exists.
 RUN grep :${UID}:${GID}: /etc/passwd && \
     (grep :${UID}:${GID}: /etc/passwd | \
