@@ -46,7 +46,7 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
     std::vector<int> laxities;
     laxities.reserve(n);
 
-    for (auto *job: jobs) {
+    for (Job *job: jobs) {
         laxities.push_back(job->get_laxity());
     }
 
