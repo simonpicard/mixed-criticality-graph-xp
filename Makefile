@@ -17,15 +17,18 @@ install-py: $(VENV)
 install-cpp: $(CPP_BUILD)
 	$(MAKE) -C $(CPP_BUILD) -j$(nproc) VERBOSE=1
 
-install-all:
-	make install-py
-	make install-cpp
+install-all: install-py install-cpp
 
-xp-statespace-small:
-	$(VENV)/bin/python src/py/experiment.py -t statespace -o statespace_def.txt -c statespace_header.csv -phi 0.5 -rhi 2.5 -n 2 3 -N 50 -max_t 20
-	./src/cpp/build/evaluation_mcs antichain statespace_def.txt statespace_res.csv
-	$(VENV)/bin/jupyter notebook src/py/notebooks/plot_statespace.ipynb
+xp-statespace-small: generate-xp-tasks-small
+	$(CPP_BUILD)/evaluation_mcs antichain xp_tasks_small_def.txt xp_tasks_small_sim.csv
+	export MCS_HEADER_FILE=xp_tasks_small_header.csv; \
+	export MCS_SIMULATION_FILE=xp_tasks_small_sim.csv; \
+	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
 
-all:
-	make install-all
-	make xp-statespace-small
+all: install-all xp-statespace-small
+
+generate-xp-utilisation:
+	$(VENV)/bin/python src/py/experiment.py -t utilisation -o xp_utilisation_def.txt -c xp_utilisation_header.csv -phi 0.5 -rhi 2.5 -ta 3 -u 0.6 -U 1 -us 0.01 -ss 100 -max_t 100 -max_c_lo 40
+
+generate-xp-tasks-small:
+	$(VENV)/bin/python src/py/experiment.py -t n_tasks -o xp_tasks_small_def.txt -c xp_tasks_small_header.csv -phi 0.5 -rhi 2.5 -tas 2 3 -s 50 -max_t 20 -max_c_lo 10
