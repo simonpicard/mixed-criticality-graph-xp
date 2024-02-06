@@ -1,5 +1,7 @@
 VENV = ./src/py/.venv-$(shell uname -m)
-CPP_BUILD = ./src/cpp/build-$(shell uname -m)
+CPP_SRC = ./mcsexplorer
+CPP_BUILD = $(CPP_SRC)/build-$(shell uname -m)
+CPP_MAKEFILE = $(CPP_BUILD)/Makefile
 
 default: all
 
@@ -9,12 +11,14 @@ $(VENV):
 
 $(CPP_BUILD):
 	mkdir -p $(CPP_BUILD)
-	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B $(CPP_BUILD)
+
+$(CPP_MAKEFILE): $(CPP_BUILD)
+	cmake -DCMAKE_BUILD_TYPE=Release -S $(CPP_SRC) -B $(CPP_BUILD)
 
 install-py: $(VENV)
 	$(VENV)/bin/pip install -r ./src/py/requirements.txt
 
-install-cpp: $(CPP_BUILD)
+install-cpp: $(CPP_BUILD) $(CPP_MAKEFILE)
 	$(MAKE) -C $(CPP_BUILD) -j$(nproc) VERBOSE=1
 
 install-all: install-py install-cpp
