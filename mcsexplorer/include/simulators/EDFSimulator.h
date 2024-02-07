@@ -23,6 +23,8 @@ class EDFSimulator {
 
     struct JobComparator {
         bool operator()(const Job& a, const Job& b) const {
+            if (a.deadline == b.deadline)
+                return a.taskId > b.taskId;
             return a.deadline > b.deadline;
         }
     };

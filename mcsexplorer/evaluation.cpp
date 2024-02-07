@@ -182,7 +182,7 @@ void read_task_sets(std::string const& input_path,
             input_file >> T >> D >> X;
             input_file >> c1 >> c2;
             if (i >= offset) {
-                Job* job = new Job(T, D, X, std::vector<int>{c1, c2});
+                Job* job = new Job(T, D, int2crit(X), std::vector<int>{c1, c2});
                 jobs.push_back(job);
             }
         }
@@ -213,9 +213,9 @@ void dev_main() {
 
     // State* s = new State(std::vector<Job*>{j, j2});
     State* s = new State(std::vector<Job*>{
-        new Job(11, 11, 2, std::vector<int>{2, 3}),
-        new Job(12, 12, 1, std::vector<int>{6, 6}),
-        new Job(3, 3, 2, std::vector<int>{1, 2}),
+        new Job(11, 11, HI, std::vector<int>{2, 3}),
+        new Job(12, 12, LO, std::vector<int>{6, 6}),
+        new Job(3, 3, HI, std::vector<int>{1, 2}),
     });
 
     std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;

@@ -15,7 +15,7 @@ class Job {
    public:
     Job() = default;
 
-    Job(int T, int D, int X, std::vector<int> const& C, int p = 0)
+    Job(int T, int D, Criticality X, std::vector<int> const& C, int p = 0)
         : T(T), D(D), X(X), C(std::move(C)), p(p) {
         initialize();
     };
@@ -80,7 +80,7 @@ class Job {
    private:
     int T;
     int D;
-    int X; // criticality? TODO change type
+    Criticality X;
     std::vector<int> C;
     int p;  // priority for FJP/FTP
 
