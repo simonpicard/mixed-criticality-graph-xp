@@ -163,7 +163,7 @@ void Graph::initialize_search(bool use_idle_antichain_current) {
 int64_t* Graph::finalize_search() {
     auto stop = std::chrono::high_resolution_clock::now();
     duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
 
     graphiz_teardown();
     log_end_search();
