@@ -7,7 +7,7 @@ bool SafeOracle::edf_carryoverjobs(State* state) {
         return false;
     }
 
-    std::vector<Task*> hi_tasks = state->get_tasks_of_level(HI);//TODO check level == criticaltiy
+    std::vector<int> hi_task_ids = state->get_tasks_of_level(HI);//TODO check level == criticaltiy
     const size_t hyperperiod = 10; // TODO
 
     size_t study_bound = hyperperiod;
