@@ -1,53 +1,86 @@
-VENV := ./src/py/.venv-$(shell uname -m)
-CPP_BUILD := ./src/cpp/build-$(shell uname -m)
+GENERATOR_SRC = ./tasksetgen
+GENERATOR_EXP = $(GENERATOR_SRC)/experiment.py
+
+EXPLORER_SRC = ./mcsexplorer
+EXPLORER_BUILD = $(EXPLORER_SRC)/build-$(shell uname -m)
+EXPLORER_MAKEFILE = $(EXPLORER_BUILD)/Makefile
+
+VENV = $(GENERATOR_SRC)/.venv-$(shell uname -m)
+PYTHON = python3
+VENV_PYTHON = $(VENV)/bin/$(PYTHON)
+
 DT := $(shell date +%Y%m%d_%H%M%S)
 
 default: all
 
 $(VENV):
-	python3 -m venv $(VENV)
+	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
+	$(VENV)/bin/pip install -r $(GENERATOR_SRC)/requirements.txt
 
-$(CPP_BUILD):
-	mkdir -p $(CPP_BUILD)
-	cmake -DCMAKE_BUILD_TYPE=Release -S ./src/cpp -B $(CPP_BUILD)
+$(EXPLORER_BUILD):
+	mkdir -p $(EXPLORER_BUILD)
 
-install-py: $(VENV)
-	$(VENV)/bin/pip install -r ./src/py/requirements.txt
+$(EXPLORER_MAKEFILE): $(EXPLORER_BUILD)
+	cmake -DCMAKE_BUILD_TYPE=Release -S $(EXPLORER_SRC) -B $(EXPLORER_BUILD)
 
-install-cpp: $(CPP_BUILD)
-	$(MAKE) -C $(CPP_BUILD) -j$(nproc) VERBOSE=1
+install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
+	$(MAKE) -C $(EXPLORER_BUILD) -j$(nproc) VERBOSE=1
 
-install-all: install-py install-cpp
+install-all: $(VENV) install-explorer
 
-xp-tasks-small: generate-xp-tasks-small
-	$(CPP_BUILD)/evaluation_mcs antichain $(DT)_xp_tasks_small_def.txt $(DT)_xp_tasks_small_sim.csv
-	export MCS_HEADER_FILE=$(DT)_xp_tasks_small_header.csv; \
-	export MCS_SIMULATION_FILE=$(DT)_xp_tasks_small_sim.csv; \
+all: install-all xp-statespace-small
+
+generate-set-ntasks-small: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t n_tasks \
+	-o $(DT)_ntasks_small_def.txt \
+	-c $(DT)_ntasks_small_header.csv \
+	-phi 0.5 \
+	-rhi 2.5 \
+	-tas 2 3 \
+	-s 50 \
+	-max_t 20 \
+	-max_c_lo 10
+
+xp-statespace-ntasks-small: generate-set-ntasks-small
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_ntasks_small_def.txt $(DT)_ntasks_small_statespace_explo.csv
+	export MCS_HEADER_FILE=$(DT)_ntasks_small_header.csv; \
+	export MCS_SIMULATION_FILE=$(DT)_ntasks_small_statespace_explo.csv; \
 	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
 
-all: install-all xp-tasks-small
+generate-set-utilisation: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(DT)_utilisation_def.txt \
+	-c $(DT)_utilisation_header.csv \
+	-phi 0.5 \
+	-rhi 3 \
+	-ta 3 \
+	-u 0.6 \
+	-U 0.99 \
+	-us 0.01 \
+	-ss 100 \
+	-max_t 50 \
+	-max_c_lo 20
 
-generate-xp-utilisation:
-	$(VENV)/bin/python src/py/experiment.py -t utilisation -o $(DT)_xp_utilisation_def.txt -c $(DT)_xp_utilisation_header.csv -phi 0.5 -rhi 3 -ta 3 -u 0.6 -U 0.99 -us 0.01 -ss 100 -max_t 50 -max_c_lo 20
+xp-statespace-utilisation: generate-set-utilisation
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_utilisation_def.txt $(DT)_utilisation_statespace_explo.csv
 
-generate-xp-ntasks-ac:
-	$(VENV)/bin/python src/py/experiment.py -t n_tasks -o $(DT)_xp_ntasks_ac_def.txt -c $(DT)_xp_ntasks_ac_header.csv -phi 0.5 -rhi 3 -tas 2 3 4 5 -s 1000 -max_t 12 -max_c_lo 3
+generate-set-ntasks: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t n_tasks \
+	-o $(DT)_ntasks_def.txt \
+	-c $(DT)_ntasks_small.csv \
+	-phi 0.5 \
+	-rhi 3 \
+	-tas 2 3 4 5 \
+	-s 1000 \
+	-max_t 12 \
+	-max_c_lo 3
 
-generate-xp-tasks-small:
-	$(VENV)/bin/python src/py/experiment.py -t n_tasks -o $(DT)_xp_tasks_small_def.txt -c $(DT)_xp_tasks_small_header.csv -phi 0.5 -rhi 2.5 -tas 2 3 -s 50 -max_t 20 -max_c_lo 10
+xp-statespace-ntasks: generate-set-ntasks
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_ntasks_def.txt $(DT)_ntasks_small_statespace_explo.csv
 
-
-
-xp-ntasks-ac: generate-xp-ntasks-ac
-	$(CPP_BUILD)/evaluation_mcs antichain $(DT)_xp_ntasks_ac_def.txt $(DT)_xp_ntasks_ac_sim.csv
-	export MCS_HEADER_FILE=$(DT)_xp_ntasks_ac_header.csv; \
-	export MCS_SIMULATION_FILE=$(DT)_xp_ntasks_ac_sim.csv; \
-	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
-
-xp-utilisation: generate-xp-utilisation
-	$(CPP_BUILD)/evaluation_mcs antichain $(DT)_xp_utilisation_def.txt $(DT)_xp_utilisation_sim.csv
-
-
-notebook:
+notebook: $(VENV)
 	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''

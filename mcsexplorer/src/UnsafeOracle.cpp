@@ -39,3 +39,27 @@ bool UnsafeOracle::all_interference(State* state) {
 bool UnsafeOracle::worst_interference(State* state) {
     return interference_at_level(state, 2);
 }
+
+bool UnsafeOracle::sum_sorted_laxities(State* state) {
+    auto jobs = state->get_jobs();
+    size_t n = jobs.size();
+    std::vector<int> laxities;
+    laxities.reserve(n);
+
+    for (Job *job: jobs) {
+        laxities.push_back(job->get_laxity());
+    }
+
+    std::sort(laxities.begin(), laxities.end());
+
+    int l_k = 0;
+    for (int k = 1; k <= laxities.size(); ++k) {
+        l_k += laxities[k - 1];
+
+        if (l_k <= k - 2) {
+            return true; // Necessary condition violated, so the scheduling is unsafe
+        }
+    }
+
+    return false; // Necessary condition satisfied, we don't know if it is safe
+}

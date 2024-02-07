@@ -1,2 +1,8 @@
+# IDEs
 .DS_Store
 .idea/
+.ipynb_checkpoints/
+
+# venv & build
+.venv*/
+build-*/

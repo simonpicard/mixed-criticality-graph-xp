@@ -14,6 +14,7 @@ class UnsafeOracle {
     static bool interference(State* state);
     static bool all_interference(State* state);
     static bool worst_interference(State* state);
+    static bool sum_sorted_laxities(State* state);
 };
 
 #endif
