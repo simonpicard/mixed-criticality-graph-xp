@@ -21,7 +21,7 @@ bool SafeOracle::edf_carryoverjobs(State* state) {
             job->get_T()
         );
         if (job->get_rct() > 0) { // carry over job
-            auto rct = job->get_rct();
+            int rct = job->get_rct();
             auto ttd = job->get_ttd();
             simulator.addAperiodicJob(rct, ttd);
             study_bound += rct;
