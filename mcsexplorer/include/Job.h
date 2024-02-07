@@ -80,7 +80,7 @@ class Job {
    private:
     int T;
     int D;
-    int X;
+    int X; // criticality? TODO change type
     std::vector<int> C;
     int p;  // priority for FJP/FTP
 
