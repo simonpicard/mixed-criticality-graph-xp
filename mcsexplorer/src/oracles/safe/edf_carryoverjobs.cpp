@@ -1,6 +1,7 @@
 #include "SafeOracle.h"
 
 #include "simulators/EDFSimulator.h"
+#include <stdexcept>
 
 bool SafeOracle::edf_carryoverjobs(State* state) {
     if (LO == state->get_crit()) {
@@ -9,6 +10,7 @@ bool SafeOracle::edf_carryoverjobs(State* state) {
 
     std::vector<int> hi_task_ids = state->get_tasks_of_level(HI);//TODO check level == criticaltiy
     const size_t hyperperiod = 10; // TODO
+    throw std::runtime_error("not fully implemented");
 
     size_t study_bound = hyperperiod;
 
