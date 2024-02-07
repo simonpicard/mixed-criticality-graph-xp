@@ -11,6 +11,7 @@ class SafeOracle {
    public:
     static bool all_idle_hi(State* state);
     static bool hi_interference(State* state);
+    static bool edf_carryoverjobs(State* state);
 };
 
 #endif

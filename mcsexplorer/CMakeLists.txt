@@ -28,10 +28,13 @@ set(
         src/Scheduler.cpp
         src/SafeOracle.cpp
         src/UnsafeOracle.cpp
+        src/simulators/EDFSimulator.cpp
+        src/oracles/safe/edf_carryoverjobs.cpp
 )
 
 add_executable(evaluation_mcs ${CPP_SOURCES} evaluation.cpp)
 add_executable(edf_safe ${CPP_SOURCES} edf_safe.cpp)
+add_executable(test_simulators ${CPP_SOURCES} tests/test_simulators.cpp)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
