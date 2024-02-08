@@ -1,4 +1,4 @@
-from random import randint, random, randrange, sample, uniform
+from random import randint, random, randrange, uniform
 
 from drs import drs
 
@@ -32,8 +32,8 @@ def generateRandomTaskSet(n_tasks, pHI, rHI, CmaxLO, Tmax):
     while not done:
         ts.clear()
         while len(ts) < n_tasks:
-            ts.addTask(generateTaskUniform(pHI, rHI, CmaxLO, Tmax))
-            if ts.getUtilisationOfLevel(0) > 1 or ts.getUtilisationOfLevel(1) > 1:
+            ts.add_task(generateTaskUniform(pHI, rHI, CmaxLO, Tmax))
+            if ts.get_utilisation_of_level(0) > 1 or ts.get_utilisation_of_level(1) > 1:
                 break
         else:
             if not ((ts.tasks["X"] == ts.tasks.loc[0, "X"]).all()):
@@ -41,10 +41,10 @@ def generateRandomTaskSet(n_tasks, pHI, rHI, CmaxLO, Tmax):
     return ts
 
 
-def generateTaskSetWithUtilisation(n_tasks, u_target, t_max, verbose=False):
+def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_period, probability_of_HI, verbose=False):
     assert n_tasks > 1, "n_tasks must be at least 2"
-    assert u_target >= U_MIN, f"u_target must be greater than {U_MIN}"
-    assert u_target <= U_MAX, f"u_target must be less than {U_MAX}"
+    assert target_average_utilisation >= U_MIN, f"u_target must be greater than {U_MIN}"
+    assert target_average_utilisation <= U_MAX, f"u_target must be less than {U_MAX}"
 
     while True:
         # draw number of HI
@@ -53,29 +53,37 @@ def generateTaskSetWithUtilisation(n_tasks, u_target, t_max, verbose=False):
         n_LO = n_tasks - n_HI
 
         # select HI tasks
-        tid_HI = sample(range(n_tasks), k=n_HI)
+        tid_HI = [i for i in range(n_tasks) if random() <= probability_of_HI]
+        if len(tid_HI) == 0:
+            if verbose:
+                print("no HI tasks")
+            continue
+        if len(tid_HI) == n_tasks:
+            if verbose:
+                print("all HI tasks")
+            continue
 
-        range_to_u_max = U_MAX - u_target
-        range_to_u_min = u_target
+        range_to_u_max = U_MAX - target_average_utilisation
+        range_to_u_min = target_average_utilisation
         random_range = min(range_to_u_max, range_to_u_min)
 
         # draw utilisation of HI
         # as the target utilisation is the average of the utilisation in LO and HI an mode, we know that
-        u_HI_upper_bound = min(U_MAX, u_target + random_range)
-        u_HI_lower_bound = max(U_MIN, u_target - random_range)
+        u_HI_upper_bound = min(U_MAX, target_average_utilisation + random_range)
+        u_HI_lower_bound = max(U_MIN, target_average_utilisation - random_range)
         u_HI = uniform(u_HI_lower_bound, u_HI_upper_bound)
 
         # infer utilisation of LO to match target average utilisation
-        u_LO = 2 * u_target - u_HI
+        u_LO = 2 * target_average_utilisation - u_HI
 
         u_avg = (u_HI + u_LO) / 2  # should always be == u_target
-        if u_avg != u_target:
+        if u_avg != target_average_utilisation:
             if verbose:
-                print(f"u_avg != u_target: {u_avg} != {u_target}")
+                print(f"u_avg != u_target: {u_avg} != {target_average_utilisation}")
             continue
 
         # draw periods before hand
-        periods = [randrange(1, t_max + 1) for i in range(n_tasks)]
+        periods = [randrange(1, max_period + 1) for i in range(n_tasks)]
 
         # tasks must have a min wcet of 1, this inferieng what is the min utilisation based on the period
         u_min_in_LO = [1 / p for p in periods]
@@ -125,10 +133,10 @@ def generateTaskSetWithUtilisation(n_tasks, u_target, t_max, verbose=False):
 
             task = Task(0, period, period, criticality_level, wcet)
 
-            ts.addTask(task)
+            ts.add_task(task)
 
-        u_LO_generated = ts.getUtilisationOfLevel(0)
-        u_HI_generated = ts.getUtilisationOfLevel(1)
+        u_LO_generated = ts.get_utilisation_of_level(0)
+        u_HI_generated = ts.get_utilisation_of_level(1)
         u_avg_generated = (u_LO_generated + u_HI_generated) / 2
         torlerance = 0.005
 
@@ -150,7 +158,7 @@ def generateTaskSetWithUtilisation(n_tasks, u_target, t_max, verbose=False):
             continue
 
         recap_str = f"""
-        Generating a set of {n_tasks} with target actual utilisation of {u_target}.
+        Generating a set of {n_tasks} with target actual utilisation of {target_average_utilisation}.
 
         Randomly drawn number of HI tasks = {n_HI}
         Hence, number of LO tasks = {n_LO}
@@ -175,4 +183,4 @@ def generateTaskSetWithUtilisation(n_tasks, u_target, t_max, verbose=False):
 
 
 if __name__ == "__main__":
-    generateTaskSetWithUtilisation(10, 0.99, 100, True)
+    generateTaskSetWithUtilisation(10, 0.67, 20, True)

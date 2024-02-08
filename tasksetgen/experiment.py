@@ -1,144 +1,123 @@
 import argparse
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-import EDFVD
-import SetGenerator
+from EDFVD import test as test_edfvd
+from set_generator import generateRandomTaskSet, generateTaskSetWithUtilisation
 
 
-def get_ts_str_cpp(ts):
-    res = f"{len(ts)}\n"
-    for e in ts:
-        res += f"{int(e['T'])} {int(e['D'])} {int(e['X'])+1}\n"
-        res += f"{int(e[0])} {int(e[1])}\n"
-    return res
+def get_task_set_definition(task_set):
+    task_set_definition = f"{len(task_set)}\n"
+    for task in task_set:
+        task_set_definition += f"{int(task['T'])} {int(task['D'])} {int(task['X'])+1}\n"
+        task_set_definition += f"{int(task[0])} {int(task[1])}\n"
+    return task_set_definition
 
 
 def generate_per_n_tasks(
     task_sets_output=None,
     header_output=None,
-    p_HI=0.5,
-    r_HI=2.5,
-    max_T=24,
-    max_C_LO=20,
-    task_amounts=[2, 3, 4, 5],
-    set_per_amount=200,
+    probability_of_HI=0.5,
+    wcet_HI_ratio=2.5,
+    max_period=24,
+    max_wcet_LO=20,
+    n_tasks=[2, 3, 4, 5],
+    sets_per_amount=200,
 ):
     if not task_sets_output:
-        task_sets_output = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.txt"
+        task_sets_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.txt"
     if not header_output:
-        header_output = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.csv"
+        header_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.csv"
 
-    df_c = pd.DataFrame()
+    task_sets_header = pd.DataFrame()
 
-    ts_id = 0
+    task_set_id = 0
 
-    ts_str_cpp = ""
+    task_sets_definition = ""
 
-    with tqdm(total=len(task_amounts) * set_per_amount) as pbar:
-        for nb_t in task_amounts:
-            created_ts = set()
-            i = 0
-            while i < set_per_amount:
-                sg = SetGenerator.SetGenerator(p_HI, r_HI, max_C_LO, max_T, 0, nb_t)
-                ts = sg.generateAnySetU()
-                flat_ts = tuple([item for sublist in ts.tasks.values for item in sublist])
-                if flat_ts not in created_ts:
-                    created_ts.add(flat_ts)
-                    ts_str_cpp += get_ts_str_cpp(ts)
+    for n_task in n_tasks:
+        generated_task_sets = set()
+        for _ in tqdm(range(sets_per_amount), desc=f"n_task={n_task}"):
+            while True:
+                task_set = generateRandomTaskSet(n_task, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period)
+                task_set_hash = task_set.get_hash()
+                if task_set_hash not in generated_task_sets:
+                    generated_task_sets.add(task_set_hash)
+                    break
+            task_sets_definition += get_task_set_definition(task_set)
 
-                    res = pd.Series(dtype=float)
-                    res["ts_id"] = ts_id
-                    res["U"] = ts.getAverageUtilisation()
-                    res["nbt"] = len(ts)
-                    res["EDFVD_test"] = int(EDFVD.EDFVD(ts).test())
+            task_set_info = pd.Series(dtype=float)
+            task_set_info["ts_id"] = task_set_id
+            task_set_info["U"] = task_set.get_average_utilisation()
+            task_set_info["nbt"] = len(task_set)
+            task_set_info["EDFVD_test"] = int(test_edfvd(task_set).test())
 
-                    df_c = pd.concat([df_c, res.to_frame().T], ignore_index=True)
+            task_sets_header = pd.concat([task_sets_header, task_set_info.to_frame().T], ignore_index=True)
 
-                    ts_id += 1
-                    i += 1
+            task_set_id += 1
 
-                    pbar.update(1)
-
-    ts_str_cpp = f"{ts_id}\n" + ts_str_cpp
-    df_c.to_csv(header_output, index=False)
+    task_sets_definition = f"{task_set_id}\n" + task_sets_definition
+    task_sets_header.to_csv(header_output, index=False)
     with open(task_sets_output, "w") as text_file:
-        text_file.write(ts_str_cpp)
+        text_file.write(task_sets_definition)
 
 
 def generate_per_utilisation(
     task_sets_output=None,
     header_output=None,
-    p_HI=0.5,
-    r_HI=2,
-    max_T=50,
-    task_amount=3,
-    max_C_LO=20,
-    from_u=0.89,
-    to_u=0.99,
-    step=0.01,
+    probability_of_HI=0.5,
+    max_period=50,
+    n_tasks=3,
+    from_utilisation=0.89,
+    to_utilisation=0.99,
+    utilisation_step=0.01,
     sets_per_step=100,
 ):
     if not task_sets_output:
-        task_sets_output = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.txt"
+        task_sets_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.txt"
     if not header_output:
-        header_output = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.csv"
+        header_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.csv"
 
-    ts_id = 0
+    task_set_id = 0
 
-    df_sc = pd.DataFrame()
-    ts_str_cpp = ""
+    task_sets_header = pd.DataFrame()
+    task_sets_definition = ""
 
-    generated_tasks = {}
+    utilisations = [
+        from_utilisation + i * utilisation_step
+        for i in range(int((to_utilisation - from_utilisation) / utilisation_step) + 1)
+    ]
 
-    utilisations = [from_u + i * step for i in range(int((to_u - from_u) / step) + 1)]
-    utilisations = list(map(lambda x: round(x, 2), utilisations))
-    utilisations_np = np.array(utilisations)
+    for u in utilisations:
+        generated_task_sets = set()
+        for _ in tqdm(range(sets_per_step), desc=f"U={u*100:.0f}%"):
+            while True:
+                task_set = generateTaskSetWithUtilisation(n_tasks, u, max_period, probability_of_HI)
+                task_set_hash = task_set.get_hash()
+                if task_set_hash not in generated_task_sets:
+                    generated_task_sets.add(task_set_hash)
+                    break
 
-    total_t = len(utilisations) * sets_per_step
+            task_sets_definition += get_task_set_definition(task_set)
 
-    generated_tasks = {u: 0 for u in utilisations}
-    pbars = {u: tqdm(total=sets_per_step, desc=f"TS:{u*100:.0f}%") for u in utilisations}
+            task_set_info = pd.Series(dtype=float)
+            task_set_info["ts_id"] = task_set_id
+            task_set_info["U"] = u
+            task_set_info["Uv"] = task_set.get_average_utilisation()
+            task_set_info["nbt"] = len(task_set)
+            task_set_info["EDFVD_test"] = int(test_edfvd(task_set).test())
 
-    sg = SetGenerator.SetGenerator(p_HI, r_HI, max_C_LO, max_T, 0, task_amount)
-    current_t = 0
-    while current_t < total_t:
-        ts = sg.generateAnySetU()
-        ts_u = ts.getAverageUtilisation()
-        difference_array = np.absolute(utilisations_np - ts_u)
-        index = difference_array.argmin()
-        target_u = utilisations[index]
-        u_error = difference_array[index]
+            task_sets_header = pd.concat([task_sets_header, task_set_info.to_frame().T], ignore_index=True)
 
-        if ts_u >= from_u and ts_u <= to_u and u_error < 0.001:
-            if generated_tasks[target_u] < sets_per_step:
-                generated_tasks[target_u] += 1
-                pbars[target_u].update(1)
-                current_t += 1
+            task_set_id += 1
 
-                ts_str_cpp += get_ts_str_cpp(ts)
+    task_sets_definition = f"{task_set_id}\n" + task_sets_definition
 
-                res = pd.Series(dtype=float)
-                res["ts_id"] = ts_id
-                res["U"] = target_u
-                res["Uv"] = ts_u
-                res["nbt"] = len(ts)
-                res["EDFVD_test"] = int(EDFVD.EDFVD(ts).test())
-
-                df_sc = pd.concat([df_sc, res.to_frame().T], ignore_index=True)
-                ts_id += 1
-
-    for pct in pbars:
-        pbars[pct].close()
-
-    ts_str_cpp = f"{ts_id}\n" + ts_str_cpp
-
-    df_sc.to_csv(header_output, index=False)
+    task_sets_header.to_csv(header_output, index=False)
     with open(task_sets_output, "w") as text_file:
-        text_file.write(ts_str_cpp)
+        text_file.write(task_sets_definition)
 
 
 def read_args():
@@ -161,20 +140,18 @@ def read_args():
         default=None,
     )
     parser.add_argument(
-        "--hi_probability",
+        "--probability_of_HI",
         "-phi",
         help="probability of tasks being high-criticality",
         type=float,
         required=False,
-        default=0.5,
     )
     parser.add_argument(
-        "--hi_ratio",
+        "--wcet_HI_ratio",
         "-rhi",
         help="the maximum ratio between high- and low-criticality execution time",
         type=float,
         required=False,
-        default=2.5,
     )
     parser.add_argument(
         "-tas",
@@ -183,7 +160,6 @@ def read_args():
         help="list of the number of tasks per task set",
         type=int,
         required=False,
-        default=[2, 3, 4],
     )
     parser.add_argument(
         "-s",
@@ -191,7 +167,6 @@ def read_args():
         help="amout of task sets to generate for each number of tasks",
         required=False,
         type=int,
-        default=100,
     )
     parser.add_argument(
         "-max_t",
@@ -199,7 +174,6 @@ def read_args():
         help="maximum period",
         required=False,
         type=int,
-        default=20,
     )
     parser.add_argument(
         "-ta",
@@ -207,39 +181,34 @@ def read_args():
         help="number of tasks per task set",
         type=int,
         required=False,
-        default=3,
     )
     parser.add_argument(
         "-max_c_lo",
-        "--maximum_wcet_lo",
+        "--max_wcet_LO",
         help="the maximum WCET for low-criticality execution time",
         type=float,
         required=False,
-        default=20,
     )
     parser.add_argument(
         "-u",
-        "--from_u",
+        "--from_utilisation",
         help="from utilization",
         type=float,
         required=False,
-        default=0.89,
     )
     parser.add_argument(
         "-U",
-        "--to_u",
+        "--to_utilisation",
         help="to utilization",
         type=float,
         required=False,
-        default=0.99,
     )
     parser.add_argument(
         "-us",
-        "--utilization_step",
+        "--utilisation_step",
         help="step",
         type=float,
         required=False,
-        default=0.01,
     )
     parser.add_argument(
         "-ss",
@@ -247,7 +216,6 @@ def read_args():
         help="sets per step",
         type=int,
         required=False,
-        default=100,
     )
 
     return parser.parse_args()
@@ -259,10 +227,10 @@ if __name__ == "__main__":
         generate_per_n_tasks(
             args.task_sets_output,
             args.header_output,
-            args.hi_probability,
-            args.hi_ratio,
+            args.probability_of_HI,
+            args.wcet_HI_ratio,
             args.maximum_period,
-            args.maximum_wcet_lo,
+            args.max_wcet_LO,
             args.task_amounts,
             args.set_per_amount,
         )
@@ -270,14 +238,12 @@ if __name__ == "__main__":
         generate_per_utilisation(
             args.task_sets_output,
             args.header_output,
-            args.hi_probability,
-            args.hi_ratio,
+            args.probability_of_HI,
             args.maximum_period,
             args.task_amount,
-            args.maximum_wcet_lo,
-            args.from_u,
-            args.to_u,
-            args.utilization_step,
+            args.from_utilisation,
+            args.to_utilisation,
+            args.utilisation_step,
             args.sets_per_step,
         )
     else:
