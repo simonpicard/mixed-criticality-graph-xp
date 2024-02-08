@@ -27,9 +27,9 @@ def generate_per_n_tasks(
     sets_per_amount=200,
 ):
     if not task_sets_output:
-        task_sets_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.txt"
+        task_sets_output = f"outputs/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.txt"
     if not header_output:
-        header_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.csv"
+        header_output = f"outputs/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_statespace.csv"
 
     task_sets_header = pd.DataFrame()
 
@@ -76,9 +76,9 @@ def generate_per_utilisation(
     sets_per_step=100,
 ):
     if not task_sets_output:
-        task_sets_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.txt"
+        task_sets_output = f"outputs/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.txt"
     if not header_output:
-        header_output = f"output/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.csv"
+        header_output = f"outputs/{datetime.now().strftime('%Y%m%d%H%M%S')}_task_sets_scheduling.csv"
 
     task_set_id = 0
 

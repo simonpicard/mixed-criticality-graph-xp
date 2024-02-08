@@ -49,11 +49,6 @@ def generate_task_set_with_utilisation(
     assert target_average_utilisation <= U_MAX, f"u_target must be less than {U_MAX}"
 
     while True:
-        # draw number of HI
-        n_HI = randint(1, n_tasks - 1)
-        # infer number of LO
-        n_LO = n_tasks - n_HI
-
         # select HI tasks
         tasks_HI = [i for i in range(n_tasks) if random() <= probability_of_HI]
         if len(tasks_HI) == 0:
@@ -64,6 +59,11 @@ def generate_task_set_with_utilisation(
             if verbose:
                 print("all HI tasks")
             continue
+
+        # draw number of HI
+        n_HI = len(tasks_HI)
+        # infer number of LO
+        n_LO = n_tasks - n_HI
 
         # compute possible range for utilisation in LO and HI based on target average utilisation
         range_to_u_max = U_MAX - target_average_utilisation
