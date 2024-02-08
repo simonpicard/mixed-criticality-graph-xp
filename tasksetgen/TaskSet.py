@@ -26,7 +26,7 @@ class TaskSet:
     def get_task(self, i):
         return self.tasks.iloc[i]
 
-    def getUtilisationOfLevelAtLevel(self, K, l):
+    def get_utilisation_of_level_at_level(self, K, l):
         if len(self.tasks) == 0:
             return 0
         scope = self.tasks["X"] == K

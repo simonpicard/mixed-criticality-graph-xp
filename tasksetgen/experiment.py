@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from EDFVD import test as test_edfvd
-from set_generator import generateRandomTaskSet, generateTaskSetWithUtilisation
+from set_generator import generate_random_task_set, generate_task_set_with_utilisation
 
 
 def get_task_set_definition(task_set):
@@ -41,7 +41,7 @@ def generate_per_n_tasks(
         generated_task_sets = set()
         for _ in tqdm(range(sets_per_amount), desc=f"n_task={n_task}"):
             while True:
-                task_set = generateRandomTaskSet(n_task, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period)
+                task_set = generate_random_task_set(n_task, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period)
                 task_set_hash = task_set.get_hash()
                 if task_set_hash not in generated_task_sets:
                     generated_task_sets.add(task_set_hash)
@@ -52,7 +52,7 @@ def generate_per_n_tasks(
             task_set_info["ts_id"] = task_set_id
             task_set_info["U"] = task_set.get_average_utilisation()
             task_set_info["nbt"] = len(task_set)
-            task_set_info["EDFVD_test"] = int(test_edfvd(task_set).test())
+            task_set_info["EDFVD_test"] = int(test_edfvd(task_set))
 
             task_sets_header = pd.concat([task_sets_header, task_set_info.to_frame().T], ignore_index=True)
 
@@ -94,7 +94,7 @@ def generate_per_utilisation(
         generated_task_sets = set()
         for _ in tqdm(range(sets_per_step), desc=f"U={u*100:.0f}%"):
             while True:
-                task_set = generateTaskSetWithUtilisation(n_tasks, u, max_period, probability_of_HI)
+                task_set = generate_task_set_with_utilisation(n_tasks, u, max_period, probability_of_HI)
                 task_set_hash = task_set.get_hash()
                 if task_set_hash not in generated_task_sets:
                     generated_task_sets.add(task_set_hash)
@@ -107,7 +107,7 @@ def generate_per_utilisation(
             task_set_info["U"] = u
             task_set_info["Uv"] = task_set.get_average_utilisation()
             task_set_info["nbt"] = len(task_set)
-            task_set_info["EDFVD_test"] = int(test_edfvd(task_set).test())
+            task_set_info["EDFVD_test"] = int(test_edfvd(task_set))
 
             task_sets_header = pd.concat([task_sets_header, task_set_info.to_frame().T], ignore_index=True)
 

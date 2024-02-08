@@ -9,30 +9,30 @@ U_MIN = 0
 U_MAX = 1
 
 
-def generateTaskUniform(pHI, rHI, CmaxLO, Tmax):
+def generate_task_uniform(probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period):
     offset = 0
-    wcet = [randrange(1, CmaxLO + 1)] * 2
+    wcet = [randrange(1, max_wcet_LO + 1)] * 2
 
-    if random() <= pHI:
+    if random() <= probability_of_HI:
         criticality_level = 1
-        wcet[1] = randrange(wcet[0], min(int(round(rHI * wcet[0])), Tmax) + 1)
+        wcet[1] = randrange(wcet[0], min(int(round(wcet_HI_ratio * wcet[0])), max_period) + 1)
     else:
         criticality_level = 0
 
-    period = randrange(wcet[criticality_level], Tmax + 1)
+    period = randrange(wcet[criticality_level], max_period + 1)
     deadline = period  # implicit deadline
 
     return Task(offset, period, deadline, criticality_level, wcet)
 
 
-def generateRandomTaskSet(n_tasks, pHI, rHI, CmaxLO, Tmax):
+def generate_random_task_set(n_tasks, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period):
     ts = TaskSet()
 
     done = False
     while not done:
         ts.clear()
         while len(ts) < n_tasks:
-            ts.add_task(generateTaskUniform(pHI, rHI, CmaxLO, Tmax))
+            ts.add_task(generate_task_uniform(probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period))
             if ts.get_utilisation_of_level(0) > 1 or ts.get_utilisation_of_level(1) > 1:
                 break
         else:
@@ -41,7 +41,9 @@ def generateRandomTaskSet(n_tasks, pHI, rHI, CmaxLO, Tmax):
     return ts
 
 
-def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_period, probability_of_HI, verbose=False):
+def generate_task_set_with_utilisation(
+    n_tasks, target_average_utilisation, max_period, probability_of_HI, tolerance=0.005, verbose=False
+):
     assert n_tasks > 1, "n_tasks must be at least 2"
     assert target_average_utilisation >= U_MIN, f"u_target must be greater than {U_MIN}"
     assert target_average_utilisation <= U_MAX, f"u_target must be less than {U_MAX}"
@@ -53,22 +55,22 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
         n_LO = n_tasks - n_HI
 
         # select HI tasks
-        tid_HI = [i for i in range(n_tasks) if random() <= probability_of_HI]
-        if len(tid_HI) == 0:
+        tasks_HI = [i for i in range(n_tasks) if random() <= probability_of_HI]
+        if len(tasks_HI) == 0:
             if verbose:
                 print("no HI tasks")
             continue
-        if len(tid_HI) == n_tasks:
+        if len(tasks_HI) == n_tasks:
             if verbose:
                 print("all HI tasks")
             continue
 
+        # compute possible range for utilisation in LO and HI based on target average utilisation
         range_to_u_max = U_MAX - target_average_utilisation
         range_to_u_min = target_average_utilisation
         random_range = min(range_to_u_max, range_to_u_min)
 
-        # draw utilisation of HI
-        # as the target utilisation is the average of the utilisation in LO and HI an mode, we know that
+        # draw utilisation of HI from possible range
         u_HI_upper_bound = min(U_MAX, target_average_utilisation + random_range)
         u_HI_lower_bound = max(U_MIN, target_average_utilisation - random_range)
         u_HI = uniform(u_HI_lower_bound, u_HI_upper_bound)
@@ -95,13 +97,18 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
             continue
 
         # using DRS to draw task level utilisation in LO
-        u_LO_tasks = drs(n_tasks, u_LO, [U_MAX] * n_tasks, u_min_in_LO)
+        try:
+            u_LO_tasks = drs(n_tasks, u_LO, [U_MAX] * n_tasks, u_min_in_LO)
+        except ZeroDivisionError:
+            if verbose:
+                print("ZeroDivisionError in DRS utilisation in LO")
+            continue
 
         # defining lower and upper bounds for all tasks in HI
         u_min_in_HI = []
         u_max_in_HI = []
         for i in range(n_tasks):
-            if i in tid_HI:
+            if i in tasks_HI:
                 # minimum utilisation for HI tasks in HI is their utilisation in LO
                 u_min_in_HI.append(u_LO_tasks[i])
                 u_max_in_HI.append(U_MAX)
@@ -118,29 +125,34 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
             continue
 
         # using DRS to draw task level utilisation of HI tasks in HI
-        u_HI_tasks = drs(n_tasks, u_HI, u_max_in_HI, u_min_in_HI)
+        try:
+            u_HI_tasks = drs(n_tasks, u_HI, u_max_in_HI, u_min_in_HI)
+        except ZeroDivisionError:
+            if verbose:
+                print("ZeroDivisionError in DRS utilisation in HI")
+            continue
 
-        ts = TaskSet()
+        task_set = TaskSet()
 
-        for i in range(n_tasks):
-            period = periods[i]
-            wcet_LO = max(1, round(period * u_LO_tasks[i]))
+        for period, u_LO, u_HI in zip(periods, u_LO_tasks, u_HI_tasks):
+            wcet_LO = max(1, round(period * u_LO))
             wcet = [wcet_LO] * 2
             criticality_level = 0
-            if i in tid_HI:
-                wcet[1] = round(period * u_HI_tasks[i])
+            if i in tasks_HI:
+                wcet[1] = round(period * u_HI)
                 criticality_level = 1
 
-            task = Task(0, period, period, criticality_level, wcet)
+            offset = 0
+            deadline = period  # implicit deadline
+            task = Task(offset, period, deadline, criticality_level, wcet)
 
-            ts.add_task(task)
+            task_set.add_task(task)
 
-        u_LO_generated = ts.get_utilisation_of_level(0)
-        u_HI_generated = ts.get_utilisation_of_level(1)
-        u_avg_generated = (u_LO_generated + u_HI_generated) / 2
-        torlerance = 0.005
+        u_LO_generated = task_set.get_utilisation_of_level(0)
+        u_HI_generated = task_set.get_utilisation_of_level(1)
+        generated_average_utilisation = (u_LO_generated + u_HI_generated) / 2
 
-        delta_u_avg = u_avg_generated - u_avg
+        delta_u_avg = generated_average_utilisation - target_average_utilisation
 
         # Utilisation cannot be above 1
         if u_LO_generated > 1:
@@ -152,9 +164,9 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
                 print(f"u_HI_generated>1: {u_HI_generated}")
             continue
         # Tolerance check
-        if abs(delta_u_avg) > torlerance:
+        if abs(delta_u_avg) > tolerance:
             if verbose:
-                print(f"abs(delta_u_avg) > torlerance: {abs(delta_u_avg)} > {torlerance}")
+                print(f"abs(delta_u_avg) > tolerance: {abs(delta_u_avg)} > {tolerance}")
             continue
 
         recap_str = f"""
@@ -163,7 +175,7 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
         Randomly drawn number of HI tasks = {n_HI}
         Hence, number of LO tasks = {n_LO}
 
-        HI tasks have ids: {tid_HI}
+        HI tasks have ids: {tasks_HI}
 
         Utilisation of LO tasks = {u_LO}
         Utilisation of HI tasks = {u_HI}
@@ -174,13 +186,11 @@ def generateTaskSetWithUtilisation(n_tasks, target_average_utilisation, max_peri
         """
         if verbose:
             print(recap_str)
-            print(ts)
+            print(task_set)
             print(f"Utilisation in LO = {u_LO_generated:.4f}, delta to target = {u_LO_generated - u_LO:.4f}")
             print(f"Utilisation in HI = {u_HI_generated:.4f}, delta to target = {u_HI_generated - u_HI:.4f}")
-            print(f"Average utilisation = {u_avg_generated:.4f}, delta to target = {u_avg_generated - u_avg:.4f}")
+            print(
+                f"Average utilisation = {generated_average_utilisation:.4f}, delta to target = {generated_average_utilisation - u_avg:.4f}"
+            )
 
-        return ts
-
-
-if __name__ == "__main__":
-    generateTaskSetWithUtilisation(10, 0.67, 20, True)
+        return task_set
