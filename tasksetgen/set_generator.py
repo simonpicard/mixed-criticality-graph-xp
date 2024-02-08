@@ -1,6 +1,7 @@
 from random import randint, random, randrange, uniform
 
 from drs import drs
+from scipy.stats import loguniform
 
 from Task import Task
 from TaskSet import TaskSet
@@ -85,7 +86,8 @@ def generate_task_set_with_utilisation(
             continue
 
         # draw periods before hand
-        periods = [randrange(1, max_period + 1) for i in range(n_tasks)]
+        periods = [loguniform.rvs(1, max_period) for i in range(n_tasks)]
+        periods = list(map(round, periods))
 
         # tasks must have a min wcet of 1, this inferieng what is the min utilisation based on the period
         u_min_in_LO = [1 / p for p in periods]

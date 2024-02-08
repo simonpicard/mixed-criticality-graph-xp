@@ -62,7 +62,7 @@ generate-set-utilisation: $(VENV)
 	-U 1 \
 	-us 0.01 \
 	-ss 100 \
-	-max_t 50 \
+	-max_t 50
 
 xp-statespace-utilisation: generate-set-utilisation
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
