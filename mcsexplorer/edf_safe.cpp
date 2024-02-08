@@ -1,4 +1,5 @@
 #include "EdfInterference.h"
+#include "SafeOracle.h"
 #include "UnsafeOracle.h"
 #include "State.h"
 
@@ -16,6 +17,10 @@ int main(int argc, char** argv) {
 
     const bool sum_min_lax_unsafe = UnsafeOracle::sum_sorted_laxities(&state);
     std::cout << "sum_min_lax oracle says " << (sum_min_lax_unsafe ? "unsafe" : "not unsafe") << " on that system." << std::endl;
+
+    state.set_crit(HI);
+    const bool edf_carryoverjobs = SafeOracle::edf_carryoverjobs(&state);
+    std::cout << "edf_carryoverjobs oracle says " << (edf_carryoverjobs ? "unsafe" : "not unsafe") << " on that system." << std::endl;
 
     return 0;
 }

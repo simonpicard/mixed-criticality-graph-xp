@@ -6,3 +6,4 @@
 # venv & build
 .venv*/
 build-*/
+cmake-build-*/

@@ -33,7 +33,7 @@ class State {
 
     size_t n() const { return jobs.size(); }
     Criticality get_crit() const { return crit; };
-    void set_crit(Criticality crit) { crit = crit; };
+    void set_crit(Criticality criticality) { crit = criticality; };
     Job* get_job(int i) { return jobs[i]; };
     std::vector<Job*> get_jobs() { return jobs; };
     int get_size() const { return jobs.size(); };
