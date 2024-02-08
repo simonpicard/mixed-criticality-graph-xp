@@ -97,7 +97,7 @@ class Graph {
     int automaton_depth;
     u_int64_t visited_count;
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
-    std::chrono::milliseconds duration;
+    std::chrono::nanoseconds duration;
 };
 
 #endif

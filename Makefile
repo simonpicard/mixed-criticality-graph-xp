@@ -9,6 +9,8 @@ VENV = $(GENERATOR_SRC)/.venv-$(shell uname -m)
 PYTHON = python3
 VENV_PYTHON = $(VENV)/bin/$(PYTHON)
 
+DT := $(shell date +%Y%m%d_%H%M%S)
+
 default: all
 
 $(VENV):
@@ -27,37 +29,58 @@ install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
 
 install-all: $(VENV) install-explorer
 
-xp-statespace-small: generate-xp-tasks-small
-	$(EXPLORER_BUILD)/evaluation_mcs antichain xp_tasks_small_def.txt xp_tasks_small_sim.csv
-	export MCS_HEADER_FILE=xp_tasks_small_header.csv; \
-	export MCS_SIMULATION_FILE=xp_tasks_small_sim.csv; \
-	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
-
 all: install-all xp-statespace-small
 
-generate-xp-utilisation: $(VENV)
+generate-set-ntasks-small: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
-		-t utilisation \
-		-o xp_utilisation_def.txt \
-		-c xp_utilisation_header.csv \
-		-phi 0.5 \
-		-rhi 2.5 \
-		-ta 3 \
-		-u 0.6 \
-		-U 1 \
-		-us 0.01 \
-		-ss 100 \
-		-max_t 100 \
-		-max_c_lo 40
+	-t n_tasks \
+	-o $(DT)_ntasks_small_def.txt \
+	-c $(DT)_ntasks_small_header.csv \
+	-phi 0.5 \
+	-rhi 2.5 \
+	-tas 2 3 \
+	-s 50 \
+	-max_t 20 \
+	-max_c_lo 10
 
-generate-xp-tasks-small: $(VENV)
+xp-statespace-ntasks-small: generate-set-ntasks-small
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_ntasks_small_def.txt $(DT)_ntasks_small_statespace_explo.csv
+	export MCS_HEADER_FILE=$(DT)_ntasks_small_header.csv; \
+	export MCS_SIMULATION_FILE=$(DT)_ntasks_small_statespace_explo.csv; \
+	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
+
+generate-set-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
-		-t n_tasks \
-		-o xp_tasks_small_def.txt \
-		-c xp_tasks_small_header.csv \
-		-phi 0.5 \
-		-rhi 2.5 \
-		-tas 2 3 \
-		-s 50 \
-		-max_t 20 \
-		-max_c_lo 10
+	-t utilisation \
+	-o $(DT)_utilisation_def.txt \
+	-c $(DT)_utilisation_header.csv \
+	-phi 0.5 \
+	-rhi 3 \
+	-ta 3 \
+	-u 0.6 \
+	-U 0.99 \
+	-us 0.01 \
+	-ss 100 \
+	-max_t 50 \
+	-max_c_lo 20
+
+xp-statespace-utilisation: generate-set-utilisation
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_utilisation_def.txt $(DT)_utilisation_statespace_explo.csv
+
+generate-set-ntasks: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t n_tasks \
+	-o $(DT)_ntasks_def.txt \
+	-c $(DT)_ntasks_small.csv \
+	-phi 0.5 \
+	-rhi 3 \
+	-tas 2 3 4 5 \
+	-s 1000 \
+	-max_t 12 \
+	-max_c_lo 3
+
+xp-statespace-ntasks: generate-set-ntasks
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(DT)_ntasks_def.txt $(DT)_ntasks_small_statespace_explo.csv
+
+notebook: $(VENV)
+	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
