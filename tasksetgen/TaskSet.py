@@ -6,8 +6,10 @@ class TaskSet:
         self.tasks = pd.DataFrame([t.task for t in tasks])
 
     def addTask(self, task):
-        # self.tasks = self.tasks.append(task.task, ignore_index=True)
         self.tasks = pd.concat([self.tasks, task.task.to_frame().T], ignore_index=True)
+        self.tasks = self.tasks.sort_values(
+            by=self.tasks.columns.to_list(), ignore_index=True
+        )  # to get consistent sets
 
     def pop(self):
         self.tasks = self.tasks.iloc[:-1]
@@ -73,3 +75,8 @@ class TaskSet:
 
     def getK(self):
         return int(self.tasks["X"].max())
+
+    def getHash(self):
+        hash_cols = ["T", "D", "X", 0, 1]
+        data = tuple(self.tasks[hash_cols].values.flatten())
+        return hash(data)
