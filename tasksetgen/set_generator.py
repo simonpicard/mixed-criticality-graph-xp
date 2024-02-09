@@ -1,4 +1,4 @@
-from random import randint, random, randrange, uniform
+from random import random, randrange, uniform
 
 from drs import drs
 from scipy.stats import loguniform
@@ -10,30 +10,40 @@ U_MIN = 0
 U_MAX = 1
 
 
-def generate_task_uniform(probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period):
+def generate_task_uniform(probability_of_HI, wcet_HI_ratio, max_wcet_LO, min_period, max_period):
     offset = 0
-    wcet = [randrange(1, max_wcet_LO + 1)] * 2
+
+    period = round(loguniform.rvs(min_period, max_period))
+
+    wcet = [randrange(1, min(max_wcet_LO, period) + 1)] * 2
 
     if random() <= probability_of_HI:
         criticality_level = 1
-        wcet[1] = randrange(wcet[0], min(int(round(wcet_HI_ratio * wcet[0])), max_period) + 1)
+        wcet[1] = randrange(wcet[0], min(int(round(wcet_HI_ratio * wcet[0])), period) + 1)
     else:
         criticality_level = 0
 
-    period = randrange(wcet[criticality_level], max_period + 1)
     deadline = period  # implicit deadline
 
     return Task(offset, period, deadline, criticality_level, wcet)
 
 
-def generate_random_task_set(n_tasks, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period):
+def generate_random_task_set(n_tasks, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period, min_period):
     ts = TaskSet()
 
     done = False
     while not done:
         ts.clear()
         while len(ts) < n_tasks:
-            ts.add_task(generate_task_uniform(probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period))
+            ts.add_task(
+                generate_task_uniform(
+                    probability_of_HI=probability_of_HI,
+                    wcet_HI_ratio=wcet_HI_ratio,
+                    max_wcet_LO=max_wcet_LO,
+                    min_period=min_period,
+                    max_period=max_period,
+                )
+            )
             if ts.get_utilisation_of_level(0) > 1 or ts.get_utilisation_of_level(1) > 1:
                 break
         else:
@@ -43,7 +53,7 @@ def generate_random_task_set(n_tasks, probability_of_HI, wcet_HI_ratio, max_wcet
 
 
 def generate_task_set_with_utilisation(
-    n_tasks, target_average_utilisation, max_period, probability_of_HI, tolerance=0.005, verbose=False
+    n_tasks, target_average_utilisation, min_period, max_period, probability_of_HI, tolerance=0.005, verbose=False
 ):
     assert n_tasks > 1, "n_tasks must be at least 2"
     assert target_average_utilisation >= U_MIN, f"u_target must be greater than {U_MIN}"
@@ -86,7 +96,7 @@ def generate_task_set_with_utilisation(
             continue
 
         # draw periods before hand
-        periods = [loguniform.rvs(1, max_period) for i in range(n_tasks)]
+        periods = [loguniform.rvs(min_period, max_period) for i in range(n_tasks)]
         periods = list(map(round, periods))
 
         # tasks must have a min wcet of 1, this inferieng what is the min utilisation based on the period
