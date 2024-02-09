@@ -24,13 +24,13 @@ size_t edf_interference(size_t i, State* state) {
     Job* tau_i = state->get_job(i);
     auto ttd_i = tau_i->get_ttd();
 
-    auto prio_higher_than_i = [tau_i, ttd_i, i, state](int j) -> bool {
+    auto prio_higher_than_i = [tau_i, ttd_i, i, state](size_t j) -> bool {
         Job* tau_j = state->get_job(j);
         auto ttd_j = tau_j->get_ttd();
         return ttd_j < ttd_i || (ttd_j == ttd_i && j < i);
     };
 
-    auto nb_future_jobs_interfering_before_i_deadline = [i, ttd_i, state](int j) -> int {
+    auto nb_future_jobs_interfering_before_i_deadline = [i, ttd_i, state](size_t j) -> int {
         Job* tau_j = state->get_job(j);
         auto nat_j = tau_j->get_nat();
         auto D_j = tau_j->get_D();

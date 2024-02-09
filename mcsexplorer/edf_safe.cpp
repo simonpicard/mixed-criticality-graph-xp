@@ -3,7 +3,7 @@
 #include "UnsafeOracle.h"
 #include "State.h"
 
-int main(int argc, char** argv) {
+int main() {
     std::vector<Job*> jobs = {
         new Job(11, 11, HI, {2, 3}),
         new Job(12, 12, LO, {5, 5}),

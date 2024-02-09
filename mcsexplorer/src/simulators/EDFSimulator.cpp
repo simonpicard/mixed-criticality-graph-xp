@@ -24,7 +24,7 @@ void EDFSimulator::addAperiodicJob(int execution_time, int absolute_deadline) {
 }
 
 void EDFSimulator::initializeTaskReleases(int time_bound) {
-    for (int i = 0; i < tasks.size(); ++i) {
+    for (size_t i = 0; i < tasks.size(); ++i) {
         for (int release_time = 0; release_time <= time_bound; release_time += tasks[i].T) {
             taskReleases[release_time].push_back(i);
         }

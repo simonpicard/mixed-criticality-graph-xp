@@ -8,13 +8,12 @@ set(CMAKE_CXX_COMPILER "g++-13")
 include(CTest)
 enable_testing()
 
-# TODO enable warnings
 set(
     WFLAGS
-        #"-Wall"
-        #"-Wextra"
-        #"-pedantic"
-        #"-Werror"
+        "-Wall"
+        "-Wextra"
+        "-pedantic"
+        "-Werror"
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)

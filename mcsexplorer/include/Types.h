@@ -8,7 +8,7 @@ typedef enum {
     HI = 2,
 } Criticality;
 
-static Criticality int2crit(int value) {
+static inline Criticality int2crit(int value) {
     if (1 == value)
         return LO;
     if (2 == value)

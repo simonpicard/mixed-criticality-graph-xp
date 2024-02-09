@@ -37,7 +37,7 @@ std::vector<State*> Graph::request_transition(
     std::vector<State*> new_states;
 
     for (State* current_state : states) {
-        std::vector<int> eligibles_candidates = current_state->get_eligibles();
+        std::vector<size_t> eligibles_candidates = current_state->get_eligibles();
         std::vector<std::vector<int>> all_eligibles =
             power_set(eligibles_candidates);
 
@@ -89,7 +89,6 @@ std::vector<State*> Graph::handle_completion_transition(State* state,
                                                         int to_run,
                                                         bool is_last_leaf) {
     if (to_run > -1) {
-        u_int64_t original_hash = state->get_hash();
         std::vector<State*> completion_states =
             completion_transition(state, to_run);
 
@@ -107,7 +106,7 @@ std::vector<State*> Graph::handle_request_transition(
     std::vector<State*> const& states, bool is_last_leaf) {
     std::vector<State*> request_states = request_transition(states);
 
-    for (int i = 0; i < request_states.size(); ++i) {
+    for (size_t i = 0; i < request_states.size(); ++i) {
         State* request_state = request_states[i];
         log_request(request_state, is_last_leaf,
                     i == request_states.size() - 1);
@@ -120,7 +119,7 @@ std::vector<State*> Graph::get_neighbors(
     std::vector<State*> const& leaf_states) {
     std::vector<State*> new_states;
 
-    for (int leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
+    for (size_t leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
         State* current_state = leaf_states[leaf_i];
         State* original_leaf_state = new State(*current_state);
 
@@ -499,7 +498,7 @@ void Graph::simulate_neighbor_graphviz(State* neighbor,
 // LOGGING FUNCTIONS
 
 void Graph::repr(std::vector<State*> states) {
-    for (int i = 0; i < states.size(); ++i) {
+    for (size_t i = 0; i < states.size(); ++i) {
         std::cout << "S" << i << "-> " << states[i]->str() << std::endl;
     }
     std::cout << std::endl;

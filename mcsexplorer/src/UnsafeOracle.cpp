@@ -17,7 +17,7 @@ bool UnsafeOracle::worst_laxity(State* state) {
 }
 
 bool UnsafeOracle::interference_at_level(State* state, int crit) {
-    for (int i = 0; i < state->get_jobs().size(); i++) {
+    for (size_t i = 0; i < state->get_jobs().size(); i++) {
         if (state->get_interference_laxity(crit, i) < 0) {
             return true;
         }
@@ -53,7 +53,8 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
     std::sort(laxities.begin(), laxities.end());
 
     int l_k = 0;
-    for (int k = 1; k <= laxities.size(); ++k) {
+    const int laxities_size = laxities.size();
+    for (int k = 1; k <= laxities_size; ++k) {
         l_k += laxities[k - 1];
 
         if (l_k <= k - 2) {

@@ -1,7 +1,7 @@
 #include "Scheduler.h"
 
 int Scheduler::edfvd(State* state) {
-    std::vector<int> actives = state->get_actives();
+    std::vector<size_t> actives = state->get_actives();
 
     if (actives.empty()) {
         return -1;
@@ -28,7 +28,7 @@ int Scheduler::edfvd(State* state) {
     } else if (state->get_crit() == 1) {
         for (int i : actives) {
             dl = state->get_job(i)->get_ttvd(state->get_relativity());
-            if (!first_set or dl < min_dl or dl == min_dl and i < j_id) {
+            if ((!first_set or dl < min_dl or dl == min_dl) and i < j_id) { // TODO parentheses to be confirmed with Simon
                 min_dl = dl;
                 j_id = i;
                 first_set = true;
@@ -38,7 +38,7 @@ int Scheduler::edfvd(State* state) {
     return j_id;
 }
 int Scheduler::lwlf(State* state) {
-    std::vector<int> actives = state->get_actives();
+    std::vector<size_t> actives = state->get_actives();
 
     if (actives.empty()) {
         return -1;
@@ -55,8 +55,8 @@ int Scheduler::lwlf(State* state) {
 
     for (int i : actives) {
         w_lax = state->get_job(i)->get_worst_laxity(state->get_crit());
-        if (!first_set or w_lax < min_w_lax or
-            w_lax == min_w_lax and i < j_id) {
+        if ((!first_set or w_lax < min_w_lax or
+            w_lax == min_w_lax) and i < j_id) { // TODO parentheses to be confirmed with Simon
             min_w_lax = w_lax;
             j_id = i;
             first_set = true;
@@ -68,7 +68,7 @@ int Scheduler::lwlf(State* state) {
 
 int Scheduler::reduce_interference(State* state) {
     // experimental
-    std::vector<int> actives = state->get_actives();
+    std::vector<size_t> actives = state->get_actives();
 
     if (actives.empty()) {
         return -1;
