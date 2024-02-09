@@ -21,9 +21,10 @@ def generate_per_n_tasks(
     header_output=None,
     probability_of_HI=0.5,
     wcet_HI_ratio=2.5,
+    min_period=6,
     max_period=24,
     max_wcet_LO=20,
-    n_tasks=[2, 3, 4, 5],
+    n_tasks_list=[2, 3, 4, 5],
     sets_per_amount=200,
 ):
     if not task_sets_output:
@@ -37,11 +38,18 @@ def generate_per_n_tasks(
 
     task_sets_definition = ""
 
-    for n_task in n_tasks:
+    for n_tasks in n_tasks_list:
         generated_task_sets = set()
-        for _ in tqdm(range(sets_per_amount), desc=f"n_task={n_task}"):
+        for _ in tqdm(range(sets_per_amount), desc=f"n_tasks={n_tasks}"):
             while True:
-                task_set = generate_random_task_set(n_task, probability_of_HI, wcet_HI_ratio, max_wcet_LO, max_period)
+                task_set = generate_random_task_set(
+                    n_tasks=n_tasks,
+                    probability_of_HI=probability_of_HI,
+                    wcet_HI_ratio=wcet_HI_ratio,
+                    max_wcet_LO=max_wcet_LO,
+                    max_period=max_period,
+                    min_period=min_period,
+                )
                 task_set_hash = task_set.get_hash()
                 if task_set_hash not in generated_task_sets:
                     generated_task_sets.add(task_set_hash)
@@ -68,6 +76,7 @@ def generate_per_utilisation(
     task_sets_output=None,
     header_output=None,
     probability_of_HI=0.5,
+    min_period=5,
     max_period=50,
     n_tasks=3,
     from_utilisation=0.89,
@@ -94,7 +103,13 @@ def generate_per_utilisation(
         generated_task_sets = set()
         for _ in tqdm(range(sets_per_step), desc=f"U={u*100:.0f}%"):
             while True:
-                task_set = generate_task_set_with_utilisation(n_tasks, u, max_period, probability_of_HI)
+                task_set = generate_task_set_with_utilisation(
+                    n_tasks=n_tasks,
+                    target_average_utilisation=u,
+                    max_period=max_period,
+                    probability_of_HI=probability_of_HI,
+                    min_period=min_period,
+                )
                 task_set_hash = task_set.get_hash()
                 if task_set_hash not in generated_task_sets:
                     generated_task_sets.add(task_set_hash)
@@ -144,7 +159,7 @@ def read_args():
         "-phi",
         help="probability of tasks being high-criticality",
         type=float,
-        required=False,
+        required=True,
     )
     parser.add_argument(
         "--wcet_HI_ratio",
@@ -172,7 +187,14 @@ def read_args():
         "-max_t",
         "--maximum_period",
         help="maximum period",
-        required=False,
+        required=True,
+        type=int,
+    )
+    parser.add_argument(
+        "-min_t",
+        "--minimum_period",
+        help="minimum period",
+        required=True,
         type=int,
     )
     parser.add_argument(
@@ -229,6 +251,7 @@ if __name__ == "__main__":
             args.header_output,
             args.probability_of_HI,
             args.wcet_HI_ratio,
+            args.minimum_period,
             args.maximum_period,
             args.max_wcet_LO,
             args.task_amounts,
@@ -239,6 +262,7 @@ if __name__ == "__main__":
             args.task_sets_output,
             args.header_output,
             args.probability_of_HI,
+            args.minimum_period,
             args.maximum_period,
             args.task_amount,
             args.from_utilisation,
