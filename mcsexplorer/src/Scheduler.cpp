@@ -55,8 +55,8 @@ int Scheduler::lwlf(State* state) {
 
     for (int i : actives) {
         w_lax = state->get_job(i)->get_worst_laxity(state->get_crit());
-        if ((!first_set or w_lax < min_w_lax or
-            w_lax == min_w_lax) and i < j_id) { // TODO parentheses to be confirmed with Simon
+        if (!first_set or w_lax < min_w_lax or
+            (w_lax == min_w_lax and i < j_id)) {
             min_w_lax = w_lax;
             j_id = i;
             first_set = true;
