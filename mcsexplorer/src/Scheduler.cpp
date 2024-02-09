@@ -28,7 +28,7 @@ int Scheduler::edfvd(State* state) {
     } else if (state->get_crit() == 1) {
         for (int i : actives) {
             dl = state->get_job(i)->get_ttvd(state->get_relativity());
-            if ((!first_set or dl < min_dl or dl == min_dl) and i < j_id) { // TODO parentheses to be confirmed with Simon
+            if (!first_set or dl < min_dl or (dl == min_dl and i < j_id)) {
                 min_dl = dl;
                 j_id = i;
                 first_set = true;
