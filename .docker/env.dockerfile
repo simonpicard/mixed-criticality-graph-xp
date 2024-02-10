@@ -69,7 +69,7 @@ RUN adduser --disabled-password --uid $UID --gid $GID --gecos "" ${USER_NAME}
 RUN adduser ${USER_NAME} sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10-docker
-USER user
+USER ${USER_NAME}
 
 # Configure user environment
 WORKDIR /home/${USER_NAME}
@@ -91,5 +91,8 @@ RUN ./bootstrap --parallel=$(nproc) && \
     (rm -rf /home/${USER_NAME}/workspace/libraries/cmake-${cmake_version} || true) && \
     (sudo chown -f --recursive ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/workspace/libraries/cmake-${cmake_version} || true) && \
     rm -rf /home/${USER_NAME}/workspace/libraries/cmake-${cmake_version}
+
+WORKDIR /home/${USER_NAME}
+RUN mkdir -p .cache/pip
 
 ENV PYTHONDONTWRITEBYTECODE=yes
