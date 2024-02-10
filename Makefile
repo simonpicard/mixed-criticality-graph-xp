@@ -8,7 +8,10 @@ EXPLORER_MAKEFILE = $(EXPLORER_BUILD)/Makefile
 VENV = $(GENERATOR_SRC)/.venv-$(shell uname -m)
 PYTHON = python3
 VENV_PYTHON = $(VENV)/bin/$(PYTHON)
-
+JUPYTER = $(VENV)/bin/jupyter
+NB_INTERACTIVE = $(JUPYTER) notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
+NB_GENERATE_HTML = $(JUPYTER) nbconvert --execute --to html notebooks/*.ipynb
+NB_CLEAR = $(JUPYTER) nbconvert --ClearOutputPreprocessor.enabled=True --inplace notebooks/*.ipynb
 
 OUTPUT_DIR = ./outputs
 DT := $(shell date +%Y%m%d_%H%M%S)
@@ -50,7 +53,8 @@ xp-statespace-ntasks-small: generate-set-ntasks-small
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_small_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv
 	export MCS_HEADER_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_header.csv; \
 	export MCS_SIMULATION_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv; \
-	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
+	$(NB_GENERATE_HTML); \
+	$(NB_INTERACTIVE)
 
 generate-set-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -86,4 +90,7 @@ xp-statespace-ntasks: generate-set-ntasks
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv
 
 notebook: $(VENV)
-	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
+	$(NB_INTERACTIVE)
+
+clear-notebook: $(VENV)
+	$(NB_CLEAR)
