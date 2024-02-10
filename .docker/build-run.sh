@@ -21,12 +21,15 @@ readlinkf() {
 root_dir=$(readlinkf "$(dirname "$(readlinkf "$0")")/..")
 
 image_name=mcgraphxp
+volume_name=mcgraphxp_cache
 
 cd "${root_dir}"
 export DOCKER_BUILDKIT=0
 
 uid=$(id -u)
 gid=$(id -g)
+
+docker volume ls | grep -i "${volume_name}" || docker volume create "${volume_name}"
 
 docker build \
   --file "${root_dir}/.docker/env.dockerfile" \
@@ -40,6 +43,7 @@ guest_ws_dir=/home/user/workspace
 docker run \
   --rm \
   -ti \
+  --volume "${volume_name}":/home/user/.cache/pip \
   --volume "${root_dir}:${guest_ws_dir}" \
   --workdir ${guest_ws_dir} \
   --env OUT=out \
