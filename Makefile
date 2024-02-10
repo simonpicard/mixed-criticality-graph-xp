@@ -48,8 +48,8 @@ generate-set-ntasks-small: $(VENV)
 
 xp-statespace-ntasks-small: generate-set-ntasks-small
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_small_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv
-	export MCS_HEADER_PATH=$(OUTPUT_DIR)/$(DT)_ntasks_small_header.csv; \
-	export MCS_SIMULATION_PATH=$(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv; \
+	export MCS_HEADER_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_header.csv; \
+	export MCS_SIMULATION_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv; \
 	$(VENV)/bin/jupyter notebook --port 8888 --ip 0.0.0.0 --no-browser --allow-root --notebook-dir=. --NotebookApp.token='' --NotebookApp.password=''
 
 generate-set-utilisation: $(VENV)
