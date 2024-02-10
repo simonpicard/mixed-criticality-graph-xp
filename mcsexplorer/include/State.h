@@ -20,10 +20,10 @@ class State {
 
     State(const State& other);
 
-    std::vector<int> get_actives() const;
-    std::vector<int> get_implicitly_completeds() const;
-    std::vector<int> get_eligibles();
-    std::vector<int> get_tasks_of_level(int of_level) const;
+    std::vector<size_t> get_actives() const;
+    std::vector<size_t> get_implicitly_completeds() const;
+    std::vector<size_t> get_eligibles();
+    std::vector<size_t> get_tasks_of_level(int of_level) const;
 
     bool is_fail() const;
 
@@ -39,8 +39,8 @@ class State {
     int get_size() const { return jobs.size(); };
     float get_relativity() const { return relativity; };
 
-    int get_interference_laxity(int target_crit, int i) const;
-    float get_interference_laxity_float(int target_crit, int i) const;
+    int get_interference_laxity(int target_crit, size_t i) const;
+    float get_interference_laxity_float(int target_crit, size_t i) const;
 
     void repr() const;
     std::string str() const;

@@ -31,7 +31,7 @@ install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
 
 install-all: $(VENV) install-explorer
 
-all: install-all xp-statespace-small
+all: install-all xp-statespace-ntasks-small
 
 generate-set-ntasks-small: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \

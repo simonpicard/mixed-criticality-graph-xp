@@ -25,9 +25,9 @@ class Job {
           D(other->D),
           X(other->X),
           C(other->C),
+          p(other->p),
           rct(other->rct),
           nat(other->nat),
-          p(other->p),
           utilisation(other->utilisation){};
     Job(Job const& other) = default;
     ~Job() = default;
@@ -86,6 +86,7 @@ class Job {
 
     int rct;
     int nat;
+
     std::vector<float> utilisation = std::vector<float>{
         compute_utilisation_at_level(1), compute_utilisation_at_level(2)};
 

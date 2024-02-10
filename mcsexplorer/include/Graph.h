@@ -21,10 +21,10 @@ class Graph {
           std::vector<std::function<bool(State*)>> safe_oracles_ = {},
           std::vector<std::function<bool(State*)>> unsafe_oracles_ = {})
         : initial_state(initial_state_),
-          schedule(schedule_),
           graph_output_path(graph_output_path_),
           plot_graph(graph_output_path_ != ""),
           verbose(verbose_),
+          schedule(schedule_),
           safe_oracles(safe_oracles_),
           unsafe_oracles(unsafe_oracles_){};
 

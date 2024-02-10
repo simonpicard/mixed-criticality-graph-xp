@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-inline std::vector<std::vector<int>> power_set(const std::vector<int>& elts) {
+inline std::vector<std::vector<int>> power_set(const std::vector<size_t>& elts) {
     if (elts.empty()) {
         return std::vector<std::vector<int>>(
             1,                    // vector contains 1 element which is...
@@ -12,7 +12,7 @@ inline std::vector<std::vector<int>> power_set(const std::vector<int>& elts) {
 
     else {
         std::vector<std::vector<int>> smaller =
-            power_set(std::vector<int>(elts.begin() + 1, elts.end()));
+            power_set(std::vector<size_t>(elts.begin() + 1, elts.end()));
         int elt = elts[0];  // in Python elt is a list (of int)
                             //      withElt = []
         std::vector<std::vector<int>> withElt;
