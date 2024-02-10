@@ -2,8 +2,13 @@
 .DS_Store
 .idea/
 .ipynb_checkpoints/
+.vscode/
 
 # venv & build
 .venv*/
 build-*/
 cmake-build-*/
+
+# outputs
+outputs/*.csv
+outputs/*.txt
