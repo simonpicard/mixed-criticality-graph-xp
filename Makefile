@@ -63,9 +63,9 @@ generate-set-utilisation: $(VENV)
 	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
 	-phi 0.5 \
 	-ta 3 \
-	-u 0.6 \
+	-u 0.25 \
 	-U 1 \
-	-us 0.01 \
+	-us 0.05 \
 	-ss 100 \
 	-min_t 5 \
 	-max_t 50
@@ -77,7 +77,7 @@ generate-set-ntasks: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t n_tasks \
 	-o $(OUTPUT_DIR)/$(DT)_ntasks_def.txt \
-	-c $(OUTPUT_DIR)/$(DT)_ntasks_small.csv \
+	-c $(OUTPUT_DIR)/$(DT)_ntasks_header.csv \
 	-phi 0.5 \
 	-rhi 3 \
 	-tas 2 3 4 5 \
@@ -87,10 +87,27 @@ generate-set-ntasks: $(VENV)
 	-max_c_lo 3
 
 xp-statespace-ntasks: generate-set-ntasks
-	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_statespace_explo.csv
 
 notebook: $(VENV)
 	$(NB_INTERACTIVE)
 
 clear-notebook: $(VENV)
 	$(NB_CLEAR)
+
+generate-set-oracles: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
+	-phi 0.5 \
+	-ta 3 \
+	-u 0.8 \
+	-U 1 \
+	-us 0.05 \
+	-ss 100 \
+	-min_t 5 \
+	-max_t 50
+
+xp-oracles: generate-set-oracles
+	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
