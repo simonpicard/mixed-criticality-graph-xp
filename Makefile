@@ -102,9 +102,15 @@ generate-set-oracles: $(VENV)
 	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
 	-phi 0.5 \
 	-ta 3 \
+<<<<<<< HEAD
 	-u 0.7 \
 	-U 1 \
 	-us 0.02 \
+=======
+	-u 0.8 \
+	-U 1 \
+	-us 0.05 \
+>>>>>>> main
 	-ss 100 \
 	-min_t 5 \
 	-max_t 50
