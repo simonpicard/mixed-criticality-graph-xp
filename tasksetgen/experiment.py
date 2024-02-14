@@ -94,10 +94,9 @@ def generate_per_utilisation(
     task_sets_header = pd.DataFrame()
     task_sets_definition = ""
 
-    utilisations = [
-        from_utilisation + i * utilisation_step
-        for i in range(int((to_utilisation - from_utilisation) / utilisation_step) + 1)
-    ]
+    utilisations = [from_utilisation]
+    while utilisations[-1] + utilisation_step <= to_utilisation:
+        utilisations.append(utilisations[-1] + utilisation_step)
 
     for u in utilisations:
         generated_task_sets = set()
