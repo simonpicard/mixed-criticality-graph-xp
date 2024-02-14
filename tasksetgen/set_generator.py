@@ -146,7 +146,7 @@ def generate_task_set_with_utilisation(
 
         task_set = TaskSet()
 
-        for period, u_LO, u_HI in zip(periods, u_LO_tasks, u_HI_tasks):
+        for i, period, u_LO, u_HI in zip(range(n_tasks), periods, u_LO_tasks, u_HI_tasks):
             wcet_LO = max(1, round(period * u_LO))
             wcet = [wcet_LO] * 2
             criticality_level = 0
