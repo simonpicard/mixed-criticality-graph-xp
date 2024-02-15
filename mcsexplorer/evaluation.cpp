@@ -83,7 +83,7 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id,
     search_result = g.acbfs();
     search_result_csv_line.str("");
     search_result_csv_line << test_case_id
-                           << ",ACBFS,EDF-VD,None,worst_interference,"
+                           << ",ACBFS,EDF-VD,None,hi_interference,"
                            << search_result[0] << "," << search_result[1] << ","
                            << search_result[2] << "," << search_result[3]
                            << std::endl;

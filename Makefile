@@ -101,7 +101,7 @@ generate-set-oracles: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
 	-phi 0.5 \
-	-ta 3 \
+	-ta 4 \
 	-u 0.7 \
 	-U 1 \
 	-us 0.02 \
