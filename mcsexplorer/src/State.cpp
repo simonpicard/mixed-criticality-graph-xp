@@ -56,7 +56,7 @@ std::vector<size_t> State::get_eligibles() {
     return vect;
 }
 
-std::vector<size_t> State::get_tasks_of_level(int of_level) const {
+std::vector<size_t> State::get_tasks_of_level(Criticality of_level) const {
     std::vector<size_t> vect;
     for (size_t i = 0; i < jobs.size(); ++i) {
         if (jobs[i]->get_X() == of_level) {
