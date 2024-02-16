@@ -45,7 +45,7 @@ class Job {
     int get_ttd() const { return nat - (T - D); };
     float get_ttvd(float discount_factor) const;
     int get_laxity() const { return get_ttd() - rct; };
-    int get_worst_laxity(int current_crit) const {
+    int get_worst_laxity(Criticality current_crit) const {
         return get_ttd() - rct - (C[1] - C[current_crit - 1]);
     };
 
