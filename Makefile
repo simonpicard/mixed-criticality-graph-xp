@@ -30,7 +30,7 @@ $(EXPLORER_MAKEFILE): $(EXPLORER_BUILD)
 	cmake -DCMAKE_BUILD_TYPE=Release -S $(EXPLORER_SRC) -B $(EXPLORER_BUILD)
 
 install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
-	$(MAKE) -C $(EXPLORER_BUILD) -j$(nproc) VERBOSE=1
+	$(MAKE) -C $(EXPLORER_BUILD) -j$(nproc)
 
 install-all: $(VENV) install-explorer
 
