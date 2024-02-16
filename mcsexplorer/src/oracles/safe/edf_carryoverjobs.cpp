@@ -4,17 +4,16 @@
 #include <stdexcept>
 
 bool SafeOracle::edf_carryoverjobs(State* state) {
-    if (LO == state->get_crit()) {
+    if (HI != state->get_crit()) {
         return false;
     }
 
-    std::vector<size_t> hi_task_ids = state->get_tasks_of_level(HI);//TODO check level == criticaltiy
-    const size_t hyperperiod = 10; // TODO
+    std::vector<size_t> hi_task_ids = state->get_tasks_of_level(HI); // TODO check level == criticality
+
     throw std::runtime_error("not fully implemented");
 
-    size_t study_bound = hyperperiod;
-
     rtsimulator::EDFSimulator simulator;
+    int carryover_deadline_max = 0;
 
     for (Job *job: state->get_jobs()) {
         simulator.addTask( // task
@@ -23,14 +22,21 @@ bool SafeOracle::edf_carryoverjobs(State* state) {
             job->get_T()
         );
         if (job->get_rct() > 0) { // carry over job
-            int rct = job->get_rct();
-            int ttd = job->get_ttd();
+            const int rct = job->get_rct();
+            const int ttd = job->get_ttd();
             simulator.addAperiodicJob(rct, ttd);
-            study_bound += rct;
+
+            const int deadline = job->get_D(); // TODO define this with answer of Joel
+            if (deadline > carryover_deadline_max) {
+                carryover_deadline_max = deadline;
+            }
         }
     }
 
-    bool result = simulator.simulate(study_bound);
+    const int big_l = 0; // TODO define with answer of Joel
 
-    return result;
+    const int upper_bound = carryover_deadline_max + big_l;
+    bool feasible = simulator.simulate(upper_bound);
+
+    return feasible;
 }
