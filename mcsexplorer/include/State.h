@@ -23,7 +23,7 @@ class State {
     std::vector<size_t> get_actives() const;
     std::vector<size_t> get_implicitly_completeds() const;
     std::vector<size_t> get_eligibles();
-    std::vector<size_t> get_tasks_of_level(int of_level) const;
+    std::vector<size_t> get_tasks_of_level(Criticality of_level) const;
 
     bool is_fail() const;
 
