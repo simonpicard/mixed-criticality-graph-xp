@@ -67,6 +67,8 @@ bool EDFSimulator::simulate(int time_bound) {
             if (current_job.remainingTime > 0) {
                 jobQueue.push(current_job); // Re-queue the job if it's not completed
             }
+        } else {
+            return true; // First idle point
         }
     }
 
