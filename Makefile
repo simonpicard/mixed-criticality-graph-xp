@@ -101,13 +101,13 @@ generate-set-oracles: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
 	-phi 0.5 \
-	-ta 4 \
-	-u 0.7 \
+	-ta 3 \
+	-u 0.8 \
 	-U 1 \
-	-us 0.02 \
-	-ss 100 \
+	-us 0.05 \
+	-ss 10 \
 	-min_t 5 \
 	-max_t 50
 
-xp-oracles: generate-set-oracles
+xp-oracles: install-all generate-set-oracles
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
