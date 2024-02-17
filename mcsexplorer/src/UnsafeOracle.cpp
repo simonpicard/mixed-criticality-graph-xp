@@ -47,7 +47,9 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
     laxities.reserve(n);
 
     for (Job *job: jobs) {
-        laxities.push_back(job->get_laxity());
+        if (job->is_active()) {
+            laxities.push_back(job->get_laxity());
+        }
     }
 
     std::sort(laxities.begin(), laxities.end());
@@ -77,7 +79,9 @@ bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
     worst_laxities.reserve(n);
 
     for (Job *job: jobs) {
-        worst_laxities.push_back(job->get_worst_laxity(LO));
+        if (job->is_active()) {
+            worst_laxities.push_back(job->get_worst_laxity(LO));
+        }
     }
 
     std::sort(worst_laxities.begin(), worst_laxities.end());

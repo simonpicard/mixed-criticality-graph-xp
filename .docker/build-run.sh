@@ -49,5 +49,6 @@ docker run \
   --env OUT=out \
   --user "${uid}:${gid}" \
   -p 8888:8888 \
+  --name "${image_name}" \
    "${image_name}" \
    $@

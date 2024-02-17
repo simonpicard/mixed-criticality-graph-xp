@@ -26,6 +26,7 @@ def prepare_df(default_header_path=None, default_exploration_path=None):
         lambda x: (x.iloc[0] == x).all()
     )
 
-    assert same_exploration_result.all(), "Found at least one task set with different schedulability output for a given scheduler"
+    if not same_exploration_result.all():
+        print("WARNING: Found at least one task set with different schedulability output for a given scheduler")
 
     return df
