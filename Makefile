@@ -49,7 +49,7 @@ generate-set-ntasks-small: $(VENV)
 	-max_t 20 \
 	-max_c_lo 10
 
-xp-statespace-ntasks-small: generate-set-ntasks-small
+xp-statespace-ntasks-small: generate-set-ntasks-small install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_small_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv
 	export MCS_HEADER_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_header.csv; \
 	export MCS_SIMULATION_PATH=../$(OUTPUT_DIR)/$(DT)_ntasks_small_statespace_explo.csv; \
@@ -63,9 +63,9 @@ generate-set-utilisation: $(VENV)
 	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
 	-phi 0.5 \
 	-ta 3 \
-	-u 0.25 \
-	-U 1 \
-	-us 0.05 \
+	-u 25 \
+	-U 100 \
+	-us 5 \
 	-ss 100 \
 	-min_t 5 \
 	-max_t 50
@@ -101,13 +101,13 @@ generate-set-oracles: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
 	-phi 0.5 \
-	-ta 3 \
-	-u 0.8 \
-	-U 1 \
-	-us 0.05 \
-	-ss 10 \
+	-ta 5 \
+	-u 80 \
+	-U 100 \
+	-us 1 \
+	-ss 100 \
 	-min_t 5 \
-	-max_t 50
+	-max_t 20
 
 xp-oracles: install-all generate-set-oracles
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
