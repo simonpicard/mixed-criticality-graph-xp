@@ -37,7 +37,8 @@ std::vector<State*> Graph::request_transition(
     std::vector<State*> new_states;
 
     for (State* current_state : states) {
-        std::vector<size_t> eligibles_candidates = current_state->get_eligibles();
+        std::vector<size_t> eligibles_candidates =
+            current_state->get_eligibles();
         std::vector<std::vector<int>> all_eligibles =
             power_set(eligibles_candidates);
 
@@ -79,7 +80,7 @@ void Graph::handle_safe(std::vector<State*>& states) {
     }
 }
 
-void Graph::handle_run_tansition(State* state, int to_run, bool is_last_leaf) {
+void Graph::handle_run_transition(State* state, int to_run, bool is_last_leaf) {
     u_int64_t original_state_hash = state->get_hash();
     run_tansition(state, to_run);
     if (state->get_hash() != original_state_hash) log_run(state, is_last_leaf);
@@ -129,7 +130,7 @@ std::vector<State*> Graph::get_neighbors(
 
         // apply all three transitions
         int to_run = schedule(current_state);
-        handle_run_tansition(current_state, to_run, is_last_leaf);
+        handle_run_transition(current_state, to_run, is_last_leaf);
         std::vector<State*> states_for_request =
             handle_completion_transition(current_state, to_run, is_last_leaf);
         std::vector<State*> request_state =

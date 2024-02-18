@@ -1,5 +1,4 @@
 #include "SafeOracle.h"
-
 #include "simulators/EDFSimulator.h"
 #include <stdexcept>
 
@@ -11,11 +10,12 @@
 We can compute this value in the same way as in Theorem of FTP schedulers:
 \begin{align*}
   w_0     & = \sum_{i=1}^{n}Ci & (initialisation) \\
-  w_{k+1} & = \sum_{i=1}^{n}\left\lceil \frac{w_k}{T_i}\right\rceil C_i & (iteration)
-\end{align*}
+  w_{k+1} & = \sum_{i=1}^{n}\left\lceil \frac{w_k}{T_i}\right\rceil C_i &
+(iteration) \end{align*}
  */
 static int div_ceil_int(int numerator, int denominator) {
-    const int result = numerator / denominator + ((numerator % denominator) == 0 ? 0 : 1);
+    const int result =
+        numerator / denominator + ((numerator % denominator) == 0 ? 0 : 1);
     return result;
 }
 
@@ -55,13 +55,10 @@ bool SafeOracle::edf_carryoverjobs(State* state) {
     rtsimulator::EDFSimulator simulator;
     int carryover_deadline_max = 0;
 
-    for (Job *job: state->get_jobs()) {
-        simulator.addTask( // task
-            job->get_C(HI),
-            job->get_D(),
-            job->get_T()
-        );
-        if (job->get_rct() > 0) { // carry over job
+    for (Job* job : state->get_jobs()) {
+        simulator.addTask(  // task
+            job->get_C(HI), job->get_D(), job->get_T(), job->get_nat());
+        if (job->get_rct() > 0) {  // carry over job
             const int rct = job->get_rct();
             const int ttd = job->get_ttd();
             simulator.addAperiodicJob(rct, ttd);

@@ -5,11 +5,13 @@ namespace rtsimulator {
 
 EDFSimulator::EDFSimulator() = default;
 
-void EDFSimulator::addTask(int execution_time, int relative_deadline, int period) {
+void EDFSimulator::addTask(int execution_time, int relative_deadline,
+                           int period, int offset) {
     Task task = {
         .C = execution_time,
         .D = relative_deadline,
         .T = period,
+        .O = offset,
     };
     tasks.push_back(task);
 }
@@ -25,7 +27,8 @@ void EDFSimulator::addAperiodicJob(int execution_time, int absolute_deadline) {
 
 void EDFSimulator::initializeTaskReleases(int time_bound) {
     for (size_t i = 0; i < tasks.size(); ++i) {
-        for (int release_time = 0; release_time <= time_bound; release_time += tasks[i].T) {
+        for (int release_time = tasks[i].O; release_time <= time_bound;
+             release_time += tasks[i].T) {
             taskReleases[release_time].push_back(i);
         }
     }
@@ -58,21 +61,26 @@ bool EDFSimulator::simulate(int time_bound) {
 
             // Check for deadline miss
             if (current_time >= current_job.deadline) {
-                std::cout << "Deadline miss detected for job from Task Index: " << current_job.taskId << " at time: " << current_time << std::endl;
-                return false; // Indicate scheduling failure due to deadline miss
+                // std::cout << "Deadline miss detected for job from Task Index:
+                // " << current_job.taskId << " at time: " << current_time <<
+                // std::endl;
+                return false;  // Indicate scheduling failure due to deadline
+                               // miss
             }
 
-            current_job.remainingTime--; // Simulate job execution for one time unit
+            current_job
+                .remainingTime--;  // Simulate job execution for one time unit
 
             if (current_job.remainingTime > 0) {
-                jobQueue.push(current_job); // Re-queue the job if it's not completed
+                jobQueue.push(
+                    current_job);  // Re-queue the job if it's not completed
             }
         } else {
-            return true; // First idle point
+            return true;  // First idle point
         }
     }
 
     return true;
 }
 
-}
+}  // namespace rtsimulator

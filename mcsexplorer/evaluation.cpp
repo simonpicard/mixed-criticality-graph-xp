@@ -4,10 +4,10 @@
 #include "Scheduler.h"
 #include "State.h"
 #include "UnsafeOracle.h"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <filesystem>
 
 void statespace_antichain_experiment(State* initial_state, int test_case_id,
                                      std::string output_path) {
@@ -72,7 +72,8 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id,
     g.set_safe_oracle(&SafeOracle::edf_carryoverjobs);
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,edf_carryoverjobs,None,"
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,edf_carryoverjobs,None,"
                            << search_result[0] << "," << search_result[1] << ","
                            << search_result[2] << "," << search_result[3]
                            << std::endl;
@@ -140,7 +141,8 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id,
     g.set_unsafe_oracle(&UnsafeOracle::sum_sorted_laxities);
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,sum_sorted_laxities,"
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,None,sum_sorted_laxities,"
                            << search_result[0] << "," << search_result[1] << ","
                            << search_result[2] << "," << search_result[3]
                            << std::endl;
@@ -151,7 +153,34 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id,
     g.set_unsafe_oracle(&UnsafeOracle::sum_sorted_worst_laxities);
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,sum_sorted_worst_laxities,"
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,None,sum_sorted_worst_laxities,"
+                           << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3]
+                           << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    output_file.close();
+};
+
+void make_graph_experiment(State* initial_state, int test_case_id,
+                           std::string output_path) {
+    std::ofstream output_file;
+    output_file.open(output_path, std::ios::in | std::ios::out | std::ios::ate);
+
+    std::stringstream search_result_csv_line;
+    int64_t* search_result;
+
+    Graph g(initial_state, &Scheduler::edfvd, "./graph_experiment.dot", -1, {},
+            {});
+
+    g.set_safe_oracle(&SafeOracle::edf_carryoverjobs);
+
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id
+                           << ",ACBFS,EDF-VD,edf_carryoverjobs,None,"
                            << search_result[0] << "," << search_result[1] << ","
                            << search_result[2] << "," << search_result[3]
                            << std::endl;
@@ -220,7 +249,8 @@ void read_task_sets(std::string const& input_path,
     std::ifstream input_file(input_path);
     if (!input_file.is_open()) {
         std::cerr << "Problem opening input file: " << input_path << std::endl;
-        std::cerr << "Current directory: " << std::filesystem::current_path() << std::endl;
+        std::cerr << "Current directory: " << std::filesystem::current_path()
+                  << std::endl;
 
         exit(1);
     }
@@ -310,6 +340,8 @@ int main(int argc, char** argv) {
             experiment = scheduling_performance_experiment;
         } else if (xp_type == "oracle") {
             experiment = statespace_oracle_experiment;
+        } else if (xp_type == "plot_graph") {
+            experiment = make_graph_experiment;
         } else {
             std::cout << "Unknown experiment type: " << xp_type << std::endl;
             return 0;
@@ -319,8 +351,8 @@ int main(int argc, char** argv) {
         read_task_sets(input_path, output_path, experiment, offset,
                        n_experiments);
     } else {
-        std::cout << "Usage: "<< argv[0] << " <xp_type> <input_path> <output_path>"
-                  << std::endl;
+        std::cout << "Usage: " << argv[0]
+                  << " <xp_type> <input_path> <output_path>" << std::endl;
         return 0;
     }
 
