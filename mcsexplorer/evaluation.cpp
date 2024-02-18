@@ -58,7 +58,7 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id,
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
-    // g.set_safe_oracle(&SafeOracle::all_idle_hi);
+    g.set_safe_oracle(&SafeOracle::all_idle_hi);
     search_result = g.acbfs();
     search_result_csv_line.str("");
     search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,all_idle_hi,None,"
