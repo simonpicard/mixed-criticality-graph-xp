@@ -1,9 +1,9 @@
 #ifndef EDFSIMULATOR_H
 #define EDFSIMULATOR_H
 
-#include <vector>
-#include <queue>
 #include <map>
+#include <queue>
+#include <vector>
 
 namespace rtsimulator {
 
@@ -13,6 +13,7 @@ class EDFSimulator {
         int C;  // Execution time
         int D;  // Relative deadline
         int T;  // Period
+        int O;  // Offset
     };
 
     struct Job {
@@ -23,8 +24,7 @@ class EDFSimulator {
 
     struct JobComparator {
         bool operator()(const Job& a, const Job& b) const {
-            if (a.deadline == b.deadline)
-                return a.taskId > b.taskId;
+            if (a.deadline == b.deadline) return a.taskId > b.taskId;
             return a.deadline > b.deadline;
         }
     };
@@ -41,7 +41,7 @@ class EDFSimulator {
    public:
     explicit EDFSimulator();
 
-    void addTask(int C, int D, int T);
+    void addTask(int C, int D, int T, int O = 0);
     void addAperiodicJob(int execution_time, int absolute_deadline);
     bool simulate(int time_bound);
 
@@ -49,6 +49,6 @@ class EDFSimulator {
     void initializeTaskReleases(int time_bound);
 };
 
-}
+}  // namespace rtsimulator
 
 #endif /* EDFSIMULATOR_H */

@@ -36,7 +36,7 @@ class Graph {
     bool has_unsafe(std::vector<State*> const& states);
     void handle_safe(std::vector<State*>& states);
 
-    void handle_run_tansition(State* state, int to_run, bool is_last_leaf);
+    void handle_run_transition(State* state, int to_run, bool is_last_leaf);
     std::vector<State*> handle_completion_transition(State* state, int to_run,
                                                      bool is_last_leaf);
     std::vector<State*> handle_request_transition(
