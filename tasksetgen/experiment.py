@@ -79,9 +79,9 @@ def generate_per_utilisation(
     min_period=5,
     max_period=50,
     n_tasks=3,
-    from_utilisation=0.89,
-    to_utilisation=0.99,
-    utilisation_step=0.01,
+    from_utilisation=89,
+    to_utilisation=99,
+    utilisation_step=1,
     sets_per_step=100,
 ):
     if not task_sets_output:
@@ -99,6 +99,7 @@ def generate_per_utilisation(
         utilisations.append(utilisations[-1] + utilisation_step)
 
     for u in utilisations:
+        u = u / 100
         generated_task_sets = set()
         for _ in tqdm(range(sets_per_step), desc=f"U={u*100:.0f}%"):
             while True:
