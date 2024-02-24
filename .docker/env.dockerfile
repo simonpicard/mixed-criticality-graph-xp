@@ -1,6 +1,7 @@
 FROM ubuntu:23.10
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=yes
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apt-utils \
@@ -31,22 +32,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Required packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.11 \
-        python3.11-dev \
-        python3.11-venv \
-    && rm -rf /var/lib/apt/lists/*
+# Set root password
+RUN echo 'root:root' | chpasswd
 
 # Set locales
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-# Set root password
-RUN echo 'root:root' | chpasswd
-
+# Unminimize the distribution
 RUN yes | unminimize
+
+# Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3.11 \
+        python3.11-dev \
+        python3.11-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Other tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        clang-format \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
 ARG USER_NAME=user
@@ -94,5 +101,3 @@ RUN ./bootstrap --parallel=$(nproc) && \
 
 WORKDIR /home/${USER_NAME}
 RUN mkdir -p .cache/pip
-
-ENV PYTHONDONTWRITEBYTECODE=yes
