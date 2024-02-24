@@ -101,13 +101,52 @@ generate-set-oracles: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
 	-phi 0.5 \
-	-ta 5 \
+	-ta 3 \
 	-u 80 \
 	-U 100 \
 	-us 1 \
 	-ss 100 \
 	-min_t 5 \
-	-max_t 20
+	-max_t 50
 
 xp-oracles: install-all generate-set-oracles
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
+
+
+generate-set-scheduling1: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(OUTPUT_DIR)/$(DT)_scheduling1_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_scheduling1_header.csv \
+	-phi 0.5 \
+	-ta 3 \
+	-u 50 \
+	-U 100 \
+	-us 5 \
+	-ss 1000 \
+	-min_t 5 \
+	-max_t 50
+
+xp-scheduling1: install-all generate-set-scheduling1
+	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling1_def.txt $(OUTPUT_DIR)/$(DT)_scheduling1_explo.csv
+
+
+generate-set-scheduling2: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_scheduling2_header.csv \
+	-phi 0.5 \
+	-ta 3 \
+	-u 90 \
+	-U 100 \
+	-us 1 \
+	-ss 1000 \
+	-min_t 5 \
+	-max_t 50
+
+xp-scheduling2: install-all generate-set-scheduling2
+	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt $(OUTPUT_DIR)/$(DT)_scheduling2_explo.csv
+
+
+xp-scheduling: xp-scheduling1 xp-scheduling2
