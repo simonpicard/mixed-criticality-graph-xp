@@ -22,9 +22,7 @@ DT := $(shell date +%Y%m%d_%H%M%S)
 default: all
 
 $(VENV):
-	$(PYTHON) -m venv $(VENV)
-	$(VENV)/bin/pip install --upgrade pip
-	$(VENV)/bin/pip install --requirement $(ROOT_DIR)/requirements.txt
+	$(ROOT_DIR)/install-venv.sh $(VENV)
 
 explicit_venv: $(VENV)
 
@@ -116,3 +114,9 @@ generate-set-oracles: $(VENV)
 
 xp-oracles: install-all generate-set-oracles
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
+
+xp-oracles-split: install-all generate-set-oracles
+	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--build-dir=$(EXPLORER_BUILD) \
+		--input-file=$(OUTPUT_DIR)/$(DT)_oracles_def.txt \
+		--output-prefix=$(OUTPUT_DIR)/$(DT)_oracles_explo
