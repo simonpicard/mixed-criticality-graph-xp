@@ -103,7 +103,8 @@ WORKDIR /home/${USER_NAME}
 RUN mkdir img_workspace
 WORKDIR /home/${USER_NAME}/img_workspace
 COPY --chown=${USER_NAME}:${USER_NAME} Makefile requirements.txt ./
-RUN make explicit_venv
+ARG IMAGE_VENV=OFF
+RUN ([ "xONx" = "x${IMAGE_VENV}x" ] && make explicit_venv) || true
 
 WORKDIR /home/${USER_NAME}
 RUN rm -rf .cache/pip && mkdir -p .cache/pip
