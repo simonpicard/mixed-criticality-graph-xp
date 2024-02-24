@@ -100,4 +100,10 @@ RUN ./bootstrap --parallel=$(nproc) && \
     rm -rf /home/${USER_NAME}/workspace/libraries/cmake-${cmake_version}
 
 WORKDIR /home/${USER_NAME}
-RUN mkdir -p .cache/pip
+RUN mkdir img_workspace
+WORKDIR /home/${USER_NAME}/img_workspace
+COPY --chown=${USER_NAME}:${USER_NAME} Makefile requirements.txt ./
+RUN make explicit_venv
+
+WORKDIR /home/${USER_NAME}
+RUN rm -rf .cache/pip && mkdir -p .cache/pip
