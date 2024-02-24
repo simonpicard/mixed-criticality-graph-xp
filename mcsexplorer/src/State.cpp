@@ -10,8 +10,7 @@ State::~State() {
     jobs.clear();
 }
 
-State::State(const State& other)
-    : crit(other.crit), relativity(other.relativity) {
+State::State(const State& other) : crit(other.crit), relativity(other.relativity) {
     std::vector<Job*> jobs_;
     for (Job* job : other.jobs) {
         Job* clone = new Job(static_cast<Job*>(job));
@@ -19,11 +18,11 @@ State::State(const State& other)
     }
     jobs = jobs_;
 
-    utilisation_of_level_at_level = std::vector<std::vector<float>>{
-        std::vector<float>{other.get_utilisation_of_level_at_level(1, 1),
-                           other.get_utilisation_of_level_at_level(1, 2)},
-        std::vector<float>{other.get_utilisation_of_level_at_level(2, 1),
-                           other.get_utilisation_of_level_at_level(2, 2)}};
+    utilisation_of_level_at_level =
+        std::vector<std::vector<float>>{std::vector<float>{other.get_utilisation_of_level_at_level(1, 1),
+                                                           other.get_utilisation_of_level_at_level(1, 2)},
+                                        std::vector<float>{other.get_utilisation_of_level_at_level(2, 1),
+                                                           other.get_utilisation_of_level_at_level(2, 2)}};
 }
 
 std::vector<size_t> State::get_actives() const {
@@ -80,8 +79,7 @@ void State::run_tansition(int to_run_index = -1) {
     }
 }
 
-void State::completion_transition(int ran_index = -1,
-                                  bool signals_completion = false) {
+void State::completion_transition(int ran_index = -1, bool signals_completion = false) {
     if (ran_index == -1) return;
 
     if (jobs[ran_index]->is_implicitly_completed(crit) or signals_completion) {
@@ -124,8 +122,7 @@ std::string State::str_tasks() const {
     return ss.str();
 }
 
-std::string State::dot_node(std::string node_id,
-                            std::string extra_node_arg) const {
+std::string State::dot_node(std::string node_id, std::string extra_node_arg) const {
     std::stringstream ss;
 
     ss << node_id << " [label=<";
@@ -133,8 +130,7 @@ std::string State::dot_node(std::string node_id,
     const int n = jobs.size();
     for (int i = 0; i < n; ++i) {
         ss << jobs[i]->dot_node();
-        if (i < n - 1)
-            ss << " ";
+        if (i < n - 1) ss << " ";
     }
     ss << ">,";
     if (this->crit == 1)
@@ -151,8 +147,7 @@ std::string State::dot_node(std::string node_id,
     return ss.str();
 }
 
-float State::compute_utilisation_of_level_at_level(int of_level,
-                                                   int at_level) const {
+float State::compute_utilisation_of_level_at_level(int of_level, int at_level) const {
     float utilisation = 0.0;
     if (at_level > of_level) {
         return utilisation;
@@ -167,13 +162,10 @@ float State::compute_utilisation_of_level_at_level(int of_level,
 
 void State::initialize() {
     utilisation_of_level_at_level = std::vector<std::vector<float>>{
-        std::vector<float>{compute_utilisation_of_level_at_level(1, 1),
-                           compute_utilisation_of_level_at_level(1, 2)},
-        std::vector<float>{compute_utilisation_of_level_at_level(2, 1),
-                           compute_utilisation_of_level_at_level(2, 2)}};
+        std::vector<float>{compute_utilisation_of_level_at_level(1, 1), compute_utilisation_of_level_at_level(1, 2)},
+        std::vector<float>{compute_utilisation_of_level_at_level(2, 1), compute_utilisation_of_level_at_level(2, 2)}};
 
-    relativity = utilisation_of_level_at_level[1][0] /
-                 (1.0 - utilisation_of_level_at_level[0][0]);
+    relativity = utilisation_of_level_at_level[1][0] / (1.0 - utilisation_of_level_at_level[0][0]);
 }
 
 uint64_t State::get_hash() const {
@@ -242,8 +234,7 @@ int State::get_interference_laxity(int target_crit, size_t i) const {
     if (!job->is_active() || job->is_discarded(target_crit)) return 999999999;
 
     int ttd = job->get_ttd();
-    int total_rct = job->get_rct() +
-                    (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
+    int total_rct = job->get_rct() + (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
     for (size_t j = 0; j < jobs.size(); j++) {
         if (i == j) continue;
         Job* other_job = jobs[j];
@@ -253,9 +244,8 @@ int State::get_interference_laxity(int target_crit, size_t i) const {
         int other_ttd = other_job->get_ttd();
         if (other_ttd <= ttd) {
             if (other_job->is_active()) {
-                total_rct += other_job->get_rct() +
-                             (other_job->get_C()[target_crit - 1] -
-                              other_job->get_C()[crit - 1]);
+                total_rct +=
+                    other_job->get_rct() + (other_job->get_C()[target_crit - 1] - other_job->get_C()[crit - 1]);
                 other_ttd += other_job->get_T();
             } else {
                 int other_nat = other_job->get_nat();
@@ -267,8 +257,7 @@ int State::get_interference_laxity(int target_crit, size_t i) const {
 
             if (other_ttd <= ttd) {
                 int n = 1;
-                n +=
-                    (ttd - other_ttd) / other_job->get_T();  // integer division
+                n += (ttd - other_ttd) / other_job->get_T();  // integer division
                 total_rct += other_job->get_C()[target_crit - 1] * n;
             }
 
@@ -290,8 +279,7 @@ float State::get_interference_laxity_float(int target_crit, size_t i) const {
     if (!job->is_active() || job->is_discarded(target_crit)) return 999999999.0;
 
     float ttd = job->get_ttd();
-    float total_rct = job->get_rct() +
-                      (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
+    float total_rct = job->get_rct() + (job->get_C()[target_crit - 1] - job->get_C()[crit - 1]);
     for (size_t j = 0; j < jobs.size(); j++) {
         if (i == j) continue;
         Job* other_job = jobs[j];
@@ -301,9 +289,8 @@ float State::get_interference_laxity_float(int target_crit, size_t i) const {
         float other_ttd = other_job->get_ttd();
         if (other_ttd <= ttd) {
             if (other_job->is_active()) {
-                total_rct += other_job->get_rct() +
-                             (other_job->get_C()[target_crit - 1] -
-                              other_job->get_C()[crit - 1]);
+                total_rct +=
+                    other_job->get_rct() + (other_job->get_C()[target_crit - 1] - other_job->get_C()[crit - 1]);
                 other_ttd += other_job->get_T();
             } else {
                 int other_nat = other_job->get_nat();

@@ -26,9 +26,7 @@ bool UnsafeOracle::interference_at_level(State* state, int crit) {
     return false;
 }
 
-bool UnsafeOracle::interference(State* state) {
-    return interference_at_level(state, state->get_crit());
-}
+bool UnsafeOracle::interference(State* state) { return interference_at_level(state, state->get_crit()); }
 
 bool UnsafeOracle::all_interference(State* state) {
     if (interference_at_level(state, 1)) return true;
@@ -36,9 +34,7 @@ bool UnsafeOracle::all_interference(State* state) {
     return false;
 }
 
-bool UnsafeOracle::worst_interference(State* state) {
-    return interference_at_level(state, 2);
-}
+bool UnsafeOracle::worst_interference(State* state) { return interference_at_level(state, 2); }
 
 bool UnsafeOracle::sum_sorted_laxities(State* state) {
     auto jobs = state->get_jobs();
@@ -46,7 +42,7 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
     std::vector<int> laxities;
     laxities.reserve(n);
 
-    for (Job *job: jobs) {
+    for (Job* job : jobs) {
         if (job->is_active()) {
             laxities.push_back(job->get_laxity());
         }
@@ -60,11 +56,11 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
         l_k += laxities[k - 1];
 
         if (l_k <= k - 2) {
-            return true; // Necessary condition violated, so the scheduling is unsafe
+            return true;  // Necessary condition violated, so the scheduling is unsafe
         }
     }
 
-    return false; // Necessary condition satisfied, we don't know if it is safe
+    return false;  // Necessary condition satisfied, we don't know if it is safe
 }
 
 bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
@@ -78,7 +74,7 @@ bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
     std::vector<int> worst_laxities;
     worst_laxities.reserve(n);
 
-    for (Job *job: jobs) {
+    for (Job* job : jobs) {
         if (job->is_active()) {
             worst_laxities.push_back(job->get_worst_laxity(LO));
         }
@@ -92,9 +88,9 @@ bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
         l_k += worst_laxities[k - 1];
 
         if (l_k <= k - 2) {
-            return true; // Necessary condition violated, so the scheduling is unsafe
+            return true;  // Necessary condition violated, so the scheduling is unsafe
         }
     }
 
-    return false; // Necessary condition satisfied, we don't know if it is safe
+    return false;  // Necessary condition satisfied, we don't know if it is safe
 }

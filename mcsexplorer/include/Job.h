@@ -15,8 +15,7 @@ class Job {
    public:
     Job() = default;
 
-    Job(int T, int D, Criticality X, std::vector<int> const& C, int p = 0)
-        : T(T), D(D), X(X), C(std::move(C)), p(p) {
+    Job(int T, int D, Criticality X, std::vector<int> const& C, int p = 0) : T(T), D(D), X(X), C(std::move(C)), p(p) {
         initialize();
     };
 
@@ -46,17 +45,11 @@ class Job {
     int get_ttd() const { return nat - (T - D); };
     float get_ttvd(float discount_factor) const;
     int get_laxity() const { return get_ttd() - rct; };
-    int get_worst_laxity(Criticality current_crit) const {
-        return get_ttd() - rct - (C[1] - C[current_crit - 1]);
-    };
+    int get_worst_laxity(Criticality current_crit) const { return get_ttd() - rct - (C[1] - C[current_crit - 1]); };
 
     bool is_active() const { return rct > 0; };
-    bool is_eligible(int crit) const {
-        return rct == 0 and nat == 0 and X >= crit;
-    };
-    bool is_implicitly_completed(int crit) const {
-        return rct == 0 and C[crit - 1] == C[X - 1];
-    };
+    bool is_eligible(int crit) const { return rct == 0 and nat == 0 and X >= crit; };
+    bool is_implicitly_completed(int crit) const { return rct == 0 and C[crit - 1] == C[X - 1]; };
     bool is_deadline_miss() const { return rct > 0 and get_ttd() <= 0; };
     bool is_discarded(int crit) const { return X < crit; };
 
@@ -65,9 +58,7 @@ class Job {
     void request(int crit);
     void critic(int current_crit, int next_crit, bool is_triggering);
 
-    float get_utilisation_at_level(int at_level) const {
-        return utilisation[at_level - 1];
-    };
+    float get_utilisation_at_level(int at_level) const { return utilisation[at_level - 1]; };
 
     std::string str() const;
     std::string str_task() const;
@@ -88,12 +79,10 @@ class Job {
     int rct;
     int nat;
 
-    std::vector<float> utilisation = std::vector<float>{
-        compute_utilisation_at_level(1), compute_utilisation_at_level(2)};
+    std::vector<float> utilisation =
+        std::vector<float>{compute_utilisation_at_level(1), compute_utilisation_at_level(2)};
 
-    float compute_utilisation_at_level(int at_level) const {
-        return float(C[at_level - 1]) / float(T);
-    }
+    float compute_utilisation_at_level(int at_level) const { return float(C[at_level - 1]) / float(T); }
 
     void initialize();
 };

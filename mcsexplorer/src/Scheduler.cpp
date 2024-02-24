@@ -55,8 +55,7 @@ int Scheduler::lwlf(State* state) {
 
     for (int i : actives) {
         w_lax = state->get_job(i)->get_worst_laxity(state->get_crit());
-        if (!first_set or w_lax < min_w_lax or
-            (w_lax == min_w_lax and i < j_id)) {
+        if (!first_set or w_lax < min_w_lax or (w_lax == min_w_lax and i < j_id)) {
             min_w_lax = w_lax;
             j_id = i;
             first_set = true;
@@ -87,8 +86,7 @@ int Scheduler::reduce_interference(State* state) {
     // first find the task with the worst interference laxity
     // then, gather all tasks with a smaller or equal ttd
     // executing any of those will reduce its worst interference
-    for (int current_crit = state->get_crit(); current_crit <= 2;
-         current_crit++) {
+    for (int current_crit = state->get_crit(); current_crit <= 2; current_crit++) {
         for (int i : actives) {
             if (!state->get_job(i)->is_discarded(current_crit)) {
                 wilf = state->get_interference_laxity_float(current_crit, i);
@@ -105,8 +103,7 @@ int Scheduler::reduce_interference(State* state) {
                 int current_ttd = state->get_job(i)->get_ttd();
                 for (int j : actives) {
                     if (!state->get_job(j)->is_discarded(current_crit))
-                        if (state->get_job(j)->get_ttd() <= current_ttd)
-                            candidates.push_back(j);
+                        if (state->get_job(j)->get_ttd() <= current_ttd) candidates.push_back(j);
                 }
             }
         }

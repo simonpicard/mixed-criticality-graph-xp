@@ -2,22 +2,16 @@
 #define EDFINTERFERENCE_HPP
 
 #include "State.h"
-#include <stdexcept>
 #include <format>
 #include <functional>
-
+#include <stdexcept>
 
 typedef std::function<size_t(int, State*)> interference_function;
-
 
 size_t edf_interference(size_t i, State* state) {
     const auto n = state->n();
     if (i >= n) {
-        auto message = std::format(
-            "Task index i must be 0 <= i < n = {}. i = {}.",
-            n,
-            i
-        );
+        auto message = std::format("Task index i must be 0 <= i < n = {}. i = {}.", n, i);
         throw std::invalid_argument(message);
     }
 
@@ -79,16 +73,10 @@ size_t edf_interference(size_t i, State* state) {
     return I_i;
 }
 
-
-bool _unsafe_edf_task_interference(
-    int i,
-    State* state,
-    interference_function interference
-) {
-    if (interference(i, state) == 0) return false;//TODO
-    return true;//TODO
+bool _unsafe_edf_task_interference(int i, State* state, interference_function interference) {
+    if (interference(i, state) == 0) return false;  // TODO
+    return true;                                    // TODO
 }
-
 
 bool unsafe_edf_system_interference(State* state) {
     const size_t n = state->get_jobs().size();
