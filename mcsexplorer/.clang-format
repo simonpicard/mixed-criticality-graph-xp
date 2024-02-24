@@ -37,5 +37,7 @@ RawStringFormats:
 
 CommentPragmas: '(@copydoc)'
 
-# personnal
+# Personal settings
 IndentWidth: 4
+ColumnLimit: 120
+InsertNewlineAtEOF: true
