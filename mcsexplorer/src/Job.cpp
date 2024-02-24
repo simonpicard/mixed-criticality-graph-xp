@@ -51,8 +51,7 @@ std::string Job::str() const {
 
 std::string Job::str_task() const {
     std::stringstream ss;
-    ss << "T=" << T << ", D=" << D << ", X=" << X << ", C={" << C[0] << ", "
-       << C[1] << "}";
+    ss << "T=" << T << ", D=" << D << ", X=" << X << ", C={" << C[0] << ", " << C[1] << "}";
     return ss.str();
 }
 

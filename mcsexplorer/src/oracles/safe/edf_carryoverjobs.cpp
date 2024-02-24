@@ -14,8 +14,7 @@ We can compute this value in the same way as in Theorem of FTP schedulers:
 (iteration) \end{align*}
  */
 static int div_ceil_int(int numerator, int denominator) {
-    const int result =
-        numerator / denominator + ((numerator % denominator) == 0 ? 0 : 1);
+    const int result = numerator / denominator + ((numerator % denominator) == 0 ? 0 : 1);
     return result;
 }
 

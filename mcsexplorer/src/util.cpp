@@ -5,14 +5,12 @@
 
 inline std::vector<std::vector<int>> power_set(const std::vector<size_t>& elts) {
     if (elts.empty()) {
-        return std::vector<std::vector<int>>(
-            1,                    // vector contains 1 element which is...
-            std::vector<int>());  // ...empty vector of ints
+        return std::vector<std::vector<int>>(1,                    // vector contains 1 element which is...
+                                             std::vector<int>());  // ...empty vector of ints
     }
 
     else {
-        std::vector<std::vector<int>> smaller =
-            power_set(std::vector<size_t>(elts.begin() + 1, elts.end()));
+        std::vector<std::vector<int>> smaller = power_set(std::vector<size_t>(elts.begin() + 1, elts.end()));
         int elt = elts[0];  // in Python elt is a list (of int)
                             //      withElt = []
         std::vector<std::vector<int>> withElt;
@@ -30,8 +28,7 @@ inline std::vector<std::vector<int>> power_set(const std::vector<size_t>& elts) 
     }
 }
 
-inline void append_to_file(std::string const& path,
-                           std::string const& to_append) {
+inline void append_to_file(std::string const& path, std::string const& to_append) {
     std::ofstream o_file;
     o_file.open(path, std::ios::in | std::ios::out | std::ios::ate);
     o_file << to_append;
