@@ -3,7 +3,7 @@
 
 namespace rtsimulator {
 
-EDFSimulator::EDFSimulator() = default;
+EDFSimulator::EDFSimulator(bool verbose): verbose_(verbose) {}
 
 void EDFSimulator::addTask(int execution_time, int relative_deadline,
                            int period, int offset) {
@@ -61,11 +61,13 @@ bool EDFSimulator::simulate(int time_bound) {
 
             // Check for deadline miss
             if (current_time >= current_job.deadline) {
-                // std::cout << "Deadline miss detected for job from Task Index:
-                // " << current_job.taskId << " at time: " << current_time <<
-                // std::endl;
-                return false;  // Indicate scheduling failure due to deadline
-                               // miss
+                if (verbose_) {
+                    std::cout
+                        << "Deadline miss detected for job from Task Index: "
+                        << current_job.taskId << " at time: " << current_time
+                        << std::endl;
+                }
+                return false; // Indicate scheduling failure due to deadline miss
             }
 
             current_job

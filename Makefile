@@ -1,3 +1,6 @@
+THIS_MAKEFILE := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+ROOT_DIR := $(patsubst %/,%,$(dir $(abspath $(THIS_MAKEFILE))))
+
 GENERATOR_SRC = ./tasksetgen
 GENERATOR_EXP = $(GENERATOR_SRC)/experiment.py
 
@@ -5,7 +8,7 @@ EXPLORER_SRC = ./mcsexplorer
 EXPLORER_BUILD = $(EXPLORER_SRC)/build-$(shell uname -m)
 EXPLORER_MAKEFILE = $(EXPLORER_BUILD)/Makefile
 
-VENV = $(GENERATOR_SRC)/.venv-$(shell uname -m)
+VENV = $(ROOT_DIR)/.venv-$(shell uname -m)
 PYTHON = python3
 VENV_PYTHON = $(VENV)/bin/$(PYTHON)
 JUPYTER = $(VENV)/bin/jupyter
@@ -21,7 +24,9 @@ default: all
 $(VENV):
 	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
-	$(VENV)/bin/pip install -r $(GENERATOR_SRC)/requirements.txt
+	$(VENV)/bin/pip install --requirement $(ROOT_DIR)/requirements.txt
+
+explicit_venv: $(VENV)
 
 $(EXPLORER_BUILD):
 	mkdir -p $(EXPLORER_BUILD)

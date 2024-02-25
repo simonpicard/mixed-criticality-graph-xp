@@ -30,6 +30,7 @@ class EDFSimulator {
     };
 
    private:
+    bool verbose_;
     std::vector<Task> tasks;
     std::vector<Job> aperiodicJobs;
     std::map<int, std::vector<int>> taskReleases;
@@ -39,7 +40,7 @@ class EDFSimulator {
     JobQueue jobQueue;
 
    public:
-    explicit EDFSimulator();
+    explicit EDFSimulator(bool verbose = false);
 
     void addTask(int C, int D, int T, int O = 0);
     void addAperiodicJob(int execution_time, int absolute_deadline);
