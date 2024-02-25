@@ -9,10 +9,8 @@ typedef enum {
 } Criticality;
 
 static inline Criticality int2crit(int value) {
-    if (1 == value)
-        return LO;
-    if (2 == value)
-        return HI;
+    if (1 == value) return LO;
+    if (2 == value) return HI;
 
     throw std::runtime_error("Unknown given value for criticality");
 }

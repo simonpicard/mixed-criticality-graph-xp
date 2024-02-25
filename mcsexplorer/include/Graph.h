@@ -16,9 +16,8 @@ class Graph {
     Graph();
     ~Graph();
 
-    Graph(State* initial_state_, std::function<int(State*)> schedule_,
-          std::string graph_output_path_ = "", int verbose_ = 0,
-          std::vector<std::function<bool(State*)>> safe_oracles_ = {},
+    Graph(State* initial_state_, std::function<int(State*)> schedule_, std::string graph_output_path_ = "",
+          int verbose_ = 0, std::vector<std::function<bool(State*)>> safe_oracles_ = {},
           std::vector<std::function<bool(State*)>> unsafe_oracles_ = {})
         : initial_state(initial_state_),
           graph_output_path(graph_output_path_),
@@ -37,10 +36,8 @@ class Graph {
     void handle_safe(std::vector<State*>& states);
 
     void handle_run_transition(State* state, int to_run, bool is_last_leaf);
-    std::vector<State*> handle_completion_transition(State* state, int to_run,
-                                                     bool is_last_leaf);
-    std::vector<State*> handle_request_transition(
-        std::vector<State*> const& states, bool is_last_leaf);
+    std::vector<State*> handle_completion_transition(State* state, int to_run, bool is_last_leaf);
+    std::vector<State*> handle_request_transition(std::vector<State*> const& states, bool is_last_leaf);
 
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
@@ -50,22 +47,16 @@ class Graph {
     int64_t* bfs();
     int64_t* acbfs();
 
-    void set_safe_oracle(std::function<bool(State*)> safe_oracle) {
-        safe_oracles = {safe_oracle};
-    }
-    void set_unsafe_oracle(std::function<bool(State*)> unsafe_oracle) {
-        unsafe_oracles = {unsafe_oracle};
-    }
+    void set_safe_oracle(std::function<bool(State*)> safe_oracle) { safe_oracles = {safe_oracle}; }
+    void set_unsafe_oracle(std::function<bool(State*)> unsafe_oracle) { unsafe_oracles = {unsafe_oracle}; }
     void clear_safe_oracle() { safe_oracles.clear(); }
     void clear_unsafe_oracle() { unsafe_oracles.clear(); }
 
     void graphiz_setup();
     void graphiz_teardown();
     void connect_neighbor_graphviz(State* from_, State* to) const;
-    void connect_neighbors_graphviz(State* from,
-                                    std::vector<State*> to_list) const;
-    void simulate_neighbor_graphviz(State* neighbor,
-                                    std::vector<int> nats) const;
+    void connect_neighbors_graphviz(State* from, std::vector<State*> to_list) const;
+    void simulate_neighbor_graphviz(State* neighbor, std::vector<int> nats) const;
 
     static void repr(std::vector<State*> states);
     void log_start_search();

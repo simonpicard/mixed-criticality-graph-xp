@@ -20,6 +20,9 @@ readlinkf() {
 
 root_dir=$(readlinkf "$(dirname "$(readlinkf "$0")")/..")
 
+IMAGE_VENV=${IMAGE_VENV}
+[ -z ${IMAGE_VENV} ] && IMAGE_VENV=OFF
+
 image_name=mcgraphxp
 volume_name=mcgraphxp_cache
 
@@ -35,6 +38,7 @@ docker build \
   --file "${root_dir}/.docker/env.dockerfile" \
   --build-arg=UID="${uid}" \
   --build-arg=GID="${gid}" \
+  --build-arg=IMAGE_VENV="${IMAGE_VENV}" \
   --tag "${image_name}" \
   .
 

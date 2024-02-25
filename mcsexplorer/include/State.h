@@ -13,10 +13,7 @@ class State {
     State() = default;
     ~State();
 
-    explicit State(std::vector<Job*> const& jobs)
-        : jobs(std::move(jobs)), crit(LO) {
-        initialize();
-    };
+    explicit State(std::vector<Job*> const& jobs) : jobs(std::move(jobs)), crit(LO) { initialize(); };
 
     State(const State& other);
 
@@ -45,8 +42,7 @@ class State {
     void repr() const;
     std::string str() const;
     std::string str_tasks() const;
-    std::string dot_node(std::string node_id,
-                         std::string extra_node_arg = "") const;
+    std::string dot_node(std::string node_id, std::string extra_node_arg = "") const;
 
     uint64_t get_hash() const;
     uint64_t get_hash_idle() const;
@@ -64,8 +60,7 @@ class State {
     Criticality crit;
     int max_crit;
 
-    float compute_utilisation_of_level_at_level(int of_level,
-                                                int at_level) const;
+    float compute_utilisation_of_level_at_level(int of_level, int at_level) const;
 
     std::vector<std::vector<float>> utilisation_of_level_at_level;
 
