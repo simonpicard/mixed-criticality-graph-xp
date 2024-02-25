@@ -28,5 +28,9 @@ int main() {
     std::cout << "edf_carryoverjobs oracle says " << (edf_carryoverjobs ? "unsafe" : "not unsafe") << " on that system."
               << std::endl;
 
+    for (Job* job : jobs) {
+        delete job;
+    }
+
     return 0;
 }

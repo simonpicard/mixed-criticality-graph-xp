@@ -112,6 +112,20 @@ generate-set-oracles: $(VENV)
 	--minimum_period 5 \
 	--maximum_period 20
 
+generate-set-oracles-hta: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	--type utilisation \
+	--task_sets_output $(OUTPUT_DIR)/$(DT)_oracles_def.txt \
+	--header_output $(OUTPUT_DIR)/$(DT)_oracles_header.csv \
+	--probability_of_HI 0.5 \
+	--task_amount 7 \
+	--from_utilisation 80 \
+	--to_utilisation 80 \
+	--utilisation_step 1 \
+	--sets_per_step 1 \
+	--minimum_period 5 \
+	--maximum_period 20
+
 xp-oracles: install-all generate-set-oracles
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
 
@@ -150,6 +164,9 @@ xp-scheduling2: install-all generate-set-scheduling2
 	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt $(OUTPUT_DIR)/$(DT)_scheduling2_explo.csv
 
 xp-scheduling: xp-scheduling1 xp-scheduling2
+
+xp-oracles-hta: install-all generate-set-oracles-hta
+	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
 
 xp-oracles-split: install-all generate-set-oracles
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
