@@ -73,7 +73,24 @@ generate-set-utilisation: $(VENV)
 	-min_t 5 \
 	-max_t 50
 
+generate-set-utilisation5: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
+	-phi 0.5 \
+	-ta 5 \
+	-u 25 \
+	-U 100 \
+	-us 5 \
+	-ss 1000 \
+	-min_t 5 \
+	-max_t 50
+
 xp-statespace-utilisation: generate-set-utilisation
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
+
+xp-statespace-utilisation5: generate-set-utilisation5
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
 
 generate-set-ntasks: $(VENV)
