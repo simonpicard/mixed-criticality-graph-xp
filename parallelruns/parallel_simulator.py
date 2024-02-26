@@ -77,5 +77,5 @@ def main(args):
 
 
 if __name__ == '__main__':
-    aruments = docopt(__doc__)
-    main(aruments)
+    arguments = docopt(__doc__)
+    main(arguments)
