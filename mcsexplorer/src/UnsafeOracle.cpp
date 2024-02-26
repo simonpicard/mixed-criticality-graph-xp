@@ -65,9 +65,9 @@ bool UnsafeOracle::sum_sorted_laxities(State* state) {
 
 bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
     // TODO same structure as sum_sorted_laxities; maybe factor out later.
-    if (LO != state->get_crit()) {
-        return false;
-    }
+    // TODO check if we can get rid of it, we do it cross laxities
+
+    auto cri = state->get_crit();
 
     auto jobs = state->get_jobs();
     size_t n = jobs.size();
@@ -75,8 +75,8 @@ bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
     worst_laxities.reserve(n);
 
     for (Job* job : jobs) {
-        if (job->is_active()) {
-            worst_laxities.push_back(job->get_worst_laxity(LO));
+        if (job->is_active() and job->get_X() >= cri) {
+            worst_laxities.push_back(job->get_worst_laxity(cri));
         }
     }
 
