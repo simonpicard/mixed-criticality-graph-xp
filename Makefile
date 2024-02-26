@@ -73,8 +73,29 @@ generate-set-utilisation: $(VENV)
 	-min_t 5 \
 	-max_t 50
 
+generate-set-utilisation5: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t utilisation \
+	-o $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
+	-phi 0.5 \
+	-ta 5 \
+	-u 25 \
+	-U 100 \
+	-us 5 \
+	-ss 1000 \
+	-min_t 5 \
+	-max_t 20
+
 xp-statespace-utilisation: generate-set-utilisation
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
+
+xp-statespace-utilisation5: generate-set-utilisation5
+	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--xp-type=antichain \
+		--build-dir=$(EXPLORER_BUILD) \
+		--input-file=$(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
+		--output-prefix=$(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo
 
 generate-set-ntasks: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -170,6 +191,7 @@ xp-oracles-hta: install-all generate-set-oracles-hta
 
 xp-oracles-split: install-all generate-set-oracles
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--xp-type=oracle \
 		--build-dir=$(EXPLORER_BUILD) \
 		--input-file=$(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_oracles_explo
