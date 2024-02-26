@@ -2,6 +2,52 @@ import os
 from pathlib import Path
 
 import pandas as pd
+from typing import List
+
+
+def merge_datasets(dataset_directory: str, unsorted_filenames: List[str], prefix: str):
+    list_filenames = [f for f in unsorted_filenames]
+    filenames = []
+    file_nb = 0
+    while len(list_filenames) > 0:
+        forged_filename = f"{prefix}_{file_nb}.csv"
+        if forged_filename in list_filenames:
+            list_filenames.remove(forged_filename)
+            filenames.append(forged_filename)
+        else:
+            break
+        file_nb += 1
+
+    pdd = Path(dataset_directory)
+    output_filename = pdd / f"{prefix}.csv"
+
+    if output_filename.exists():
+        return
+
+    first_line = True
+    all_lines = []
+    for filename in filenames:
+        with open(pdd/filename, "r") as f:
+            lines = f.readlines()
+        if first_line:
+            all_lines.extend(lines)
+            first_line = False
+        else:
+            all_lines.extend(lines[1:])
+    with open(output_filename, "w") as output_file:
+        output_file.writelines(all_lines)
+
+
+def potentially_merge_datasets(dataset_directory: str | Path, csv_filenames: List[str]):
+    for csv_filename in csv_filenames:
+        key = "_0.csv"
+        if csv_filename.endswith(key):
+            csv_prefix = csv_filename.split(key)[0]
+            merge_datasets(
+                dataset_directory=dataset_directory,
+                unsorted_filenames=[f for f in csv_filenames if csv_filename.startswith(csv_prefix)],
+                prefix=csv_prefix,
+            )
 
 
 def prepare_df(
@@ -21,6 +67,13 @@ def prepare_df(
         )
 
         assert len(csv_filenames) >= 2, f"No dataset found in {dataset_directory}"
+
+        potentially_merge_datasets(dataset_directory, csv_filenames)
+
+        # reload (TODO function to avoid duplicate)
+        csv_filenames = sorted(
+            name for name in os.listdir(dataset_directory) if name.endswith(".csv")
+        )
 
         # use the latest dataset produced
         header = [
@@ -86,3 +139,8 @@ def prepare_df(
         )
 
     return df
+
+
+if __name__ == "__main__":
+    df = prepare_df(xp_identifier="oracles")
+    print(df.head)
