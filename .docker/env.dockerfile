@@ -32,6 +32,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Ensure perf & valgrind are installed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        linux-tools-generic \
+        valgrind \
+    && rm -rf /var/lib/apt/lists/*
+USER ${USER_NAME}
+
 # Set root password
 RUN echo 'root:root' | chpasswd
 
