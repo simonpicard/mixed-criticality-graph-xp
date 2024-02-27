@@ -75,22 +75,22 @@ generate-set-utilisation: $(VENV)
 
 generate-set-utilisation5: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
-	-t utilisation \
-	-o $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
-	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
-	-phi 0.5 \
-	-ta 5 \
-	-u 25 \
-	-U 100 \
-	-us 5 \
-	-ss 1000 \
-	-min_t 5 \
-	-max_t 20
+	--type utilisation \
+	--task_sets_output $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
+	--header_output $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
+	--probability_of_HI 0.5 \
+	--task_amount 5 \
+	--from_utilisation 50 \
+	--to_utilisation 100 \
+	--utilisation_step 5 \
+	--sets_per_step 1000 \
+	--minimum_period 5 \
+	--maximum_period 20
 
-xp-statespace-utilisation: generate-set-utilisation
+xp-statespace-utilisation: generate-set-utilisation install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
 
-xp-statespace-utilisation5: generate-set-utilisation5
+xp-statespace-utilisation5: generate-set-utilisation5 install-explorer
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
 		--xp-type=antichain \
 		--build-dir=$(EXPLORER_BUILD) \
@@ -110,7 +110,7 @@ generate-set-ntasks: $(VENV)
 	-max_t 12 \
 	-max_c_lo 3
 
-xp-statespace-ntasks: generate-set-ntasks
+xp-statespace-ntasks: generate-set-ntasks install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_ntasks_def.txt $(OUTPUT_DIR)/$(DT)_ntasks_statespace_explo.csv
 
 notebook: $(VENV)
@@ -147,7 +147,7 @@ generate-set-oracles-hta: $(VENV)
 	--minimum_period 5 \
 	--maximum_period 20
 
-xp-oracles: install-all generate-set-oracles
+xp-oracles: install-all generate-set-oracles install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
 
 generate-set-scheduling1: $(VENV)
@@ -184,7 +184,7 @@ generate-set-scheduling2: $(VENV)
 xp-scheduling2: install-all generate-set-scheduling2
 	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt $(OUTPUT_DIR)/$(DT)_scheduling2_explo.csv
 
-xp-scheduling: xp-scheduling1 xp-scheduling2
+xp-scheduling: xp-scheduling1 xp-scheduling2 install-explorer
 
 xp-oracles-hta: install-all generate-set-oracles-hta
 	$(EXPLORER_BUILD)/evaluation_mcs oracle $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_oracles_explo.csv
