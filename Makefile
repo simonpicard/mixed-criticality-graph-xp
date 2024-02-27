@@ -156,7 +156,7 @@ generate-set-scheduling1: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_scheduling1_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_scheduling1_header.csv \
 	-phi 0.5 \
-	-ta 3 \
+	-ta 5 \
 	-u 50 \
 	-U 100 \
 	-us 5 \
@@ -173,7 +173,7 @@ generate-set-scheduling2: $(VENV)
 	-o $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt \
 	-c $(OUTPUT_DIR)/$(DT)_scheduling2_header.csv \
 	-phi 0.5 \
-	-ta 3 \
+	-ta 5 \
 	-u 90 \
 	-U 100 \
 	-us 1 \
