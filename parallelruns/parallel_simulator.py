@@ -40,7 +40,7 @@ def create_processes(
 
 
 def main(args):
-    xp_type = args['--xp_type']
+    xp_type = args['--xp-type']
     build_dir = args['--build-dir']
     input_file = args['--input-file']
     output_prefix = args['--output-prefix']
@@ -54,6 +54,9 @@ def main(args):
     start_taskset = 0
     processes = []
     i = 0
+
+    nb_success = 0
+    nb_failed = 0
 
     for cpu in range(cpus):
         num_tasksets = tasksets_per_cpu + (1 if cpu < remaining_tasksets else 0)
@@ -73,7 +76,19 @@ def main(args):
 
     for process in processes:
         process.wait()
-    print("Parallel simulation completed.")
+        if 0 == process.returncode:
+            nb_success += 1
+        else:
+            nb_failed += 1
+
+    print(f"-- {nb_failed} process(es) failed. --")
+    print(f"-- {nb_success} process(es) succeed. --")
+
+    if 0 == nb_failed:
+        print("Parallel simulations completed.")
+    else:
+        print("Parallel simulations failed.")
+        exit(1)
 
 
 if __name__ == '__main__':
