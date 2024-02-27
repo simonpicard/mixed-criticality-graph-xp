@@ -174,9 +174,9 @@ generate-set-scheduling2: $(VENV)
 	-c $(OUTPUT_DIR)/$(DT)_scheduling2_header.csv \
 	-phi 0.5 \
 	-ta 5 \
-	-u 90 \
+	-u 80 \
 	-U 100 \
-	-us 1 \
+	-us 2 \
 	-ss 1000 \
 	-min_t 5 \
 	-max_t 50
