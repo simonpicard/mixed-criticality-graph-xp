@@ -35,6 +35,8 @@ $(EXPLORER_MAKEFILE): $(EXPLORER_BUILD)
 install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
 	$(MAKE) -C $(EXPLORER_BUILD) -j$(nproc)
 
+install-py: $(VENV)
+
 install-all: $(VENV) install-explorer
 
 all: install-all xp-statespace-ntasks-small
@@ -59,11 +61,11 @@ xp-statespace-ntasks-small: generate-set-ntasks-small install-explorer
 	$(NB_GENERATE_HTML); \
 	$(NB_INTERACTIVE)
 
-generate-set-utilisation: $(VENV)
+generate-set-statespace-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t utilisation \
-	-o $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
-	-c $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
+	-o $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
+	-c $(OUTPUT_DIR)/$(DT)_statespace_utilisation_header.csv \
 	-phi 0.5 \
 	-ta 3 \
 	-u 25 \
@@ -73,11 +75,11 @@ generate-set-utilisation: $(VENV)
 	-min_t 5 \
 	-max_t 50
 
-generate-set-utilisation5: $(VENV)
+generate-set-statespace-utilisation5: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	--type utilisation \
-	--task_sets_output $(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
-	--header_output $(OUTPUT_DIR)/$(DT)_utilisation_header.csv \
+	--task_sets_output $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
+	--header_output $(OUTPUT_DIR)/$(DT)_statespace_utilisation_header.csv \
 	--probability_of_HI 0.5 \
 	--task_amount 5 \
 	--from_utilisation 50 \
@@ -87,14 +89,14 @@ generate-set-utilisation5: $(VENV)
 	--minimum_period 5 \
 	--maximum_period 20
 
-xp-statespace-utilisation: generate-set-utilisation install-explorer
-	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
+xp-statespace-utilisation: generate-set-statespace-utilisation install-explorer
+	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
 
-xp-statespace-utilisation5: generate-set-utilisation5 install-explorer
+xp-statespace-utilisation5: generate-set-statespace-utilisation5 install-explorer
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
 		--xp-type=antichain \
 		--build-dir=$(EXPLORER_BUILD) \
-		--input-file=$(OUTPUT_DIR)/$(DT)_utilisation_def.txt \
+		--input-file=$(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo
 
 generate-set-ntasks: $(VENV)
