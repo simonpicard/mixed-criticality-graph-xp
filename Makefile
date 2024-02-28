@@ -162,7 +162,7 @@ generate-set-scheduling1: $(VENV)
 	-us 5 \
 	-ss 1000 \
 	-min_t 5 \
-	-max_t 50
+	-max_t 20
 
 xp-scheduling1: install-all generate-set-scheduling1
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
@@ -183,7 +183,7 @@ generate-set-scheduling2: $(VENV)
 	-us 2 \
 	-ss 1000 \
 	-min_t 5 \
-	-max_t 50
+	-max_t 20
 
 xp-scheduling2: install-all generate-set-scheduling2
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
