@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-script_dir=$(readlink -e "$(dirname "$0")")
-root_dir=$(readlink -e "${script_dir}")
+script_dir=$(greadlink -e "$(dirname "$0")")
+root_dir=$(greadlink -e "${script_dir}")
 venv_dir=$1
 
 if [ -z "${venv_dir}" ]
