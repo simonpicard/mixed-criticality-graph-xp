@@ -36,6 +36,9 @@ install-explorer: $(EXPLORER_BUILD) $(EXPLORER_MAKEFILE)
 	$(MAKE) -C $(EXPLORER_BUILD) -j$(nproc)
 
 install-py: $(VENV)
+install-py-macos:
+	$(ROOT_DIR)/install-venv-macos.sh $(VENV)
+
 
 install-all: $(VENV) install-explorer
 
