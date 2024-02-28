@@ -162,10 +162,14 @@ generate-set-scheduling1: $(VENV)
 	-us 5 \
 	-ss 1000 \
 	-min_t 5 \
-	-max_t 50
+	-max_t 20
 
 xp-scheduling1: install-all generate-set-scheduling1
-	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling1_def.txt $(OUTPUT_DIR)/$(DT)_scheduling1_explo.csv
+	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--xp-type=scheduling \
+		--build-dir=$(EXPLORER_BUILD) \
+		--input-file=$(OUTPUT_DIR)/$(DT)_scheduling1_def.txt \
+		--output-prefix=$(OUTPUT_DIR)/$(DT)_scheduling1_explo
 
 generate-set-scheduling2: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -179,10 +183,14 @@ generate-set-scheduling2: $(VENV)
 	-us 2 \
 	-ss 1000 \
 	-min_t 5 \
-	-max_t 50
+	-max_t 20
 
 xp-scheduling2: install-all generate-set-scheduling2
-	$(EXPLORER_BUILD)/evaluation_mcs scheduling $(OUTPUT_DIR)/$(DT)_scheduling2_def.txt $(OUTPUT_DIR)/$(DT)_scheduling2_explo.csv
+	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--xp-type=scheduling \
+		--build-dir=$(EXPLORER_BUILD) \
+		--input-file=$(OUTPUT_DIR)/$(DT)_scheduling2_def.txt \
+		--output-prefix=$(OUTPUT_DIR)/$(DT)_scheduling2_explo
 
 xp-scheduling: xp-scheduling1 xp-scheduling2 install-explorer
 
