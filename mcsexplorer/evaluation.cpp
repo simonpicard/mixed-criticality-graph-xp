@@ -161,25 +161,23 @@ void scheduling_performance_experiment(State* initial_state, int test_case_id, s
     std::stringstream search_result_csv_line;
     int64_t* search_result;
 
-    Graph g(new State(*initial_state), &Scheduler::edfvd, "", -1, {&SafeOracle::edf_carryoverjobs},
+    Graph g(new State(*initial_state), &Scheduler::edfvd, "", -1, {&SafeOracle::all_idle_hi},
             {&UnsafeOracle::worst_interference});
 
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,edf_carryoverjobs,hi_interference," << search_result[0]
-                           << "," << search_result[1] << "," << search_result[2] << "," << search_result[3]
-                           << std::endl;
+    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,all_idle_hi,hi_interference," << search_result[0] << ","
+                           << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
-    Graph g2(new State(*initial_state), &Scheduler::lwlf, "", -1, {&SafeOracle::edf_carryoverjobs},
+    Graph g2(new State(*initial_state), &Scheduler::lwlf, "", -1, {&SafeOracle::all_idle_hi},
              {&UnsafeOracle::worst_interference});
 
     search_result = g2.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,LWLF,edf_carryoverjobs,hi_interference," << search_result[0]
-                           << "," << search_result[1] << "," << search_result[2] << "," << search_result[3]
-                           << std::endl;
+    search_result_csv_line << test_case_id << ",ACBFS,LWLF,all_idle_hi,hi_interference," << search_result[0] << ","
+                           << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
