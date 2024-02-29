@@ -208,3 +208,12 @@ xp-oracles-split: install-all generate-set-oracles
 		--build-dir=$(EXPLORER_BUILD) \
 		--input-file=$(OUTPUT_DIR)/$(DT)_oracles_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_oracles_explo
+
+xp-statespace-antichain-oracle: generate-set-oracles install-explorer
+	mv $(OUTPUT_DIR)/$(DT)_oracles_def.txt $(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_def.txt
+	mv $(OUTPUT_DIR)/$(DT)_oracles_header.csv $(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_header.csv
+	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
+		--xp-type=antichain_oracle \
+		--build-dir=$(EXPLORER_BUILD) \
+		--input-file=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_def.txt \
+		--output-prefix=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_explo
