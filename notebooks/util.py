@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
+from typing import List
 
 import pandas as pd
-from typing import List
 
 
 def merge_datasets(dataset_directory: str, unsorted_filenames: List[str], prefix: str):
@@ -27,7 +27,7 @@ def merge_datasets(dataset_directory: str, unsorted_filenames: List[str], prefix
     first_line = True
     all_lines = []
     for filename in filenames:
-        with open(pdd/filename, "r") as f:
+        with open(pdd / filename, "r") as f:
             lines = f.readlines()
         if first_line:
             all_lines.extend(lines)
@@ -45,7 +45,9 @@ def potentially_merge_datasets(dataset_directory: str | Path, csv_filenames: Lis
             csv_prefix = csv_filename.split(key)[0]
             merge_datasets(
                 dataset_directory=dataset_directory,
-                unsorted_filenames=[f for f in csv_filenames if csv_filename.startswith(csv_prefix)],
+                unsorted_filenames=[
+                    f for f in csv_filenames if csv_filename.startswith(csv_prefix)
+                ],
                 prefix=csv_prefix,
             )
 
@@ -56,10 +58,10 @@ def prepare_df(
     xp_identifier=None,
     output_directory="../outputs/",
 ):
-    header_path = os.getenv("MCS_HEADER_PATH", default_header_path)
-    exploration_path = os.getenv("MCS_SIMULATION_PATH", default_exploration_path)
+    header_path = default_header_path or os.getenv("MCS_HEADER_PATH")
+    exploration_path = default_exploration_path or os.getenv("MCS_SIMULATION_PATH")
 
-    if not header_path or exploration_path:
+    if not (header_path or exploration_path):
         dataset_directory = Path(output_directory)
 
         csv_filenames = sorted(
