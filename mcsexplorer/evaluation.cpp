@@ -58,6 +58,13 @@ void statespace_antichain_oracle_experiment(State* initial_state, int test_case_
 
     g.set_unsafe_oracle(&UnsafeOracle::worst_interference);
 
+    search_result = g.bfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",BFS,EDF-VD,None,hi_interference," << search_result[0] << ","
+                           << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
     search_result = g.acbfs();
     search_result_csv_line.str("");
     search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,hi_interference," << search_result[0] << ","
