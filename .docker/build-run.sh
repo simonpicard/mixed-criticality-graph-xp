@@ -23,6 +23,12 @@ root_dir=$(readlinkf "$(dirname "$(readlinkf "$0")")/..")
 IMAGE_VENV=${IMAGE_VENV}
 [ -z ${IMAGE_VENV} ] && IMAGE_VENV=OFF
 
+INTERACTIVE=${INTERACTIVE}
+[ -z ${INTERACTIVE} ] && INTERACTIVE=1
+
+INTERACTIVE_FLAGS=""
+[ 1 -eq ${INTERACTIVE} ] && INTERACTIVE_FLAGS="-ti"
+
 image_name=mcgraphxp
 volume_name=mcgraphxp_cache
 
@@ -46,7 +52,7 @@ guest_ws_dir=/home/user/workspace
 
 docker run \
   --rm \
-  -ti \
+  ${INTERACTIVE_FLAGS} \
   --volume "${volume_name}":/home/user/.cache/pip \
   --volume "${root_dir}:${guest_ws_dir}" \
   --workdir ${guest_ws_dir} \

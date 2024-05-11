@@ -1,0 +1,3 @@
+[submodule "deps/benchkit"]
+	path = deps/benchkit
+	url = https://github.com/open-s4c/benchkit.git
