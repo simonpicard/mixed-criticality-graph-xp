@@ -217,3 +217,51 @@ xp-statespace-antichain-oracle: generate-set-oracles install-explorer
 		--build-dir=$(EXPLORER_BUILD) \
 		--input-file=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_explo
+
+generate-set-statespace-n-tasks: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--utilisation_list 50 \
+	--max_period_list 30 \
+	--n_tasks_start 3 \
+	--n_tasks_stop 11 \
+	--n_tasks_step 1 \
+	--sets_per_config 20 \
+	--seed 1
+
+generate-set-statespace-period-max: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-period-max.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-period-max.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--utilisation_list 50 \
+	--n_tasks_list 5 \
+	--max_period_start 20 \
+	--max_period_stop 201 \
+	--max_period_step 20 \
+	--sets_per_config 20 \
+	--seed 2
+
+generate-set-statespace-utilisation: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-utilisation.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-utilisation.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--max_period_list 30 \
+	--n_tasks_list 5 \
+	--utilisation_start 30 \
+	--utilisation_stop 101 \
+	--utilisation_step 10 \
+	--sets_per_config 20 \
+	--seed 3
+
+
+generate-set-statespace-rtss: generate-set-statespace-n-tasks generate-set-statespace-period-max generate-set-statespace-utilisation
