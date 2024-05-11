@@ -64,7 +64,7 @@ xp-statespace-ntasks-small: generate-set-ntasks-small install-explorer
 	$(NB_GENERATE_HTML); \
 	$(NB_INTERACTIVE)
 
-generate-set-statespace-tasks-period-utilisation: $(VENV)
+generate-set-statespace-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t utilisation \
 	-o $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
@@ -78,7 +78,7 @@ generate-set-statespace-tasks-period-utilisation: $(VENV)
 	-min_t 5 \
 	-max_t 50
 
-generate-set-statespace-tasks-period-utilisation5: $(VENV)
+generate-set-statespace-utilisation5: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	--type utilisation \
 	--task_sets_output $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
@@ -92,10 +92,10 @@ generate-set-statespace-tasks-period-utilisation5: $(VENV)
 	--minimum_period 5 \
 	--maximum_period 20
 
-xp-statespace-utilisation: generate-set-statespace-tasks-period-utilisation install-explorer
+xp-statespace-utilisation: generate-set-statespace-utilisation install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
 
-xp-statespace-utilisation5: generate-set-statespace-tasks-period-utilisation5 install-explorer
+xp-statespace-utilisation5: generate-set-statespace-utilisation5 install-explorer
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
 		--xp-type=antichain \
 		--build-dir=$(EXPLORER_BUILD) \
