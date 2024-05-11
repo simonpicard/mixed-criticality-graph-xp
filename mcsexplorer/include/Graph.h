@@ -30,14 +30,15 @@ class Graph {
     bool is_fail(std::vector<State*> const& states);
     void run_tansition(State* state, int to_run);
     std::vector<State*> completion_transition(State* state, int to_run);
-    std::vector<State*> request_transition(std::vector<State*> const& states);
+    std::vector<State*> request_transition(State* state);
 
     bool has_unsafe(std::vector<State*> const& states);
     void handle_safe(std::vector<State*>& states);
 
-    void handle_run_transition(State* state, int to_run, bool is_last_leaf);
-    std::vector<State*> handle_completion_transition(State* state, int to_run, bool is_last_leaf);
-    std::vector<State*> handle_request_transition(std::vector<State*> const& states, bool is_last_leaf);
+    std::vector<State*> handle_request_transition(State* state, bool is_last_leaf);
+    void handle_run_transition(std::vector<State*> const& states, std::vector<int> to_runs, bool is_last_leaf);
+    std::vector<State*> handle_completion_transition(std::vector<State*> const& states, std::vector<int> to_runs,
+                                                     bool is_last_leaf);
 
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
 
@@ -66,8 +67,8 @@ class Graph {
     void log_safe(State* safe_state);
     void log_start(State* state, bool is_last_leaf);
     void log_run(State* state, bool is_last_leaf);
-    void log_completion(State* state, bool is_last_leaf);
-    void log_request(State* state, bool is_last_leaf, bool is_last_request);
+    void log_completion(State* state, bool is_last_leaf, bool is_last_state);
+    void log_request(State* state, bool is_last_leaf);
     void log_simulated(State* state);
     void log_visited(State* state);
     std::string get_second_hiearchy_char(bool is_last_leaf);

@@ -30,20 +30,18 @@ std::vector<State*> Graph::completion_transition(State* state, int to_run) {
     return std::vector<State*>{state};
 }
 
-std::vector<State*> Graph::request_transition(std::vector<State*> const& states) {
+std::vector<State*> Graph::request_transition(State* state) {
     std::vector<State*> new_states;
 
-    for (State* current_state : states) {
-        std::vector<size_t> eligibles_candidates = current_state->get_eligibles();
-        std::vector<std::vector<int>> all_eligibles = power_set(eligibles_candidates);
+    std::vector<size_t> eligibles_candidates = state->get_eligibles();
+    std::vector<std::vector<int>> all_eligibles = power_set(eligibles_candidates);
 
-        for (std::vector<int> const& current_eligibles : all_eligibles) {
-            State* request_state = new State(*current_state);
-            request_state->request_transition(current_eligibles);
-            new_states.push_back(request_state);
-        }
-        delete current_state;
+    for (std::vector<int> const& current_eligibles : all_eligibles) {
+        State* request_state = new State(*state);
+        request_state->request_transition(current_eligibles);
+        new_states.push_back(request_state);
     }
+    delete state;
 
     return new_states;
 }
@@ -74,32 +72,48 @@ void Graph::handle_safe(std::vector<State*>& states) {
     }
 }
 
-void Graph::handle_run_transition(State* state, int to_run, bool is_last_leaf) {
-    u_int64_t original_state_hash = state->get_hash();
-    run_tansition(state, to_run);
-    if (state->get_hash() != original_state_hash) log_run(state, is_last_leaf);
-}
+void Graph::handle_run_transition(std::vector<State*> const& states, std::vector<int> to_runs, bool is_last_leaf) {
+    for (size_t i = 0; i < states.size(); ++i) {
+        State* state = states[i];
+        int to_run = to_runs[i];
 
-std::vector<State*> Graph::handle_completion_transition(State* state, int to_run, bool is_last_leaf) {
-    if (to_run > -1) {
-        std::vector<State*> completion_states = completion_transition(state, to_run);
-
-        if (completion_states.size() > 1) {
-            for (State* new_state : completion_states) {
-                log_completion(new_state, is_last_leaf);
-            }
-        }
-        return completion_states;
+        run_tansition(state, to_run);
+        log_run(state, is_last_leaf);
     }
-    return std::vector<State*>{state};
 }
 
-std::vector<State*> Graph::handle_request_transition(std::vector<State*> const& states, bool is_last_leaf) {
-    std::vector<State*> request_states = request_transition(states);
+std::vector<State*> Graph::handle_completion_transition(std::vector<State*> const& states, std::vector<int> to_runs,
+                                                        bool is_last_leaf) {
+    std::vector<State*> all_completion_states = std::vector<State*>{};
+
+    for (size_t i = 0; i < states.size(); ++i) {
+        State* state = states[i];
+        int to_run = to_runs[i];
+
+        if (to_run > -1) {
+            std::vector<State*> completion_states = completion_transition(state, to_run);
+
+            for (State* new_state : completion_states) {
+                all_completion_states.push_back(new_state);
+            }
+        } else {
+            all_completion_states.push_back(state);
+        }
+    }
+
+    for (size_t j = 0; j < all_completion_states.size(); ++j) {
+        log_completion(all_completion_states[j], is_last_leaf, j == all_completion_states.size() - 1);
+    }
+
+    return all_completion_states;
+}
+
+std::vector<State*> Graph::handle_request_transition(State* state, bool is_last_leaf) {
+    std::vector<State*> request_states = request_transition(state);
 
     for (size_t i = 0; i < request_states.size(); ++i) {
         State* request_state = request_states[i];
-        log_request(request_state, is_last_leaf, i == request_states.size() - 1);
+        log_request(request_state, is_last_leaf);
     }
 
     return request_states;
@@ -117,17 +131,22 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> const& leaf_states)
         log_start(current_state, is_last_leaf);
 
         // apply all three transitions
-        int to_run = schedule(current_state);
-        handle_run_transition(current_state, to_run, is_last_leaf);
-        std::vector<State*> states_for_request = handle_completion_transition(current_state, to_run, is_last_leaf);
-        std::vector<State*> request_state = handle_request_transition(states_for_request, is_last_leaf);
+        std::vector<State*> request_states = handle_request_transition(current_state, is_last_leaf);
 
-        connect_neighbors_graphviz(original_leaf_state, request_state);
+        std::vector<int> to_runs = std::vector<int>{};
+        for (State* request_state : request_states) {
+            to_runs.push_back(schedule(request_state));
+        }
+
+        handle_run_transition(request_states, to_runs, is_last_leaf);
+        std::vector<State*> neighbors = handle_completion_transition(request_states, to_runs, is_last_leaf);
+
+        connect_neighbors_graphviz(original_leaf_state, neighbors);
 
         delete original_leaf_state;
 
         // add new states
-        new_states.insert(new_states.end(), request_state.begin(), request_state.end());
+        new_states.insert(new_states.end(), neighbors.begin(), neighbors.end());
     }
 
     return new_states;
@@ -363,20 +382,13 @@ void Graph::graphiz_setup() {
     o_file.close();
 
     std::stringstream legend;
-    legend << "legend_nat_rct "
-           << "[label=<rct,nat>,fillcolor=white]" << std::endl;
-    legend << "legend_lo "
-           << "[label=<LO>,fillcolor=lightcyan]" << std::endl;
-    legend << "legend_hi "
-           << "[label=<HI>,fillcolor=lightyellow]" << std::endl;
-    legend << "legend_fail "
-           << "[label=<fail>,color=orchid,fillcolor=white,penwidth=5]" << std::endl;
-    legend << "legend_simulated "
-           << "[label=<simulated>,color=blue,fillcolor=white,penwidth=5]" << std::endl;
-    legend << "legend_safe "
-           << "[label=<safe>,color=green,fillcolor=white,penwidth=5]" << std::endl;
-    legend << "legend_unsafe "
-           << "[label=<unsafe>,color=red,fillcolor=white,penwidth=5]" << std::endl;
+    legend << "legend_nat_rct " << "[label=<rct,nat>,fillcolor=white]" << std::endl;
+    legend << "legend_lo " << "[label=<LO>,fillcolor=lightcyan]" << std::endl;
+    legend << "legend_hi " << "[label=<HI>,fillcolor=lightyellow]" << std::endl;
+    legend << "legend_fail " << "[label=<fail>,color=orchid,fillcolor=white,penwidth=5]" << std::endl;
+    legend << "legend_simulated " << "[label=<simulated>,color=blue,fillcolor=white,penwidth=5]" << std::endl;
+    legend << "legend_safe " << "[label=<safe>,color=green,fillcolor=white,penwidth=5]" << std::endl;
+    legend << "legend_unsafe " << "[label=<unsafe>,color=red,fillcolor=white,penwidth=5]" << std::endl;
     append_to_file(graph_output_path, legend.str());
 }
 
@@ -518,18 +530,17 @@ void Graph::log_run(State* state, bool is_last_leaf) {
     }
 }
 
-void Graph::log_completion(State* state, bool is_last_leaf) {
+void Graph::log_completion(State* state, bool is_last_leaf, bool is_last_state) {
     if (verbose >= 2) {
-        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << "├ ";
+        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << get_third_hiearchy_char(is_last_state) << " ";
         std::cout << "COMPLETION " << state->str() << std::endl;
     }
 }
 
-void Graph::log_request(State* state, bool is_last_leaf, bool is_last_request) {
-    std::string third_hiearchy_char = is_last_request ? std::string("└") : std::string("├");
+void Graph::log_request(State* state, bool is_last_leaf) {
     if (verbose >= 2) {
-        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << get_third_hiearchy_char(is_last_request);
-        std::cout << " REQUEST " << state->str() << std::endl;
+        std::cout << "│" << get_second_hiearchy_char(is_last_leaf) << "├ ";
+        std::cout << "REQUEST " << state->str() << std::endl;
     }
 }
 

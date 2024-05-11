@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 #include "State.h"
+#include "Types.h"
 #include <iostream>
 #include <vector>
 

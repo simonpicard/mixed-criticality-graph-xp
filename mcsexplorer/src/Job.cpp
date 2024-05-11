@@ -6,7 +6,7 @@ void Job::initialize() {
 }
 
 float Job::get_ttvd(float discount_factor) const {
-    if (X == 1) return (float)get_ttd();
+    if (X == LO) return (float)get_ttd();
     return 1.0 * nat - (1.0 * T - D * discount_factor);
 };
 
