@@ -51,7 +51,7 @@ def nb_systems(tasksystems_path: PathType) -> int:
     return result
 
 
-def campaign_first():
+def campaign_state_space():
     taskset_files = ["outputs/20240511_094319-statespace-period-max.txt"]
     taskset_files = ["outputs/20240511_133342-statespace-utilisation.txt"]
     # taskset_positions = range(nb_systems(taskset_files[0]))
@@ -104,9 +104,98 @@ def campaign_first():
 
     return campaign01
 
+def campaign_schedulability():
+    taskset_files = ["outputs/20240511_133342-scheduling-rtss.txt"]# TODO function get the last
+    safe_oracles = []
+    unsafe_oracles = ["hi-over-demand"]
 
-def run_campaign_first():
-    campaign01 = campaign_first()
+    varying_variables = [{
+        "taskset_file": tf,
+        "taskset_position": tp,
+    } for tf in taskset_files for tp in range(nb_systems(tasksystems_path=tf))]
+
+    base_config = {
+            "use_idlesim": True,
+            "safe_oracles": safe_oracles,
+            "unsafe_oracles": unsafe_oracles,
+    }
+
+    use_cases = [
+        {
+            **base_config,
+            "use_case": "EDF-VD (exact)",
+            "scheduler": "edfvd",
+        },
+        {
+            **base_config,
+            "use_case": "LWLF (exact)",
+            "scheduler": "lwlf",
+        },
+    ]
+    variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
+
+    campaign01 = CampaignIterateVariables(
+        name="mcs_schedulability",
+        benchmark=MCSBench(timeout_seconds=timeout_seconds),
+        nb_runs=1,
+        variables=variables,
+        constants={},
+        debug=False,
+        gdb=False,
+        enable_data_dir=True,
+        continuing=False,
+        benchmark_duration_seconds=None,
+    )
+
+    return campaign01
+
+
+def campaign_oracles():
+    taskset_files = ["outputs/20240511_133342-oracles-rtss.txt"]# TODO function get the last
+
+    safe_oracles = []
+    unsafe_oracles = ["hi-over-demand"]
+
+    varying_variables = [{
+        "taskset_file": tf,
+        "taskset_position": tp,
+    } for tf in taskset_files for tp in range(nb_systems(tasksystems_path=tf))]
+
+    base_config = {
+        "scheduler": "edfvd",
+        "use_idlesim": True,
+    }
+
+    use_cases = [
+        {
+            **base_config,
+            "use_case": "basline",
+        },
+        {
+            **base_config,
+            "use_case": "LWLF (exact)",
+            "scheduler": "lwlf",
+        },
+    ]
+    variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
+
+    campaign01 = CampaignIterateVariables(
+        name="mcs_schedulability",
+        benchmark=MCSBench(timeout_seconds=timeout_seconds),
+        nb_runs=1,
+        variables=variables,
+        constants={},
+        debug=False,
+        gdb=False,
+        enable_data_dir=True,
+        continuing=False,
+        benchmark_duration_seconds=None,
+    )
+
+    return campaign01
+
+def run_campaign_state_space():
+    campaign01 = campaign_state_space()
 
     campaigns = [campaign01]
     suite = CampaignSuite(campaigns=campaigns)
