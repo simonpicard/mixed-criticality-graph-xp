@@ -263,5 +263,36 @@ generate-set-statespace-utilisation: $(VENV)
 	--sets_per_config 20 \
 	--seed 3
 
+generate-set-scheduling-rtss: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-scheduling-rtss.txt \
+	-c $(OUTPUT_DIR)/$(DT)-scheduling-rtss.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--max_period_list 30 \
+	--n_tasks_list 5 \
+	--utilisation_start 50 \
+	--utilisation_stop 101 \
+	--utilisation_step 5 \
+	--sets_per_config 1000 \
+	--seed 4
 
-generate-set-statespace-rtss: generate-set-statespace-n-tasks generate-set-statespace-period-max generate-set-statespace-utilisation
+
+
+generate-set-oracles-rtss: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	--task_sets_output $(OUTPUT_DIR)/$(DT)-oracles-rtss.txt \
+	--header_output $(OUTPUT_DIR)/$(DT)-oracles-rtss.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--max_period_list 30 \
+	--n_tasks_list 5 \
+	--utilisation_start 80 \
+	--utilisation_stop 101 \
+	--utilisation_step 1 \
+	--sets_per_config 100 \
+	--seed 5
+
+generate-set-statespace-rtss: generate-set-statespace-n-tasks generate-set-statespace-period-max generate-set-statespace-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss
