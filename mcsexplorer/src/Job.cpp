@@ -84,3 +84,18 @@ uint64_t Job::get_hash_idle() const {
 
     return hash;
 }
+
+int Job::get_next_jobs(int t, Criticality alpha) const {
+    if (X < alpha) return 0;
+
+    return std::max(0, t - nat - D + T) / T;
+}
+
+int Job::get_demand(int t, Criticality alpha, Criticality current_crit) const {
+    if (t < get_ttd() or X < alpha) return 0;
+
+    if (rct > 0)
+        return rct + C[alpha - 1] - C[current_crit - 1] + get_next_jobs(t, alpha) * C[alpha - 1];
+    else
+        return get_next_jobs(t, alpha) * C[alpha - 1];
+}

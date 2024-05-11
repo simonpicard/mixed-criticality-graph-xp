@@ -56,7 +56,7 @@ void statespace_antichain_oracle_experiment(State* initial_state, int test_case_
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
-    g.set_unsafe_oracle(&UnsafeOracle::worst_interference);
+    g.set_unsafe_oracle(&UnsafeOracle::hi_over_demand);
 
     search_result = g.bfs();
     search_result_csv_line.str("");
@@ -109,7 +109,7 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id, std::s
     output_file << search_result_csv_line.str();
 
     g.clear_safe_oracle();
-    g.set_unsafe_oracle(&UnsafeOracle::interference);
+    g.set_unsafe_oracle(&UnsafeOracle::over_demand);
     search_result = g.acbfs();
     search_result_csv_line.str("");
     search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,interference," << search_result[0] << ","
@@ -118,19 +118,10 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id, std::s
     output_file << search_result_csv_line.str();
 
     g.clear_safe_oracle();
-    g.set_unsafe_oracle(&UnsafeOracle::worst_interference);
+    g.set_unsafe_oracle(&UnsafeOracle::hi_over_demand);
     search_result = g.acbfs();
     search_result_csv_line.str("");
     search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,hi_interference," << search_result[0] << ","
-                           << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
-    std::cout << search_result_csv_line.str();
-    output_file << search_result_csv_line.str();
-
-    g.clear_safe_oracle();
-    g.set_unsafe_oracle(&UnsafeOracle::all_interference);
-    search_result = g.acbfs();
-    search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,all_interference," << search_result[0] << ","
                            << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
@@ -174,6 +165,26 @@ void statespace_oracle_experiment(State* initial_state, int test_case_id, std::s
     output_file.close();
 };
 
+// void make_graph_experiment(State* initial_state, int test_case_id, std::string output_path) {
+//     std::ofstream output_file;
+//     output_file.open(output_path, std::ios::in | std::ios::out | std::ios::ate);
+
+//     std::stringstream search_result_csv_line;
+//     int64_t* search_result;
+
+//     Graph g(initial_state, &Scheduler::edfvd, "./graph_experiment.dot", -1, {}, {});
+
+//     search_result = g.acbfs();
+//     search_result_csv_line.str("");
+//     search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,None,None," << search_result[0] << "," <<
+//     search_result[1]
+//                            << "," << search_result[2] << "," << search_result[3] << std::endl;
+//     std::cout << search_result_csv_line.str();
+//     output_file << search_result_csv_line.str();
+
+//     output_file.close();
+// };
+
 void make_graph_experiment(State* initial_state, int test_case_id, std::string output_path) {
     std::ofstream output_file;
     output_file.open(output_path, std::ios::in | std::ios::out | std::ios::ate);
@@ -181,13 +192,30 @@ void make_graph_experiment(State* initial_state, int test_case_id, std::string o
     std::stringstream search_result_csv_line;
     int64_t* search_result;
 
-    // Graph g(initial_state, &Scheduler::edfvd, "./graph_experiment.dot", 5, {}, {});
     Graph g(initial_state, &Scheduler::edfvd, "", -1, {}, {});
 
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",BFS,EDF-VD,None,None," << search_result[0] << "," << search_result[1]
-                           << "," << search_result[2] << "," << search_result[3] << std::endl;
+    search_result_csv_line << test_case_id << ",None," << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3] << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.clear_unsafe_oracle();
+    g.set_unsafe_oracle(&UnsafeOracle::over_demand);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",over_demand," << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3] << std::endl;
+    std::cout << search_result_csv_line.str();
+    output_file << search_result_csv_line.str();
+
+    g.clear_unsafe_oracle();
+    g.set_unsafe_oracle(&UnsafeOracle::hi_over_demand);
+    search_result = g.acbfs();
+    search_result_csv_line.str("");
+    search_result_csv_line << test_case_id << ",hi_over_demand," << search_result[0] << "," << search_result[1] << ","
+                           << search_result[2] << "," << search_result[3] << std::endl;
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
@@ -202,7 +230,7 @@ void scheduling_performance_experiment(State* initial_state, int test_case_id, s
     int64_t* search_result;
 
     Graph g(new State(*initial_state), &Scheduler::edfvd, "", -1, {&SafeOracle::all_idle_hi},
-            {&UnsafeOracle::worst_interference});
+            {&UnsafeOracle::hi_over_demand});
 
     search_result = g.acbfs();
     search_result_csv_line.str("");
@@ -212,7 +240,7 @@ void scheduling_performance_experiment(State* initial_state, int test_case_id, s
     output_file << search_result_csv_line.str();
 
     Graph g2(new State(*initial_state), &Scheduler::lwlf, "", -1, {&SafeOracle::all_idle_hi},
-             {&UnsafeOracle::worst_interference});
+             {&UnsafeOracle::hi_over_demand});
 
     search_result = g2.acbfs();
     search_result_csv_line.str("");
@@ -295,9 +323,9 @@ void dev_main() {
     std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;
 
     safe_oracles = {&SafeOracle::all_idle_hi};
-    unsafe_oracles = {&UnsafeOracle::worst_interference};
+    unsafe_oracles = {&UnsafeOracle::hi_over_demand};
 
-    Graph g(s, &Scheduler::reduce_interference, "./test.dot", 3, safe_oracles, unsafe_oracles);
+    Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
     g.acbfs();
 }
 
