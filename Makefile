@@ -64,7 +64,7 @@ xp-statespace-ntasks-small: generate-set-ntasks-small install-explorer
 	$(NB_GENERATE_HTML); \
 	$(NB_INTERACTIVE)
 
-generate-set-statespace-utilisation: $(VENV)
+generate-set-statespace-tasks-period-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t utilisation \
 	-o $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
@@ -78,7 +78,7 @@ generate-set-statespace-utilisation: $(VENV)
 	-min_t 5 \
 	-max_t 50
 
-generate-set-statespace-utilisation5: $(VENV)
+generate-set-statespace-tasks-period-utilisation5: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	--type utilisation \
 	--task_sets_output $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt \
@@ -92,10 +92,10 @@ generate-set-statespace-utilisation5: $(VENV)
 	--minimum_period 5 \
 	--maximum_period 20
 
-xp-statespace-utilisation: generate-set-statespace-utilisation install-explorer
+xp-statespace-utilisation: generate-set-statespace-tasks-period-utilisation install-explorer
 	$(EXPLORER_BUILD)/evaluation_mcs antichain $(OUTPUT_DIR)/$(DT)_statespace_utilisation_def.txt $(OUTPUT_DIR)/$(DT)_utilisation_statespace_explo.csv
 
-xp-statespace-utilisation5: generate-set-statespace-utilisation5 install-explorer
+xp-statespace-utilisation5: generate-set-statespace-tasks-period-utilisation5 install-explorer
 	$(VENV_PYTHON) $(ROOT_DIR)/parallelruns/parallel_simulator.py \
 		--xp-type=antichain \
 		--build-dir=$(EXPLORER_BUILD) \
@@ -217,3 +217,51 @@ xp-statespace-antichain-oracle: generate-set-oracles install-explorer
 		--build-dir=$(EXPLORER_BUILD) \
 		--input-file=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_explo
+
+generate-set-statespace-n-tasks: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--utilisation_list 50 \
+	--max_period_list 30 \
+	--n_tasks_start 3 \
+	--n_tasks_stop 11 \
+	--n_tasks_step 1 \
+	--sets_per_config 20 \
+	--seed 1
+
+generate-set-statespace-period-max: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-period-max.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-period-max.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--utilisation_list 50 \
+	--n_tasks_list 5 \
+	--max_period_start 20 \
+	--max_period_stop 201 \
+	--max_period_step 20 \
+	--sets_per_config 20 \
+	--seed 2
+
+generate-set-statespace-utilisation: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-utilisation.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-utilisation.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--max_period_list 30 \
+	--n_tasks_list 5 \
+	--utilisation_start 10 \
+	--utilisation_stop 101 \
+	--utilisation_step 10 \
+	--sets_per_config 20 \
+	--seed 3
+
+
+generate-set-statespace-rtss: generate-set-statespace-n-tasks generate-set-statespace-period-max generate-set-statespace-utilisation
