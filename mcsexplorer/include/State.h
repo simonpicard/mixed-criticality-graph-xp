@@ -57,7 +57,6 @@ class State {
    private:
     std::vector<Job*> jobs;
     Criticality crit;
-    int max_crit;
 
     float compute_utilisation_of_level_at_level(int of_level, int at_level) const;
 
