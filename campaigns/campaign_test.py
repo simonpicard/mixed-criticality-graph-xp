@@ -13,6 +13,8 @@ import concurrent.futures
 import pathlib
 import random
 
+import tqdm
+
 
 timeout_seconds = 300
 
@@ -155,7 +157,7 @@ def parallel_runner():
 
     random.shuffle(records)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=nb_cpus) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=nb_cpus) as executor, tqdm.tqdm(total=len(records)) as pbar:
         futures = [executor.submit(run_record, benchmark, record) for record in records]
 
         results = []
@@ -164,7 +166,7 @@ def parallel_runner():
                 result = future.result()
                 results.append(result)
                 print(f"Result collected: {result}")
-                path = pathlib.Path("/tmp/results2.csv")
+                path = pathlib.Path("/tmp/results3.csv")
                 result_keys = [k for k in result]
                 result_values = [result[k] for k in result_keys]
                 if not path.is_file():
@@ -172,6 +174,7 @@ def parallel_runner():
                         f.write(";".join(map(str, result_keys)) + "\n")
                 with open(path, "a") as f:
                     f.write(";".join(map(str, result_values)) + "\n")
+                pbar.update(1)
             except Exception as e:
                 print(f"An error occurred: {e}")
 
