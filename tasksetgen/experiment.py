@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 from random import seed
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -323,7 +324,7 @@ def read_args():
         "-us",
         "--utilisation_step",
         help="step",
-        type=float,
+        type=int,
         required=False,
     )
     parser.add_argument(
@@ -340,12 +341,12 @@ def read_args():
     )
     parser.add_argument(
         "--utilisation_start",
-        type=float,
+        type=int,
         required=False,
     )
     parser.add_argument(
         "--utilisation_stop",
-        type=float,
+        type=int,
         required=False,
     )
     parser.add_argument(
@@ -415,6 +416,7 @@ if __name__ == "__main__":
     args = read_args()
     if args.seed:
         seed(args.seed)
+        np.random.seed(seed=args.seed)
 
     if args.type == "n_tasks":
         generate_per_n_tasks(

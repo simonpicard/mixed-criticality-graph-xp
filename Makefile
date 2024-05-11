@@ -257,7 +257,7 @@ generate-set-statespace-utilisation: $(VENV)
 	--minimum_period 5 \
 	--max_period_list 30 \
 	--n_tasks_list 5 \
-	--utilisation_start 10 \
+	--utilisation_start 30 \
 	--utilisation_stop 101 \
 	--utilisation_step 10 \
 	--sets_per_config 20 \
