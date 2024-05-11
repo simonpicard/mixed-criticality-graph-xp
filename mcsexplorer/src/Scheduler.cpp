@@ -16,7 +16,7 @@ int Scheduler::edfvd(State* state) {
     float dl;
     int j_id;
 
-    if (state->get_crit() == 2) {
+    if (state->get_crit() == HI) {
         for (int i : actives) {
             dl = state->get_job(i)->get_ttd();
             if (!first_set or dl < min_dl) {
@@ -25,7 +25,7 @@ int Scheduler::edfvd(State* state) {
                 first_set = true;
             }
         }
-    } else if (state->get_crit() == 1) {
+    } else if (state->get_crit() == LO) {
         for (int i : actives) {
             dl = state->get_job(i)->get_ttvd(state->get_relativity());
             if (!first_set or dl < min_dl or (dl == min_dl and i < j_id)) {
@@ -34,6 +34,8 @@ int Scheduler::edfvd(State* state) {
                 first_set = true;
             }
         }
+    } else {
+        std::cout << "error: wrong crit" << std::endl;
     }
     return j_id;
 }

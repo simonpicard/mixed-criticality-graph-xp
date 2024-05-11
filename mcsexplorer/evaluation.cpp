@@ -181,14 +181,13 @@ void make_graph_experiment(State* initial_state, int test_case_id, std::string o
     std::stringstream search_result_csv_line;
     int64_t* search_result;
 
-    Graph g(initial_state, &Scheduler::edfvd, "./graph_experiment.dot", -1, {}, {});
-
-    g.set_safe_oracle(&SafeOracle::edf_carryoverjobs);
+    // Graph g(initial_state, &Scheduler::edfvd, "./graph_experiment.dot", 5, {}, {});
+    Graph g(initial_state, &Scheduler::edfvd, "", -1, {}, {});
 
     search_result = g.acbfs();
     search_result_csv_line.str("");
-    search_result_csv_line << test_case_id << ",ACBFS,EDF-VD,edf_carryoverjobs,None," << search_result[0] << ","
-                           << search_result[1] << "," << search_result[2] << "," << search_result[3] << std::endl;
+    search_result_csv_line << test_case_id << ",BFS,EDF-VD,None,None," << search_result[0] << "," << search_result[1]
+                           << "," << search_result[2] << "," << search_result[3] << std::endl;
     std::cout << search_result_csv_line.str();
     output_file << search_result_csv_line.str();
 
