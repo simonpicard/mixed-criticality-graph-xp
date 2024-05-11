@@ -54,6 +54,8 @@ def nb_systems(tasksystems_path: PathType) -> int:
 def campaign_state_space():
     taskset_files = ["outputs/20240511_094319-statespace-period-max.txt"]
     taskset_files = ["outputs/20240511_133342-statespace-utilisation.txt"]
+    taskset_files = ["outputs/20240511_162603-statespace-n-tasks.txt"]
+    taskset_files = ["outputs/20240511_162603-statespace-period-max.txt"]
     # taskset_positions = range(nb_systems(taskset_files[0]))
     # taskset_positions = [0, 20, 40, 60]
     scheduler = "edfvd"
@@ -229,6 +231,7 @@ def parallel_runner():
     benchmark = campaign01.parameters["benchmark"]
     records = campaign01.parameters["variables"]
     nb_cpus = benchmark.platform.nb_cpus()
+    benchmark.prebuild_bench()
     benchmark.build_bench()
 
     # Example asynchronous run for a single process:
@@ -239,10 +242,6 @@ def parallel_runner():
     # raw_output = benchmark.single_run(benchmark_duration_seconds=None, **record)
     # output = benchmark.parse_output_to_results(command_output=raw_output, run_variables=record)
     # print(record | output)
-
-    # exit(0)
-    # I would like to extend this to run all records (in the records List) in parallel, but limit the parallelism to the number of availables cpus (nb_cpus)
-    # What would you propose?
 
     random.shuffle(records)
 
@@ -256,6 +255,8 @@ def parallel_runner():
                 results.append(result)
                 print(f"Result collected: {result}")
                 path = pathlib.Path("/tmp/results3.csv")
+                path = pathlib.Path("results-ntasks.csv")
+                path = pathlib.Path("results-periods.csv")
                 result_keys = [k for k in result]
                 result_values = [result[k] for k in result_keys]
                 if not path.is_file():
