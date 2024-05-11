@@ -10,12 +10,10 @@ class UnsafeOracle {
    public:
     static bool laxity(State* state);
     static bool worst_laxity(State* state);
-    static bool interference_at_level(State* state, int crit);
-    static bool interference(State* state);
-    static bool all_interference(State* state);
-    static bool worst_interference(State* state);
     static bool sum_sorted_laxities(State* state);
     static bool sum_sorted_worst_laxities(State* state);
+    static bool over_demand(State* state);
+    static bool hi_over_demand(State* state);
 };
 
 #endif

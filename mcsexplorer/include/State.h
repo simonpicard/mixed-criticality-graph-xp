@@ -36,9 +36,6 @@ class State {
     int get_size() const { return jobs.size(); };
     float get_relativity() const { return relativity; };
 
-    int get_interference_laxity(int target_crit, size_t i) const;
-    float get_interference_laxity_float(int target_crit, size_t i) const;
-
     void repr() const;
     std::string str() const;
     std::string str_tasks() const;
@@ -54,6 +51,8 @@ class State {
     float get_utilisation_of_level_at_level(int of_level, int at_level) const {
         return utilisation_of_level_at_level[of_level - 1][at_level - 1];
     };
+
+    int get_demand_bound(int t, Criticality alpha) const;
 
    private:
     std::vector<Job*> jobs;

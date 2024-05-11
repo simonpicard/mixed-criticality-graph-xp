@@ -16,26 +16,6 @@ bool UnsafeOracle::worst_laxity(State* state) {
     return false;
 }
 
-bool UnsafeOracle::interference_at_level(State* state, int crit) {
-    for (size_t i = 0; i < state->get_jobs().size(); i++) {
-        if (state->get_interference_laxity(crit, i) < 0) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool UnsafeOracle::interference(State* state) { return interference_at_level(state, state->get_crit()); }
-
-bool UnsafeOracle::all_interference(State* state) {
-    if (interference_at_level(state, 1)) return true;
-    if (interference_at_level(state, 2)) return true;
-    return false;
-}
-
-bool UnsafeOracle::worst_interference(State* state) { return interference_at_level(state, 2); }
-
 bool UnsafeOracle::sum_sorted_laxities(State* state) {
     auto jobs = state->get_jobs();
     size_t n = jobs.size();
@@ -93,4 +73,24 @@ bool UnsafeOracle::sum_sorted_worst_laxities(State* state) {
     }
 
     return false;  // Necessary condition satisfied, we don't know if it is safe
+}
+
+bool UnsafeOracle::over_demand(State* state) {
+    for (int i : state->get_actives()) {
+        Job* job = state->get_jobs()[i];
+        int ttd = job->get_ttd();
+        int demand_bound = state->get_demand_bound(ttd, state->get_crit());
+        if (demand_bound > ttd) return true;
+    }
+    return false;
+}
+
+bool UnsafeOracle::hi_over_demand(State* state) {
+    for (int i : state->get_actives()) {
+        Job* job = state->get_jobs()[i];
+        int ttd = job->get_ttd();
+        int demand_bound = state->get_demand_bound(ttd, HI);
+        if (demand_bound > ttd) return true;
+    }
+    return false;
 }

@@ -69,6 +69,9 @@ class Job {
     uint64_t get_hash_factor() const;
     uint64_t get_hash_idle() const;
 
+    int get_next_jobs(int t, Criticality alpha) const;
+    int get_demand(int t, Criticality alpha, Criticality current_crit) const;
+
    private:
     int T;
     int D;
