@@ -5,7 +5,7 @@ Example of campaign script.
 """
 import pandas as pd
 
-from benchkit.campaign import CampaignSuite, CampaignCartesianProduct, CampaignIterateVariables
+from benchkit.campaign import Campaign, CampaignSuite, CampaignCartesianProduct, CampaignIterateVariables
 from benchkit.utils.types import PathType
 
 from benchmarks import MCSBench
@@ -172,8 +172,8 @@ def campaign_oracles():
         {
             **base_config,
             "use_case": "baseline",
-            "safe_oracles = [],
-            "unsafe_oracles = [],
+            "safe_oracles": [],
+            "unsafe_oracles": [],
         },
         {
             **base_config,
@@ -223,6 +223,7 @@ def campaign_oracles():
 
     return campaign01
 
+
 def run_campaign_state_space():
     campaign01 = campaign_state_space()
 
@@ -253,10 +254,9 @@ def run_record(benchmark, record):
     return record | output
 
 
-def parallel_runner():
-    campaign01 = campaign_first()
-    benchmark = campaign01.parameters["benchmark"]
-    records = campaign01.parameters["variables"]
+def parallel_runner(campaign: Campaign):
+    benchmark = campaign.parameters["benchmark"]
+    records = campaign.parameters["variables"]
     nb_cpus = benchmark.platform.nb_cpus()
     benchmark.prebuild_bench()
     benchmark.build_bench()
@@ -300,7 +300,7 @@ def parallel_runner():
 
 
 def main() -> None:
-    parallel_runner()
+    parallel_runner(campaign=campaign_state_space())
 
 
 if __name__ == "__main__":
