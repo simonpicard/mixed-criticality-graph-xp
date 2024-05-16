@@ -90,6 +90,11 @@ class MCSBench(Benchmark):
     def clean_bench(self) -> None:
         pass
 
+    def make_taskset(self, experiment: str) -> None:
+        make_target = f"generate-set-{experiment}"
+        run_command = ["docker", "exec", "mcgraphxp", "make", make_target]
+        self.platform.comm.shell(run_command)
+
     def single_run(  # pylint: disable=arguments-differ
         self,
         benchmark_duration_seconds: int,

@@ -3,6 +3,7 @@
 """
 Example of campaign script.
 """
+
 import concurrent.futures
 import pathlib
 import random
@@ -17,6 +18,9 @@ from benchkit.campaign import (
 )
 from benchkit.utils.types import PathType
 from benchmarks import MCSBench
+
+import os
+from typing import Tuple
 
 timeout_seconds = 300
 
@@ -53,16 +57,50 @@ def nb_systems(tasksystems_path: PathType) -> int:
     return result
 
 
+def get_taskset_filename(experiment: str, benchmark: MCSBench) -> pathlib.Path:
+    print(experiment)
+    root_dir = pathlib.Path(__file__).parent.parent.resolve()
+    outputs_dir = root_dir / "outputs"
+    files = sorted(
+        [f for f in os.listdir(outputs_dir) if f.endswith(f"-{experiment}.csv")]
+    )
+
+    if len(files) == 0:
+        benchmark.make_taskset(experiment=experiment)
+        # recursive call, but this time we have a taskset:
+        result = get_taskset_filename(experiment=experiment, benchmark=benchmark)
+    else:
+        result = (outputs_dir / files[-1]).resolve()
+
+    return result
+
+
+def get_both_taskset_filenames(experiment: str, benchmark: MCSBench) -> Tuple[str, str]:
+    taskset_csv_path = get_taskset_filename(experiment=experiment, benchmark=benchmark)
+    filename_csv = str(taskset_csv_path.name)
+    filename_txt = filename_csv[:-4] + ".txt"
+    return f"outputs/{filename_txt}", f"outputs/{filename_csv}"
+
+
 def campaign_state_space():
-    taskset_files = [
-        "outputs/20240511_133342-statespace-utilisation.txt"
-    ]  # make generate-set-statespace-rtss-utilisation
-    taskset_files = [
-        "outputs/20240511_162603-statespace-n-tasks.txt"
-    ]  # make generate-set-statespace-rtss-n-tasks
-    taskset_files = [
-        "outputs/20240511_162603-statespace-period-max.txt"
-    ]  # make generate-set-statespace-rtss-period-max
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    period_tasket_filenames = get_both_taskset_filenames(
+        experiment="statespace-rtss-period-max",
+        benchmark=benchmark,
+    )
+    period_tasket_filename = period_tasket_filenames[0]
+    taskset_files = [period_tasket_filename]
+
+    # taskset_files = [
+    #     "outputs/20240511_133342-statespace-utilisation.txt"
+    # ]  # make generate-set-statespace-rtss-utilisation
+    # taskset_files = [
+    #     "outputs/20240511_162603-statespace-n-tasks.txt"
+    # ]  # make generate-set-statespace-rtss-n-tasks
+    # taskset_files = [
+    #     "outputs/20240511_162603-statespace-period-max.txt"
+    # ]  # make generate-set-statespace-rtss-period-max
     # taskset_positions = range(nb_systems(taskset_files[0]))
     # taskset_positions = [0, 20, 40, 60]
     scheduler = "edfvd"
@@ -111,7 +149,7 @@ def campaign_state_space():
 
     campaign01 = CampaignIterateVariables(
         name="mcs_scale01",
-        benchmark=MCSBench(timeout_seconds=timeout_seconds),
+        benchmark=benchmark,
         nb_runs=1,
         variables=variables,
         constants={},
