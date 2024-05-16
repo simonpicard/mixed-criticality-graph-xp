@@ -171,18 +171,45 @@ def campaign_oracles():
     use_cases = [
         {
             **base_config,
-            "use_case": "basline",
+            "use_case": "baseline",
+            "safe_oracles = [],
+            "unsafe_oracles = [],
         },
         {
             **base_config,
-            "use_case": "LWLF (exact)",
-            "scheduler": "lwlf",
+            "use_case": "HI idle point",
+            "safe_oracles" : ["hi-idle-point"],
+            "unsafe_oracles": [],
+        },
+        {
+            **base_config,
+            "use_case": "Negative laxity",
+            "safe_oracles": [],
+            "unsafe_oracles": ["negative-laxity"],
+        },
+        {
+            **base_config,
+            "use_case": "Negative wost laxity",
+            "safe_oracles": [],
+            "unsafe_oracles": ["negative-worst-laxity"],
+        },
+        {
+            **base_config,
+            "use_case": "Over demand",
+            "safe_oracles": [],
+            "unsafe_oracles": ["over-demand"],
+        },
+        {
+            **base_config,
+            "use_case": "HI over demand",
+            "safe_oracles": [],
+            "unsafe_oracles": ["hi-over-demand"],
         },
     ]
     variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
 
     campaign01 = CampaignIterateVariables(
-        name="mcs_schedulability",
+        name="mcs_oracles",
         benchmark=MCSBench(timeout_seconds=timeout_seconds),
         nb_runs=1,
         variables=variables,
