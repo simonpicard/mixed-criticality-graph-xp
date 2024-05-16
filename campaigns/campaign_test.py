@@ -3,18 +3,20 @@
 """
 Example of campaign script.
 """
-import pandas as pd
-
-from benchkit.campaign import Campaign, CampaignSuite, CampaignCartesianProduct, CampaignIterateVariables
-from benchkit.utils.types import PathType
-
-from benchmarks import MCSBench
 import concurrent.futures
 import pathlib
 import random
 
+import pandas as pd
 import tqdm
-
+from benchkit.campaign import (
+    Campaign,
+    CampaignCartesianProduct,
+    CampaignIterateVariables,
+    CampaignSuite,
+)
+from benchkit.utils.types import PathType
+from benchmarks import MCSBench
 
 timeout_seconds = 300
 
@@ -42,7 +44,7 @@ def campaign_test():
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
-    path = pathlib.Path('..')/tasksystems_path
+    path = pathlib.Path("..") / tasksystems_path
     with open(path) as tasksystems_file:
         value_read = tasksystems_file.readline().split()[0]
     if not value_read.isdigit():
@@ -52,44 +54,60 @@ def nb_systems(tasksystems_path: PathType) -> int:
 
 
 def campaign_state_space():
-    taskset_files = ["outputs/20240511_094319-statespace-period-max.txt"]
-    taskset_files = ["outputs/20240511_133342-statespace-utilisation.txt"]
-    taskset_files = ["outputs/20240511_162603-statespace-n-tasks.txt"]
-    taskset_files = ["outputs/20240511_162603-statespace-period-max.txt"]
+    taskset_files = [
+        "outputs/20240511_133342-statespace-utilisation.txt"
+    ]  # make generate-set-statespace-rtss-utilisation
+    taskset_files = [
+        "outputs/20240511_162603-statespace-n-tasks.txt"
+    ]  # make generate-set-statespace-rtss-n-tasks
+    taskset_files = [
+        "outputs/20240511_162603-statespace-period-max.txt"
+    ]  # make generate-set-statespace-rtss-period-max
     # taskset_positions = range(nb_systems(taskset_files[0]))
     # taskset_positions = [0, 20, 40, 60]
     scheduler = "edfvd"
     safe_oracles = ["hi-idle-point"]
     unsafe_oracles = ["hi-over-demand"]
 
-    varying_variables = [{
-        "taskset_file": tf,
-        "taskset_position": tp,
-    } for tf in taskset_files for tp in range(nb_systems(tasksystems_path=tf))]
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
+
+    base_config = {
+        "scheduler": scheduler,
+        "safe_oracles": safe_oracles,
+    }
+
     use_cases = [
         {
+            **base_config,
             "use_case": "BFS, no oracle",
-            "scheduler": scheduler,
             "use_idlesim": False,
-            "safe_oracles": [],
             "unsafe_oracles": [],
         },
         {
+            **base_config,
             "use_case": "ACBFS, no oracle",
-            "scheduler": scheduler,
             "use_idlesim": True,
-            "safe_oracles": [],
             "unsafe_oracles": [],
         },
         {
+            **base_config,
             "use_case": "ACBFS, oracles",
-            "scheduler": scheduler,
             "use_idlesim": True,
-            "safe_oracles": [],
             "unsafe_oracles": unsafe_oracles,
         },
     ]
-    variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
 
     campaign01 = CampaignIterateVariables(
         name="mcs_scale01",
@@ -106,20 +124,28 @@ def campaign_state_space():
 
     return campaign01
 
+
 def campaign_schedulability():
-    taskset_files = ["outputs/20240511_133342-scheduling-rtss.txt"]# TODO function get the last
+    # make generate-set-scheduling-rtss
+    taskset_files = [
+        "outputs/20240511_133342-scheduling-rtss.txt"
+    ]  # TODO function get the last
     safe_oracles = []
     unsafe_oracles = ["hi-over-demand"]
 
-    varying_variables = [{
-        "taskset_file": tf,
-        "taskset_position": tp,
-    } for tf in taskset_files for tp in range(nb_systems(tasksystems_path=tf))]
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
 
     base_config = {
-            "use_idlesim": True,
-            "safe_oracles": safe_oracles,
-            "unsafe_oracles": unsafe_oracles,
+        "use_idlesim": True,
+        "safe_oracles": safe_oracles,
+        "unsafe_oracles": unsafe_oracles,
     }
 
     use_cases = [
@@ -134,7 +160,11 @@ def campaign_schedulability():
             "scheduler": "lwlf",
         },
     ]
-    variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
 
     campaign01 = CampaignIterateVariables(
         name="mcs_schedulability",
@@ -153,15 +183,19 @@ def campaign_schedulability():
 
 
 def campaign_oracles():
-    taskset_files = ["outputs/20240511_133342-oracles-rtss.txt"]# TODO function get the last
+    # make generate-set-oracles-rtss
+    taskset_files = [
+        "outputs/20240511_133342-oracles-rtss.txt"
+    ]  # TODO function get the last
 
-    safe_oracles = []
-    unsafe_oracles = ["hi-over-demand"]
-
-    varying_variables = [{
-        "taskset_file": tf,
-        "taskset_position": tp,
-    } for tf in taskset_files for tp in range(nb_systems(tasksystems_path=tf))]
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
 
     base_config = {
         "scheduler": "edfvd",
@@ -178,7 +212,7 @@ def campaign_oracles():
         {
             **base_config,
             "use_case": "HI idle point",
-            "safe_oracles" : ["hi-idle-point"],
+            "safe_oracles": ["hi-idle-point"],
             "unsafe_oracles": [],
         },
         {
@@ -206,10 +240,85 @@ def campaign_oracles():
             "unsafe_oracles": ["hi-over-demand"],
         },
     ]
-    variables = [use_case | other_variables for use_case in use_cases for other_variables in varying_variables]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
 
     campaign01 = CampaignIterateVariables(
         name="mcs_oracles",
+        benchmark=MCSBench(timeout_seconds=timeout_seconds),
+        nb_runs=1,
+        variables=variables,
+        constants={},
+        debug=False,
+        gdb=False,
+        enable_data_dir=True,
+        continuing=False,
+        benchmark_duration_seconds=None,
+    )
+
+    return campaign01
+
+
+def campaign_compression_table():
+    # make generate-set-oracles-rtss --- the same as campaign_oracles()
+    taskset_files = [
+        "outputs/20240511_133342-oracles-rtss.txt"
+    ]  # TODO function get the last
+
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
+
+    base_config = {
+        "scheduler": "edfvd",
+    }
+
+    use_cases = [
+        {
+            **base_config,
+            "use_case": "BFS",
+            "safe_oracles": [],
+            "unsafe_oracles": [],
+            "use_idlesim": False,
+        },
+        {
+            **base_config,
+            "use_case": "ACBFS",
+            "safe_oracles": [],
+            "unsafe_oracles": [],
+            "use_idlesim": True,
+        },
+        {
+            **base_config,
+            "use_case": "BFS, HI over demand",
+            "safe_oracles": [],
+            "unsafe_oracles": ["hi-over-demand"],
+            "use_idlesim": False,
+        },
+        {
+            **base_config,
+            "use_case": "ACBFS, HI over demand",
+            "safe_oracles": [],
+            "unsafe_oracles": ["hi-over-demand"],
+            "use_idlesim": True,
+        },
+    ]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
+
+    campaign01 = CampaignIterateVariables(
+        name="mcs_compression_table",
         benchmark=MCSBench(timeout_seconds=timeout_seconds),
         nb_runs=1,
         variables=variables,
@@ -250,7 +359,9 @@ def run_record(benchmark, record):
     # process.wait()
     # raw_output = process.output()
     raw_output = benchmark.single_run(benchmark_duration_seconds=None, **record)
-    output = benchmark.parse_output_to_results(command_output=raw_output, run_variables=record)
+    output = benchmark.parse_output_to_results(
+        command_output=raw_output, run_variables=record
+    )
     return record | output
 
 
@@ -272,7 +383,9 @@ def parallel_runner(campaign: Campaign):
 
     random.shuffle(records)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=nb_cpus) as executor, tqdm.tqdm(total=len(records)) as pbar:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=nb_cpus
+    ) as executor, tqdm.tqdm(total=len(records)) as pbar:
         futures = [executor.submit(run_record, benchmark, record) for record in records]
 
         results = []
