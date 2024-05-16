@@ -218,11 +218,11 @@ xp-statespace-antichain-oracle: generate-set-oracles install-explorer
 		--input-file=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_def.txt \
 		--output-prefix=$(OUTPUT_DIR)/$(DT)_ac_hi_od_hi_idle_explo
 
-generate-set-statespace-n-tasks: $(VENV)
+generate-set-statespace-rtss-n-tasks: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t modular \
-	-o $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.txt \
-	-c $(OUTPUT_DIR)/$(DT)-statespace-n-tasks.csv \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-n-tasks.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-n-tasks.csv \
 	--probability_of_HI 0.5 \
 	--minimum_period 5 \
 	--utilisation_list 50 \
@@ -233,11 +233,11 @@ generate-set-statespace-n-tasks: $(VENV)
 	--sets_per_config 20 \
 	--seed 1
 
-generate-set-statespace-period-max: $(VENV)
+generate-set-statespace-rtss-period-max: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t modular \
-	-o $(OUTPUT_DIR)/$(DT)-statespace-period-max.txt \
-	-c $(OUTPUT_DIR)/$(DT)-statespace-period-max.csv \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.csv \
 	--probability_of_HI 0.5 \
 	--minimum_period 5 \
 	--utilisation_list 50 \
@@ -248,11 +248,11 @@ generate-set-statespace-period-max: $(VENV)
 	--sets_per_config 20 \
 	--seed 2
 
-generate-set-statespace-utilisation: $(VENV)
+generate-set-statespace-rtss-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t modular \
-	-o $(OUTPUT_DIR)/$(DT)-statespace-utilisation.txt \
-	-c $(OUTPUT_DIR)/$(DT)-statespace-utilisation.csv \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-utilisation.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-utilisation.csv \
 	--probability_of_HI 0.5 \
 	--minimum_period 5 \
 	--max_period_list 30 \
@@ -295,4 +295,4 @@ generate-set-oracles-rtss: $(VENV)
 	--sets_per_config 100 \
 	--seed 5
 
-generate-set-statespace-rtss: generate-set-statespace-n-tasks generate-set-statespace-period-max generate-set-statespace-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss
+generate-set-rtss-all: generate-set-statespace-rtss-n-tasks generate-set-statespace-rtss-period-max generate-set-statespace-rtss-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss
