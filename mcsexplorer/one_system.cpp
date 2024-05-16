@@ -156,9 +156,9 @@ int main(int argc, char** argv) {
         } else if ("negative-worst-laxity" == unsafe_oracle_str) {
             unsafe_oracles.push_back(&UnsafeOracle::worst_laxity);
         } else if ("over-demand" == unsafe_oracle_str) {
-            unsafe_oracles.push_back(&UnsafeOracle::interference);
+            unsafe_oracles.push_back(&UnsafeOracle::over_demand);
         } else if ("hi-over-demand" == unsafe_oracle_str) {
-            unsafe_oracles.push_back(&UnsafeOracle::worst_interference);
+            unsafe_oracles.push_back(&UnsafeOracle::hi_over_demand);
         } else {
             std::cerr << "Bad unsafe oracle: " << unsafe_oracle_str << std::endl;
         }
