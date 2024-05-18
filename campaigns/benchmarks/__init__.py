@@ -13,6 +13,7 @@ from benchkit.utils.types import CpuOrder, PathType
 from benchkit.utils.dir import gitmainrootdir
 
 import pandas as pd
+import os
 
 
 class MCSBench(Benchmark):
@@ -41,6 +42,9 @@ class MCSBench(Benchmark):
 
         self._timeout_seconds = timeout_seconds
         self._bench_src_path = gitmainrootdir()
+
+        self._inside_docker = ("1" == os.environ["INSIDE_DOCKER"]) if "INSIDE_DOCKER" in os.environ else False
+        self._docker_cmd_prefix = [] if self._inside_docker else []
 
     @property
     def bench_src_path(self) -> pathlib.Path:
@@ -71,14 +75,20 @@ class MCSBench(Benchmark):
     def prebuild_bench(self, **_kwargs) -> None:
         build_dir = self.bench_src_path
 
-        must_debug = self.must_debug()
-        cmake_build_type = "Debug" if must_debug else "Release"  # TODO use it
+        # must_debug = self.must_debug()
+        # cmake_build_type = "Debug" if must_debug else "Release"  # TODO use it
 
         self.platform.comm.shell(
-            command=f"docker exec mcgraphxp make install-explorer",
-            current_dir=build_dir,
+            command=self._docker_cmd_prefix + ["make", "install-explorer"],
+            # command="make install-explorer",
+            # command=["make", "test"],
+            current_dir=str(build_dir),
             output_is_log=True,
-            environment={"INTERACTIVE": "0"},
+            # environment={
+            #     "INTERACTIVE": "0",
+                # "INSIDE_DOCKER": "1" if self._inside_docker else "0",
+            # },
+            # shell=True,
         )
 
     def build_bench(
@@ -92,8 +102,8 @@ class MCSBench(Benchmark):
 
     def make_taskset(self, experiment: str) -> None:
         make_target = f"generate-set-{experiment}"
-        run_command = ["docker", "exec", "mcgraphxp", "make", make_target]
-        self.platform.comm.shell(run_command)
+        run_command = self._docker_cmd_prefix + ["make", make_target]
+        self.platform.comm.shell(command=run_command, current_dir=str(self.bench_src_path), output_is_log=True)
 
     def single_run(  # pylint: disable=arguments-differ
         self,
@@ -142,7 +152,7 @@ class MCSBench(Benchmark):
         if unsafe_oracles:
             cmd_options += ["--unsafe-oracles", ",".join(unsafe_oracles)]
 
-        run_command = ["docker", "exec", "mcgraphxp", "./mcsexplorer/build-x86_64/one_system"] + cmd_options
+        run_command = self._docker_cmd_prefix + ["./mcsexplorer/build-x86_64/one_system"] + cmd_options
 
         wrapped_run_command, wrapped_environment = self._wrap_command(
             run_command=run_command,

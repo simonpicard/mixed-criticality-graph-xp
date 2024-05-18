@@ -4,11 +4,13 @@ ROOT_DIR := $(patsubst %/,%,$(dir $(abspath $(THIS_MAKEFILE))))
 GENERATOR_SRC = ./tasksetgen
 GENERATOR_EXP = $(GENERATOR_SRC)/experiment.py
 
+MACH = $(if $(INSIDE_DOCKER),$(if $(filter 1,$(INSIDE_DOCKER)),docker,host),host)
+
 EXPLORER_SRC = ./mcsexplorer
-EXPLORER_BUILD = $(EXPLORER_SRC)/build-$(shell uname -m)
+EXPLORER_BUILD = $(EXPLORER_SRC)/build-$(shell uname -m)-$(MACH)
 EXPLORER_MAKEFILE = $(EXPLORER_BUILD)/Makefile
 
-VENV = $(ROOT_DIR)/.venv-$(shell uname -m)
+VENV = $(ROOT_DIR)/.venv-$(shell uname -m)-$(MACH)
 PYTHON = python3
 VENV_PYTHON = $(VENV)/bin/$(PYTHON)
 JUPYTER = $(VENV)/bin/jupyter
@@ -227,8 +229,8 @@ generate-set-statespace-rtss-n-tasks: $(VENV)
 	--minimum_period 5 \
 	--utilisation_list 50 \
 	--max_period_list 30 \
-	--n_tasks_start 3 \
-	--n_tasks_stop 11 \
+	--n_tasks_start 2 \
+	--n_tasks_stop 8 \
 	--n_tasks_step 1 \
 	--sets_per_config 20 \
 	--seed 1
@@ -294,5 +296,22 @@ generate-set-oracles-rtss: $(VENV)
 	--utilisation_step 1 \
 	--sets_per_config 100 \
 	--seed 5
+
+generate-set-statespace-rtss-bfs: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-bfs.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-bfs.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--utilisation_list 50 \
+	--n_tasks_start 2 \
+	--n_tasks_stop 7 \
+	--n_tasks_step 1 \
+	--max_period_start 10 \
+	--max_period_stop 31 \
+	--max_period_step 5 \
+	--sets_per_config 10 \
+	--seed 6
 
 generate-set-rtss-all: generate-set-statespace-rtss-n-tasks generate-set-statespace-rtss-period-max generate-set-statespace-rtss-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss
