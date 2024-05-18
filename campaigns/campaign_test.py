@@ -8,12 +8,12 @@ import concurrent.futures
 import datetime
 import pathlib
 import random
+# import psutil
 
-import pandas as pd
+# import pandas as pd
 import tqdm
 from benchkit.campaign import (
     Campaign,
-    CampaignCartesianProduct,
     CampaignIterateVariables,
     CampaignSuite,
 )
@@ -75,7 +75,7 @@ def campaign_state_space():
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
     taskset_files = [taskset2filename(f, benchmark) for f in [
-        "statespace-rtss-utilisation",
+        # "statespace-rtss-utilisation",  # we dropped this chart from the paper
         "statespace-rtss-period-max",
         "statespace-rtss-n-tasks",
     ]]
@@ -185,12 +185,11 @@ def campaign_state_space_bfs():
 
     return campaign01
 
-def campaign_schedulability():
-    # make generate-set-scheduling-rtss
-    taskset_files = [
-        "outputs/20240511_133342-scheduling-rtss.txt"
-    ]  # TODO function get the last
 
+def campaign_schedulability():
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    taskset_files = [taskset2filename("scheduling-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -242,10 +241,8 @@ def campaign_schedulability():
 
 
 def campaign_oracles():
-    # make generate-set-oracles-rtss
-    taskset_files = [
-        "outputs/20240511_133342-oracles-rtss.txt"
-    ]  # TODO function get the last
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+    taskset_files = [taskset2filename("oracles-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -322,10 +319,8 @@ def campaign_oracles():
 
 
 def campaign_compression_table():
-    # make generate-set-oracles-rtss --- the same as campaign_oracles()
-    taskset_files = [
-        "outputs/20240511_133342-oracles-rtss.txt"
-    ]  # TODO function get the last
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+    taskset_files = [taskset2filename("compression-table-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -437,11 +432,11 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     ) as executor, tqdm.tqdm(total=len(records)) as pbar:
         futures = [executor.submit(run_record, benchmark, record) for record in records]
 
-        results = []
+        # results = []
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()
-                results.append(result)
+                # results.append(result)
                 print(f"Result collected: {result}")
                 result_keys = [k for k in result]
                 result_values = [result[k] for k in result_keys]
@@ -454,13 +449,91 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-    df = pd.DataFrame(results)
-    df.to_csv("/tmp/results.csv", sep=";", index=False)
+    # df = pd.DataFrame(results)
+    # df.to_csv("/tmp/results.csv", sep=";", index=False)
+
+
+# def adjust_workers(executor, target_workers, current_workers):
+#    # Adjust the number of workers in the ThreadPoolExecutor
+#    if target_workers > current_workers:
+#        for _ in range(target_workers - current_workers):
+#            executor._max_workers += 1
+#    elif target_workers < current_workers:
+#        for _ in range(current_workers - target_workers):
+#            executor._max_workers -= 1
+#    return executor._max_workers
+
+
+# def parallel_runner_memctrl(campaign, nb_cpus):
+#    benchmark = campaign.parameters["benchmark"]
+#    records = campaign.parameters["variables"]
+#    benchmark.prebuild_bench()
+#    benchmark.build_bench()
+#
+#    random.shuffle(records)
+#    name = campaign.parameters["experiment_name"]
+#    d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#    path = pathlib.Path(f"/tmp/results-{name}-{d}.csv")
+#
+#    min_workers = 4
+#    max_workers = nb_cpus
+#    current_workers = nb_cpus // 2
+#
+#    with concurrent.futures.ThreadPoolExecutor(
+#        max_workers=current_workers
+#    ) as executor, tqdm.tqdm(total=len(records)) as pbar:
+#        futures = {executor.submit(run_record, benchmark, record): record for record in records}
+#
+#        while futures:
+#            done, not_done = concurrent.futures.wait(
+#                futures, return_when=concurrent.futures.FIRST_COMPLETED
+#            )
+#            for future in done:
+#                try:
+#                    result = future.result()
+#                    print(f"Result collected: {result}")
+#                    result_keys = [k for k in result]
+#                    result_values = [result[k] for k in result_keys]
+#                    if not path.is_file():
+#                        with open(path, "a") as f:
+#                            f.write(";".join(map(str, result_keys)) + "\n")
+#                    with open(path, "a") as f:
+#                        f.write(";".join(map(str, result_values)) + "\n")
+#                    pbar.update(1)
+#                except Exception as e:
+#                    print(f"An error occurred: {e}")
+#                del futures[future]
+#
+#            # Adjust the number of workers based on memory usage
+#            memory_usage = psutil.virtual_memory().percent
+#            if memory_usage > 40:
+#                target_workers = max(min_workers, current_workers // 2)
+#            elif memory_usage < 15:
+#                target_workers = min(max_workers, current_workers + 4)
+#            else:
+#                target_workers = current_workers
+#
+#            if target_workers != current_workers:
+#                current_workers = adjust_workers(executor, target_workers, current_workers)
+#                print(f"Adjusted number of workers to {current_workers}")
+#
+#            # Submit new tasks if there are remaining records
+#            while len(futures) < current_workers and records:
+#                record = records.pop()
+#                future = executor.submit(run_record, benchmark, record)
+#                futures[future] = record
+#                pbar.update(1)
+#
+#            time.sleep(1)  # Small delay to prevent tight loop
 
 
 def main() -> None:
-    # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
-    parallel_runner(campaign=campaign_state_space(), nb_cpus=8)
+    # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8) # done
+    # parallel_runner(campaign=campaign_state_space(), nb_cpus=16) # done
+    parallel_runner(campaign=campaign_schedulability(), nb_cpus=64)
+    # parallel_runner_memctrl(campaign=campaign_schedulability(), nb_cpus=128) # not working yet with memory control
+    # parallel_runner(campaign=campaign_oracles(), nb_cpus=128)
+    # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
 
 if __name__ == "__main__":

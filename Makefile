@@ -245,8 +245,8 @@ generate-set-statespace-rtss-period-max: $(VENV)
 	--utilisation_list 50 \
 	--n_tasks_list 5 \
 	--max_period_start 20 \
-	--max_period_stop 201 \
-	--max_period_step 20 \
+	--max_period_stop 101 \
+	--max_period_step 10 \
 	--sets_per_config 20 \
 	--seed 2
 
@@ -314,4 +314,19 @@ generate-set-statespace-rtss-bfs: $(VENV)
 	--sets_per_config 10 \
 	--seed 6
 
-generate-set-rtss-all: generate-set-statespace-rtss-n-tasks generate-set-statespace-rtss-period-max generate-set-statespace-rtss-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss
+generate-set-compression-table-rtss: $(VENV)
+	$(VENV_PYTHON) $(GENERATOR_EXP) \
+	-t modular \
+	--task_sets_output $(OUTPUT_DIR)/$(DT)-compression-table-rtss.txt \
+	--header_output $(OUTPUT_DIR)/$(DT)-compression-table-rtss.csv \
+	--probability_of_HI 0.5 \
+	--minimum_period 5 \
+	--max_period_list 20 \
+	--n_tasks_list 5 \
+	--utilisation_start 80 \
+	--utilisation_stop 101 \
+	--utilisation_step 1 \
+	--sets_per_config 100 \
+	--seed 7
+
+generate-set-rtss-all: generate-set-statespace-rtss-n-tasks generate-set-statespace-rtss-period-max generate-set-statespace-rtss-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss generate-set-compression-table-rtss

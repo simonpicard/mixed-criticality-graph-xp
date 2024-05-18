@@ -44,7 +44,7 @@ class MCSBench(Benchmark):
         self._bench_src_path = gitmainrootdir()
 
         self._inside_docker = ("1" == os.environ["INSIDE_DOCKER"]) if "INSIDE_DOCKER" in os.environ else False
-        self._docker_cmd_prefix = [] if self._inside_docker else []
+        self._docker_cmd_prefix = [] if self._inside_docker else ["docker", "exec", "mcgraphxp"]
 
     @property
     def bench_src_path(self) -> pathlib.Path:
@@ -103,7 +103,11 @@ class MCSBench(Benchmark):
     def make_taskset(self, experiment: str) -> None:
         make_target = f"generate-set-{experiment}"
         run_command = self._docker_cmd_prefix + ["make", make_target]
-        self.platform.comm.shell(command=run_command, current_dir=str(self.bench_src_path), output_is_log=True)
+        self.platform.comm.shell(
+            command=run_command,
+            current_dir=str(self.bench_src_path),
+            output_is_log=True,
+        )
 
     def single_run(  # pylint: disable=arguments-differ
         self,
