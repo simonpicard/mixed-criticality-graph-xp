@@ -115,3 +115,5 @@ RUN [ "xONx" != "x${IMAGE_VENV}x" ] || ./install-venv.sh .venv-$(uname -m)
 
 WORKDIR /home/${USER_NAME}
 RUN rm -rf .cache/pip && mkdir -p .cache/pip
+
+ENV INSIDE_DOCKER=1

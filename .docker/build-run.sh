@@ -30,13 +30,35 @@ INTERACTIVE_FLAGS=""
 [ 1 -eq ${INTERACTIVE} ] && INTERACTIVE_FLAGS="-ti"
 
 image_name=mcgraphxp
+image_rootless_name=rlmcgraphxp
 volume_name=mcgraphxp_cache
 
 cd "${root_dir}"
 export DOCKER_BUILDKIT=0
+if [ -z "${DOCKER_ROOTLESS}" ]
+then
+  DOCKER_ROOTLESS=0
+else
+  DOCKER_ROOTLESS=${DOCKER_ROOTLESS}
+fi
 
 uid=$(id -u)
 gid=$(id -g)
+
+if [ ! 0 = ${DOCKER_ROOTLESS} ]
+then
+  contuid=1100
+  contgid=1100
+
+  #shiftuid=$(cat /etc/subuid | grep $USER | cut -f 2 -d ':')
+  #shiftgid=$(cat /etc/subgid | grep $USER | cut -f 2 -d ':')
+
+  #hostuid=$(($shiftuid + $contuid))
+  #hostgid=$(($shiftgid + $contgid))
+
+  uid=$contuid
+  gid=$contgid
+fi
 
 docker volume ls | grep -i "${volume_name}" || docker volume create "${volume_name}"
 
@@ -47,6 +69,19 @@ docker build \
   --build-arg=IMAGE_VENV="${IMAGE_VENV}" \
   --tag "${image_name}" \
   .
+
+if [ "x0x" = "x${DOCKER_ROOTLESS}x" ]
+then
+  run_image=${image_name}
+else
+  docker build \
+    --file "${root_dir}/.docker/rootless.dockerfile" \
+    --build-arg=BASE_IMAGE="${image_name}" \
+    --tag "${image_rootless_name}" \
+    .
+
+  run_image=${image_rootless_name}
+fi
 
 guest_ws_dir=/home/user/workspace
 
@@ -60,5 +95,5 @@ docker run \
   --user "${uid}:${gid}" \
   -p 8888:8888 \
   --name "${image_name}" \
-   "${image_name}" \
+   "${run_image}" \
    $@

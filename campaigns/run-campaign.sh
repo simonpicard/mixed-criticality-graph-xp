@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -ex
 
 if [ "$INSIDE_DOCKER" = "1" ]; then
   MACH="docker"
@@ -8,4 +8,4 @@ else
 fi
 VENV_NAME=".venv-$(uname -m)-${MACH}"
 
-../deps/benchkit/scripts/install_venv.sh "${VENV_NAME}"
+./${VENV_NAME}/bin/python3 campaign_test.py

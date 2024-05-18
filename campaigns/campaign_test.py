@@ -5,14 +5,15 @@ Example of campaign script.
 """
 
 import concurrent.futures
+import datetime
 import pathlib
 import random
+# import psutil
 
-import pandas as pd
+# import pandas as pd
 import tqdm
 from benchkit.campaign import (
     Campaign,
-    CampaignCartesianProduct,
     CampaignIterateVariables,
     CampaignSuite,
 )
@@ -22,29 +23,8 @@ from benchmarks import MCSBench
 import os
 from typing import Tuple
 
-timeout_seconds = 300
-
-
-def campaign_test():
-    campaign00 = CampaignCartesianProduct(
-        name="mcs_scale00",
-        benchmark=MCSBench(timeout_seconds=timeout_seconds),
-        nb_runs=20,
-        variables={
-            "taskset_file": ["outputs/20240511_094319-statespace-period-max.txt"],
-            "taskset_position": [5],
-            "use_idlesim": [True],
-            "scheduler": ["edfvd"],
-            "safe_oracles": [["hi-idle-point"]],
-            "unsafe_oracles": [["hi-over-demand"]],
-        },
-        constants={},
-        debug=False,
-        gdb=False,
-        enable_data_dir=True,
-        continuing=False,
-        benchmark_duration_seconds=None,
-    )
+# timeout_seconds = 300
+timeout_seconds = 36000
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
@@ -82,30 +62,23 @@ def get_both_taskset_filenames(experiment: str, benchmark: MCSBench) -> Tuple[st
     return f"outputs/{filename_txt}", f"outputs/{filename_csv}"
 
 
-def campaign_state_space():
-    benchmark = MCSBench(timeout_seconds=timeout_seconds)
-
+def taskset2filename(experiment: str, benchmark: MCSBench) -> str:
     period_tasket_filenames = get_both_taskset_filenames(
-        experiment="statespace-rtss-period-max",
+        experiment=experiment,
         benchmark=benchmark,
     )
     period_tasket_filename = period_tasket_filenames[0]
-    taskset_files = [period_tasket_filename]
+    return period_tasket_filename
 
-    # taskset_files = [
-    #     "outputs/20240511_133342-statespace-utilisation.txt"
-    # ]  # make generate-set-statespace-rtss-utilisation
-    # taskset_files = [
-    #     "outputs/20240511_162603-statespace-n-tasks.txt"
-    # ]  # make generate-set-statespace-rtss-n-tasks
-    # taskset_files = [
-    #     "outputs/20240511_162603-statespace-period-max.txt"
-    # ]  # make generate-set-statespace-rtss-period-max
-    # taskset_positions = range(nb_systems(taskset_files[0]))
-    # taskset_positions = [0, 20, 40, 60]
-    scheduler = "edfvd"
-    safe_oracles = ["hi-idle-point"]
-    unsafe_oracles = ["hi-over-demand"]
+
+def campaign_state_space():
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    taskset_files = [taskset2filename(f, benchmark) for f in [
+        # "statespace-rtss-utilisation",  # we dropped this chart from the paper
+        "statespace-rtss-period-max",
+        "statespace-rtss-n-tasks",
+    ]]
 
     varying_variables = [
         {
@@ -117,17 +90,11 @@ def campaign_state_space():
     ]
 
     base_config = {
-        "scheduler": scheduler,
-        "safe_oracles": safe_oracles,
+        "scheduler": "edfvd",
+        "safe_oracles": [],
     }
 
     use_cases = [
-        {
-            **base_config,
-            "use_case": "BFS, no oracle",
-            "use_idlesim": False,
-            "unsafe_oracles": [],
-        },
         {
             **base_config,
             "use_case": "ACBFS, no oracle",
@@ -138,7 +105,7 @@ def campaign_state_space():
             **base_config,
             "use_case": "ACBFS, oracles",
             "use_idlesim": True,
-            "unsafe_oracles": unsafe_oracles,
+            "unsafe_oracles": ["hi-over-demand"],
         },
     ]
     variables = [
@@ -163,13 +130,66 @@ def campaign_state_space():
     return campaign01
 
 
+def campaign_state_space_bfs():
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    taskset_files = [taskset2filename(f, benchmark) for f in [
+        "statespace-rtss-bfs",
+    ]]
+
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
+
+    base_config = {
+        "scheduler": "edfvd",
+        "safe_oracles": [],
+        "unsafe_oracles": [],
+    }
+
+    use_cases = [
+        {
+            **base_config,
+            "use_case": "BFS, no oracle",
+            "use_idlesim": False,
+        },
+        {
+            **base_config,
+            "use_case": "ACBFS, no oracle",
+            "use_idlesim": True,
+        },
+    ]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
+
+    campaign01 = CampaignIterateVariables(
+        name="mcs_scale_bfs",
+        benchmark=benchmark,
+        nb_runs=1,
+        variables=variables,
+        constants={},
+        debug=False,
+        gdb=False,
+        enable_data_dir=True,
+        continuing=False,
+        benchmark_duration_seconds=None,
+    )
+
+    return campaign01
+
+
 def campaign_schedulability():
-    # make generate-set-scheduling-rtss
-    taskset_files = [
-        "outputs/20240511_133342-scheduling-rtss.txt"
-    ]  # TODO function get the last
-    safe_oracles = []
-    unsafe_oracles = ["hi-over-demand"]
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    taskset_files = [taskset2filename("scheduling-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -182,8 +202,8 @@ def campaign_schedulability():
 
     base_config = {
         "use_idlesim": True,
-        "safe_oracles": safe_oracles,
-        "unsafe_oracles": unsafe_oracles,
+        "safe_oracles": [],
+        "unsafe_oracles": ["hi-over-demand"],
     }
 
     use_cases = [
@@ -221,10 +241,8 @@ def campaign_schedulability():
 
 
 def campaign_oracles():
-    # make generate-set-oracles-rtss
-    taskset_files = [
-        "outputs/20240511_133342-oracles-rtss.txt"
-    ]  # TODO function get the last
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+    taskset_files = [taskset2filename("oracles-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -301,10 +319,8 @@ def campaign_oracles():
 
 
 def campaign_compression_table():
-    # make generate-set-oracles-rtss --- the same as campaign_oracles()
-    taskset_files = [
-        "outputs/20240511_133342-oracles-rtss.txt"
-    ]  # TODO function get the last
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+    taskset_files = [taskset2filename("compression-table-rtss", benchmark)]
 
     varying_variables = [
         {
@@ -393,9 +409,6 @@ def run_campaign_state_space():
 
 def run_record(benchmark, record):
     print(f"Running record with variables: {record}")
-    # process = benchmark.single_run(benchmark_duration_seconds=None, **record)
-    # process.wait()
-    # raw_output = process.output()
     raw_output = benchmark.single_run(benchmark_duration_seconds=None, **record)
     output = benchmark.parse_output_to_results(
         command_output=raw_output, run_variables=record
@@ -403,38 +416,28 @@ def run_record(benchmark, record):
     return record | output
 
 
-def parallel_runner(campaign: Campaign):
+def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     benchmark = campaign.parameters["benchmark"]
     records = campaign.parameters["variables"]
-    nb_cpus = benchmark.platform.nb_cpus()
     benchmark.prebuild_bench()
     benchmark.build_bench()
 
-    # Example asynchronous run for a single process:
-    # record = records[0]
-    # process = benchmark.single_run(benchmark_duration_seconds=None, **record)
-    # process.wait()
-    # raw_output = process.output()
-    # raw_output = benchmark.single_run(benchmark_duration_seconds=None, **record)
-    # output = benchmark.parse_output_to_results(command_output=raw_output, run_variables=record)
-    # print(record | output)
-
     random.shuffle(records)
+    name = campaign.parameters["experiment_name"]
+    d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    path = pathlib.Path(f"/tmp/results-{name}-{d}.csv")
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=nb_cpus
     ) as executor, tqdm.tqdm(total=len(records)) as pbar:
         futures = [executor.submit(run_record, benchmark, record) for record in records]
 
-        results = []
+        # results = []
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()
-                results.append(result)
+                # results.append(result)
                 print(f"Result collected: {result}")
-                path = pathlib.Path("/tmp/results3.csv")
-                path = pathlib.Path("results-ntasks.csv")
-                path = pathlib.Path("results-periods.csv")
                 result_keys = [k for k in result]
                 result_values = [result[k] for k in result_keys]
                 if not path.is_file():
@@ -446,12 +449,91 @@ def parallel_runner(campaign: Campaign):
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-    df = pd.DataFrame(results)
-    df.to_csv("/tmp/results.csv", sep=";", index=False)
+    # df = pd.DataFrame(results)
+    # df.to_csv("/tmp/results.csv", sep=";", index=False)
+
+
+# def adjust_workers(executor, target_workers, current_workers):
+#    # Adjust the number of workers in the ThreadPoolExecutor
+#    if target_workers > current_workers:
+#        for _ in range(target_workers - current_workers):
+#            executor._max_workers += 1
+#    elif target_workers < current_workers:
+#        for _ in range(current_workers - target_workers):
+#            executor._max_workers -= 1
+#    return executor._max_workers
+
+
+# def parallel_runner_memctrl(campaign, nb_cpus):
+#    benchmark = campaign.parameters["benchmark"]
+#    records = campaign.parameters["variables"]
+#    benchmark.prebuild_bench()
+#    benchmark.build_bench()
+#
+#    random.shuffle(records)
+#    name = campaign.parameters["experiment_name"]
+#    d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#    path = pathlib.Path(f"/tmp/results-{name}-{d}.csv")
+#
+#    min_workers = 4
+#    max_workers = nb_cpus
+#    current_workers = nb_cpus // 2
+#
+#    with concurrent.futures.ThreadPoolExecutor(
+#        max_workers=current_workers
+#    ) as executor, tqdm.tqdm(total=len(records)) as pbar:
+#        futures = {executor.submit(run_record, benchmark, record): record for record in records}
+#
+#        while futures:
+#            done, not_done = concurrent.futures.wait(
+#                futures, return_when=concurrent.futures.FIRST_COMPLETED
+#            )
+#            for future in done:
+#                try:
+#                    result = future.result()
+#                    print(f"Result collected: {result}")
+#                    result_keys = [k for k in result]
+#                    result_values = [result[k] for k in result_keys]
+#                    if not path.is_file():
+#                        with open(path, "a") as f:
+#                            f.write(";".join(map(str, result_keys)) + "\n")
+#                    with open(path, "a") as f:
+#                        f.write(";".join(map(str, result_values)) + "\n")
+#                    pbar.update(1)
+#                except Exception as e:
+#                    print(f"An error occurred: {e}")
+#                del futures[future]
+#
+#            # Adjust the number of workers based on memory usage
+#            memory_usage = psutil.virtual_memory().percent
+#            if memory_usage > 40:
+#                target_workers = max(min_workers, current_workers // 2)
+#            elif memory_usage < 15:
+#                target_workers = min(max_workers, current_workers + 4)
+#            else:
+#                target_workers = current_workers
+#
+#            if target_workers != current_workers:
+#                current_workers = adjust_workers(executor, target_workers, current_workers)
+#                print(f"Adjusted number of workers to {current_workers}")
+#
+#            # Submit new tasks if there are remaining records
+#            while len(futures) < current_workers and records:
+#                record = records.pop()
+#                future = executor.submit(run_record, benchmark, record)
+#                futures[future] = record
+#                pbar.update(1)
+#
+#            time.sleep(1)  # Small delay to prevent tight loop
 
 
 def main() -> None:
-    parallel_runner(campaign=campaign_state_space())
+    # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8) # done
+    # parallel_runner(campaign=campaign_state_space(), nb_cpus=16) # done
+    parallel_runner(campaign=campaign_schedulability(), nb_cpus=64)
+    # parallel_runner_memctrl(campaign=campaign_schedulability(), nb_cpus=128) # not working yet with memory control
+    # parallel_runner(campaign=campaign_oracles(), nb_cpus=128)
+    # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
 
 if __name__ == "__main__":
