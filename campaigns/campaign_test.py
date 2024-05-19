@@ -24,7 +24,7 @@ import os
 from typing import Tuple
 
 # timeout_seconds = 300
-timeout_seconds = 36000
+timeout_seconds = 360000
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
@@ -422,7 +422,7 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     benchmark.prebuild_bench()
     benchmark.build_bench()
 
-    random.shuffle(records)
+    # random.shuffle(records)
     name = campaign.parameters["experiment_name"]
     d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     path = pathlib.Path(f"/tmp/results-{name}-{d}.csv")
@@ -530,10 +530,14 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
 def main() -> None:
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8) # done
     # parallel_runner(campaign=campaign_state_space(), nb_cpus=16) # done
-    parallel_runner(campaign=campaign_schedulability(), nb_cpus=64)
+    # parallel_runner(campaign=campaign_schedulability(), nb_cpus=64)
     # parallel_runner_memctrl(campaign=campaign_schedulability(), nb_cpus=128) # not working yet with memory control
     # parallel_runner(campaign=campaign_oracles(), nb_cpus=128)
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
+
+    parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
+    parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
+    parallel_runner(campaign=campaign_state_space(), nb_cpus=16)
 
 
 if __name__ == "__main__":
