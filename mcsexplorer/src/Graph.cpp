@@ -193,6 +193,8 @@ int64_t* Graph::bfs() {
     while (!leaf_states.empty()) {
         log_step(leaf_states.size());
 
+        visited_count = visited_count + leaf_states.size();
+
         automaton_is_safe = not(is_fail(leaf_states) or has_unsafe(leaf_states));
         if (not automaton_is_safe) break;
 
@@ -201,7 +203,6 @@ int64_t* Graph::bfs() {
         neighbors = get_neighbors(leaf_states);
 
         automaton_depth++;
-        visited_count = visited_count + leaf_states.size();
         leaf_states.clear();
 
         for (State* neighbor : neighbors) {
