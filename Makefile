@@ -230,7 +230,7 @@ generate-set-statespace-rtss-n-tasks: $(VENV)
 	--utilisation_list 50 \
 	--max_period_list 30 \
 	--n_tasks_start 2 \
-	--n_tasks_stop 8 \
+	--n_tasks_stop 9 \
 	--n_tasks_step 1 \
 	--sets_per_config 20 \
 	--seed 1
@@ -244,9 +244,9 @@ generate-set-statespace-rtss-period-max: $(VENV)
 	--minimum_period 5 \
 	--utilisation_list 50 \
 	--n_tasks_list 5 \
-	--max_period_start 20 \
-	--max_period_stop 201 \
-	--max_period_step 20 \
+	--max_period_start 10 \
+	--max_period_stop 221 \
+	--max_period_step 35 \
 	--sets_per_config 20 \
 	--seed 2
 
@@ -312,7 +312,7 @@ generate-set-statespace-rtss-bfs: $(VENV)
 	--max_period_stop 31 \
 	--max_period_step 5 \
 	--sets_per_config 10 \
-	--seed 6
+	--seed 654
 
 generate-set-compression-table-rtss: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
