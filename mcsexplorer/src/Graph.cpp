@@ -191,9 +191,9 @@ int64_t* Graph::bfs() {
     visited_hashes.insert(leaf_states[0]->get_hash());
 
     while (!leaf_states.empty()) {
-        log_step(leaf_states.size());
-
         visited_count = visited_count + leaf_states.size();
+
+        log_step(leaf_states.size());
 
         automaton_is_safe = not(is_fail(leaf_states) or has_unsafe(leaf_states));
         if (not automaton_is_safe) break;
@@ -259,6 +259,8 @@ int64_t* Graph::acbfs() {
     visited_hashes[initial_state_hash][initial_state_idle_nats_hash] = initial_state_idle_nats_vector;
 
     while (!leaf_states.empty()) {
+        visited_count = visited_count + leaf_states.size();
+
         log_step(leaf_states.size());
 
         automaton_is_safe = not(is_fail(leaf_states) or has_unsafe(leaf_states));
@@ -269,7 +271,6 @@ int64_t* Graph::acbfs() {
         neighbors = get_neighbors(leaf_states);
 
         automaton_depth++;
-        visited_count = visited_count + leaf_states.size();
         leaf_states.clear();
 
         for (State* neighbor : neighbors) {
