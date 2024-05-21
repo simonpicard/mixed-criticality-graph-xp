@@ -540,7 +540,7 @@ def main() -> None:
     # parallel_runner(campaign=campaign_oracles(), nb_cpus=128)
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
-    parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
+    # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
     parallel_runner(campaign=campaign_state_space(), nb_cpus=16)
     parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
