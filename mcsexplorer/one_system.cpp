@@ -1,15 +1,14 @@
 #include "EdfInterference.h"
+#include "Graph.h"
 #include "SafeOracle.h"
+#include "Scheduler.h"
 #include "State.h"
 #include "UnsafeOracle.h"
-#include "Graph.h"
-#include "Scheduler.h"
-
-#include <fstream>
 #include <filesystem>
-#include <string>
+#include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 struct {
@@ -19,12 +18,10 @@ struct {
     std::string scheduler = "edfvd";
     std::vector<std::string> safe_oracles;
     std::vector<std::string> unsafe_oracles;
+    int log_level = -1;
 } CONFIG;
 
-State* read_task_set(
-    std::string const& input_path,
-    int offset = 0
-) {
+State* read_task_set(std::string const& input_path, int offset = 0) {
     std::ifstream input_file(input_path);
     if (!input_file.is_open()) {
         std::cerr << "Problem opening input file: " << input_path << std::endl;
@@ -83,6 +80,7 @@ void parse_args(int argc, char** argv) {
             const std::string taskset_position_str = argv[i];
             const size_t taskset_position = static_cast<size_t>(std::stoi(taskset_position_str));
             CONFIG.taskset_position = taskset_position;
+            i++;
         } else if ("--use-idlesim" == argument) {
             i++;
             CONFIG.use_idlesim = true;
@@ -90,6 +88,7 @@ void parse_args(int argc, char** argv) {
             i++;
             const std::string scheduler = argv[i];
             CONFIG.scheduler = scheduler;
+            i++;
         } else if ("--safe-oracles" == argument) {
             i++;
             const std::string safe_oracles = argv[i];
@@ -110,24 +109,37 @@ void parse_args(int argc, char** argv) {
                 CONFIG.unsafe_oracles.push_back(token);
             }
             i++;
+        } else if ("--log-level" == argument) {
+            i++;
+            const std::string log_level_str = argv[i];
+            const int log_level = static_cast<int>(std::stoi(log_level_str));
+            CONFIG.log_level = log_level;
+            i++;
         } else {
             i++;
+            std::cerr << "Unknown argument: " << argument << std::endl;
         }
     }
 }
-
 
 int main(int argc, char** argv) {
     parse_args(argc, argv);
     std::cout << "Arguments: " << std::endl;
     std::cout << "  input file: " << CONFIG.inputfile_path << std::endl;
     std::cout << "  taskset number: " << CONFIG.taskset_position << std::endl;
-    std::cout << "  use idlesim: " << (CONFIG.use_idlesim? "true":"false") << std::endl;
+    std::cout << "  use idlesim: " << (CONFIG.use_idlesim ? "true" : "false") << std::endl;
     std::cout << "  scheduler: " << CONFIG.scheduler << std::endl;
-    std::cout << "  safe-oracles: " << (CONFIG.safe_oracles.empty() ? "None": "");
-    for (auto oracle: CONFIG.safe_oracles) { std::cout << oracle << " "; } std::cout << std::endl;
-    std::cout << "  unsafe-oracles: " << (CONFIG.unsafe_oracles.empty() ? "None": "");
-    for (auto oracle: CONFIG.unsafe_oracles) { std::cout << oracle << " "; } std::cout << std::endl;
+    std::cout << "  safe-oracles: " << (CONFIG.safe_oracles.empty() ? "None" : "");
+    for (auto oracle : CONFIG.safe_oracles) {
+        std::cout << oracle << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "  unsafe-oracles: " << (CONFIG.unsafe_oracles.empty() ? "None" : "");
+    for (auto oracle : CONFIG.unsafe_oracles) {
+        std::cout << oracle << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "  log level: " << CONFIG.log_level << std::endl;
 
     State* start_state = read_task_set(CONFIG.inputfile_path, CONFIG.taskset_position);
 
@@ -142,7 +154,7 @@ int main(int argc, char** argv) {
 
     std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;
 
-    for (std::string safe_oracle_str: CONFIG.safe_oracles) {
+    for (std::string safe_oracle_str : CONFIG.safe_oracles) {
         if ("hi-idle-point" == safe_oracle_str) {
             safe_oracles.push_back(&SafeOracle::all_idle_hi);
         } else {
@@ -150,7 +162,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (std::string unsafe_oracle_str: CONFIG.unsafe_oracles) {
+    for (std::string unsafe_oracle_str : CONFIG.unsafe_oracles) {
         if ("negative-laxity" == unsafe_oracle_str) {
             unsafe_oracles.push_back(&UnsafeOracle::laxity);
         } else if ("negative-worst-laxity" == unsafe_oracle_str) {
@@ -164,14 +176,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    Graph graph(
-        start_state,
-        scheduler,
-        "",
-        -1,
-        safe_oracles,
-        unsafe_oracles
-    );
+    Graph graph(start_state, scheduler, "", CONFIG.log_level, safe_oracles, unsafe_oracles);
 
     int64_t* result;
     if (CONFIG.use_idlesim) {

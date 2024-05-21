@@ -6,10 +6,12 @@ Example of campaign script.
 
 import concurrent.futures
 import datetime
+import os
 import pathlib
 import random
-# import psutil
+from typing import Tuple
 
+# import psutil
 # import pandas as pd
 import tqdm
 from benchkit.campaign import (
@@ -19,9 +21,6 @@ from benchkit.campaign import (
 )
 from benchkit.utils.types import PathType
 from benchmarks import MCSBench
-
-import os
-from typing import Tuple
 
 # timeout_seconds = 300
 timeout_seconds = 360000
@@ -74,11 +73,14 @@ def taskset2filename(experiment: str, benchmark: MCSBench) -> str:
 def campaign_state_space():
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
-    taskset_files = [taskset2filename(f, benchmark) for f in [
-        # "statespace-rtss-utilisation",  # we dropped this chart from the paper
-        "statespace-rtss-period-max",
-        "statespace-rtss-n-tasks",
-    ]]
+    taskset_files = [
+        taskset2filename(f, benchmark)
+        for f in [
+            # "statespace-rtss-utilisation",  # we dropped this chart from the paper
+            "statespace-rtss-period-max",
+            "statespace-rtss-n-tasks",
+        ]
+    ]
 
     varying_variables = [
         {
@@ -133,9 +135,12 @@ def campaign_state_space():
 def campaign_state_space_bfs():
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
-    taskset_files = [taskset2filename(f, benchmark) for f in [
-        "statespace-rtss-bfs",
-    ]]
+    taskset_files = [
+        taskset2filename(f, benchmark)
+        for f in [
+            "statespace-rtss-bfs",
+        ]
+    ]
 
     varying_variables = [
         {
@@ -536,8 +541,8 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
     parallel_runner(campaign=campaign_state_space(), nb_cpus=16)
+    parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
 
 if __name__ == "__main__":
