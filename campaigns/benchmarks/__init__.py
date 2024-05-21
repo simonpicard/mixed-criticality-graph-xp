@@ -156,7 +156,8 @@ class MCSBench(Benchmark):
         if unsafe_oracles:
             cmd_options += ["--unsafe-oracles", ",".join(unsafe_oracles)]
 
-        run_command = self._docker_cmd_prefix + ["./mcsexplorer/build-x86_64/one_system"] + cmd_options
+        mcs_build_dir = f"build-{self.platform.architecture}-docker"
+        run_command = self._docker_cmd_prefix + [f"./mcsexplorer/{mcs_build_dir}/one_system"] + cmd_options
 
         wrapped_run_command, wrapped_environment = self._wrap_command(
             run_command=run_command,
