@@ -23,7 +23,7 @@ from benchkit.utils.types import PathType
 from benchmarks import MCSBench
 
 # timeout_seconds = 300
-timeout_seconds = 60 * 60 * 1  # 2h
+timeout_seconds = 60 * 60 * 1  # 1h
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
