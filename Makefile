@@ -244,7 +244,7 @@ generate-set-statespace-rtss-period-max: $(VENV)
 	--minimum_period 5 \
 	--utilisation_list 50 \
 	--n_tasks_list 5 \
-	--max_period_list 50 100 150 200 250 300 350 400 450 500 600 700 800 900 1000 \
+	--max_period_list 50 100 150 200 250 300 350 400 450 \
 	--sets_per_config 50 \
 	--seed 268
 
