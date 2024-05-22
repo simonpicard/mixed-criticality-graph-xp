@@ -23,7 +23,11 @@ from benchkit.utils.types import PathType
 from benchmarks import MCSBench
 
 # timeout_seconds = 300
+<<<<<<< HEAD
 timeout_seconds = 60 * 60 * 1  # 2h
+=======
+timeout_seconds = 60 * 15  # 15 minutes
+>>>>>>> main
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
@@ -541,7 +545,11 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
+<<<<<<< HEAD
     parallel_runner(campaign=campaign_state_space(), nb_cpus=16)
+=======
+    parallel_runner(campaign=campaign_state_space(), nb_cpus=32)
+>>>>>>> main
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
 
