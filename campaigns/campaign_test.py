@@ -23,7 +23,7 @@ from benchkit.utils.types import PathType
 from benchmarks import MCSBench
 
 # timeout_seconds = 300
-timeout_seconds = 60 * 15  # 15 minutes
+timeout_seconds = 60 * 60 * 1  # 1h
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
@@ -103,12 +103,12 @@ def campaign_state_space():
             "use_idlesim": True,
             "unsafe_oracles": [],
         },
-        {
-            **base_config,
-            "use_case": "ACBFS, oracles",
-            "use_idlesim": True,
-            "unsafe_oracles": ["hi-over-demand"],
-        },
+        # { # as the utilisation based chart was dropped, HI over demand is useless because U = 50% which is always schedulable
+        #     **base_config,
+        #     "use_case": "ACBFS, oracles",
+        #     "use_idlesim": True,
+        #     "unsafe_oracles": ["hi-over-demand"],
+        # },
     ]
     variables = [
         use_case | other_variables
@@ -541,7 +541,7 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    parallel_runner(campaign=campaign_state_space(), nb_cpus=32)
+    parallel_runner(campaign=campaign_state_space(), nb_cpus=16)
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
 
