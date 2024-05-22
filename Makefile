@@ -230,9 +230,9 @@ generate-set-statespace-rtss-n-tasks: $(VENV)
 	--utilisation_list 50 \
 	--max_period_list 30 \
 	--n_tasks_start 2 \
-	--n_tasks_stop 8 \
+	--n_tasks_stop 11 \
 	--n_tasks_step 1 \
-	--sets_per_config 20 \
+	--sets_per_config 40 \
 	--seed 123
 
 generate-set-statespace-rtss-period-max: $(VENV)
@@ -244,10 +244,10 @@ generate-set-statespace-rtss-period-max: $(VENV)
 	--minimum_period 5 \
 	--utilisation_list 50 \
 	--n_tasks_list 5 \
-	--max_period_start 25 \
-	--max_period_stop 176 \
-	--max_period_step 25 \
-	--sets_per_config 20 \
+	--max_period_start 50 \
+	--max_period_stop 451 \
+	--max_period_step 50 \
+	--sets_per_config 40 \
 	--seed 268
 
 generate-set-statespace-rtss-utilisation: $(VENV)
