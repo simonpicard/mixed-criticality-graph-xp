@@ -85,7 +85,8 @@ def campaign_state_space(timeout_seconds: int):
             "taskset_position": tp,
         }
         for tf in taskset_files
-        for tp in range(nb_systems(tasksystems_path=tf))
+        # for tp in range(nb_systems(tasksystems_path=tf))
+        for tp in range(313,400) # TODO delete this to through all the tasksets
     ]
 
     base_config = {
@@ -479,14 +480,15 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     benchmark.prebuild_bench()
     benchmark.build_bench()
 
-    # p = [r for r in records if "period-max" in r["taskset_file"]]
-    # n = [r for r in records if "period-max" not in r["taskset_file"]]
-    # assert len(p) == len(n)
-    # new_records = []
-    # for i in range(len(p)):
-    #     new_records.append(p[i])
-    #     new_records.append(n[i])
-    # records = new_records
+    p = [r for r in records if "period-max" in r["taskset_file"]]
+    n = [r for r in records if "period-max" not in r["taskset_file"]]
+    assert len(p) == len(n)
+    new_records = []
+    for i in range(len(p)):
+        new_records.append(p[i])
+        new_records.append(n[i])
+    records = new_records
+
     # random.shuffle(records)
 
     name = campaign.parameters["experiment_name"]
@@ -602,11 +604,10 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    # parallel_runner(campaign=campaign_state_space(), nb_cpus=1)
+    parallel_runner(campaign=campaign_state_space(timeout_seconds=60*15), nb_cpus=16)
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
-    # parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60), nb_cpus=32)
-    parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*15), nb_cpus=64)
+    # parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*15), nb_cpus=64)
 
 
 if __name__ == "__main__":
