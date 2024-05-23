@@ -35,6 +35,11 @@ std::vector<State*> Graph::request_transition(State* state) {
 
     std::vector<size_t> eligibles_candidates = state->get_eligibles();
     std::vector<std::vector<int>> all_eligibles = power_set(eligibles_candidates);
+    if (periodic_tweak) {
+        std::vector<int> eligibles_candidates_int =
+            std::vector<int>(eligibles_candidates.begin(), eligibles_candidates.end());
+        all_eligibles = std::vector<std::vector<int>>{eligibles_candidates_int};
+    }
 
     for (std::vector<int> const& current_eligibles : all_eligibles) {
         State* request_state = new State(*state);

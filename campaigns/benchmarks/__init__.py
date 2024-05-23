@@ -1,19 +1,17 @@
-
+import os
 import pathlib
 import subprocess
 from typing import Any, Dict, Iterable, List, Optional
 
+import pandas as pd
 from benchkit.benchmark import Benchmark, CommandAttachment, PostRunHook, PreRunHook
 from benchkit.campaign import CampaignCartesianProduct, Constants
 from benchkit.commandwrappers import CommandWrapper
 from benchkit.dependencies.packages import PackageDependency
 from benchkit.platforms import Platform
 from benchkit.sharedlibs import SharedLib
-from benchkit.utils.types import CpuOrder, PathType
 from benchkit.utils.dir import gitmainrootdir
-
-import pandas as pd
-import os
+from benchkit.utils.types import CpuOrder, PathType
 
 
 class MCSBench(Benchmark):
@@ -43,8 +41,14 @@ class MCSBench(Benchmark):
         self._timeout_seconds = timeout_seconds
         self._bench_src_path = gitmainrootdir()
 
-        self._inside_docker = ("1" == os.environ["INSIDE_DOCKER"]) if "INSIDE_DOCKER" in os.environ else False
-        self._docker_cmd_prefix = [] if self._inside_docker else ["docker", "exec", "mcgraphxp"]
+        self._inside_docker = (
+            ("1" == os.environ["INSIDE_DOCKER"])
+            if "INSIDE_DOCKER" in os.environ
+            else False
+        )
+        self._docker_cmd_prefix = (
+            [] if self._inside_docker else ["docker", "exec", "mcgraphxp"]
+        )
 
     @property
     def bench_src_path(self) -> pathlib.Path:
@@ -63,6 +67,7 @@ class MCSBench(Benchmark):
             "scheduler",
             "safe_oracles",
             "unsafe_oracles",
+            "periodic_tweak",
         ]
 
     @staticmethod
@@ -86,7 +91,7 @@ class MCSBench(Benchmark):
             output_is_log=True,
             # environment={
             #     "INTERACTIVE": "0",
-                # "INSIDE_DOCKER": "1" if self._inside_docker else "0",
+            # "INSIDE_DOCKER": "1" if self._inside_docker else "0",
             # },
             # shell=True,
         )
@@ -118,6 +123,7 @@ class MCSBench(Benchmark):
         scheduler: str,
         safe_oracles: List[str],
         unsafe_oracles: List[str],
+        periodic_tweak: bool = False,
         **kwargs,
     ) -> str:
         environment = self._preload_env(
@@ -128,6 +134,7 @@ class MCSBench(Benchmark):
             scheduler=scheduler,
             safe_oracles=safe_oracles,
             unsafe_oracles=unsafe_oracles,
+            periodic_tweak=periodic_tweak,
             **kwargs,
         )
 
@@ -141,13 +148,21 @@ class MCSBench(Benchmark):
             if safe_oracle not in ["hi-idle-point"]:
                 raise ValueError(f"Unknown safe_oracle: {safe_oracle}")
         for unsafe_oracle in unsafe_oracles:
-            if unsafe_oracle not in ["negative-laxity", "negative-worst-laxity", "over-demand", "hi-over-demand"]:
+            if unsafe_oracle not in [
+                "negative-laxity",
+                "negative-worst-laxity",
+                "over-demand",
+                "hi-over-demand",
+            ]:
                 raise ValueError(f"Unknown unsafe_oracle: {unsafe_oracle}")
 
         cmd_options = [
-            "--taskset-file", str(taskset_file),
-            "--taskset-position", str(taskset_position),
-            "--scheduler", scheduler,
+            "--taskset-file",
+            str(taskset_file),
+            "--taskset-position",
+            str(taskset_position),
+            "--scheduler",
+            scheduler,
         ]
         if use_idlesim:
             cmd_options.append("--use-idlesim")
@@ -155,9 +170,15 @@ class MCSBench(Benchmark):
             cmd_options += ["--safe-oracles", ",".join(safe_oracles)]
         if unsafe_oracles:
             cmd_options += ["--unsafe-oracles", ",".join(unsafe_oracles)]
+        if periodic_tweak:
+            cmd_options.append("--periodic-tweak")
 
         mcs_build_dir = f"build-{self.platform.architecture}-docker"
-        run_command = self._docker_cmd_prefix + [f"./mcsexplorer/{mcs_build_dir}/one_system"] + cmd_options
+        run_command = (
+            self._docker_cmd_prefix
+            + [f"./mcsexplorer/{mcs_build_dir}/one_system"]
+            + cmd_options
+        )
 
         wrapped_run_command, wrapped_environment = self._wrap_command(
             run_command=run_command,
@@ -205,7 +226,9 @@ class MCSBench(Benchmark):
         results = command_output.splitlines()[-1]
         results_head = "Results:"
         if not results.startswith(results_head):
-            raise ValueError(f'Last line of output does not contain results: "{results}"')
-        key_values = results[len(results_head):].strip()
+            raise ValueError(
+                f'Last line of output does not contain results: "{results}"'
+            )
+        key_values = results[len(results_head) :].strip()
         result_dict |= dict(kv.split("=") for kv in key_values.split(";"))
         return result_dict
