@@ -155,7 +155,7 @@ def campaign_state_space_period():
     use_cases = [
         {
             "use_case": "BFS, no oracle, periodic",
-            "use_idlesim": True,
+            "use_idlesim": False,
             "unsafe_oracles": [],
             "scheduler": "edfvd",
             "safe_oracles": [],
@@ -601,7 +601,7 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    parallel_runner(campaign=campaign_state_space(), nb_cpus=32)
+    parallel_runner(campaign=campaign_state_space_period(), nb_cpus=32)
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
 
