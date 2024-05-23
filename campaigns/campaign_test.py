@@ -23,7 +23,7 @@ from benchkit.utils.types import PathType
 from benchmarks import MCSBench
 
 # timeout_seconds = 300
-timeout_seconds = 60 * 60 * 1  # 1h
+timeout_seconds = 60  # 1m
 
 
 def nb_systems(tasksystems_path: PathType) -> int:
@@ -118,6 +118,66 @@ def campaign_state_space():
 
     campaign01 = CampaignIterateVariables(
         name="mcs_scale01",
+        benchmark=benchmark,
+        nb_runs=1,
+        variables=variables,
+        constants={},
+        debug=False,
+        gdb=False,
+        enable_data_dir=True,
+        continuing=False,
+        benchmark_duration_seconds=None,
+    )
+
+    return campaign01
+
+
+def campaign_state_space_period():
+    benchmark = MCSBench(timeout_seconds=timeout_seconds)
+
+    taskset_files = [
+        taskset2filename(f, benchmark)
+        for f in [
+            "statespace-rtss-period-max-periodic",
+            "statespace-rtss-n-tasks-periodic",
+        ]
+    ]
+
+    varying_variables = [
+        {
+            "taskset_file": tf,
+            "taskset_position": tp,
+        }
+        for tf in taskset_files
+        for tp in range(nb_systems(tasksystems_path=tf))
+    ]
+
+    use_cases = [
+        {
+            "use_case": "BFS, no oracle, periodic",
+            "use_idlesim": True,
+            "unsafe_oracles": [],
+            "scheduler": "edfvd",
+            "safe_oracles": [],
+            "periodic_tweak": False,
+        },
+        {
+            "use_case": "ACBFS, no oracle, periodic",
+            "use_idlesim": True,
+            "unsafe_oracles": [],
+            "scheduler": "edfvd",
+            "safe_oracles": [],
+            "periodic_tweak": True,
+        },
+    ]
+    variables = [
+        use_case | other_variables
+        for use_case in use_cases
+        for other_variables in varying_variables
+    ]
+
+    campaign01 = CampaignIterateVariables(
+        name="mcs_scale_periodic",
         benchmark=benchmark,
         nb_runs=1,
         variables=variables,
