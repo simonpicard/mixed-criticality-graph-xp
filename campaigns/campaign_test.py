@@ -86,7 +86,7 @@ def campaign_state_space(timeout_seconds: int):
         }
         for tf in taskset_files
         # for tp in range(nb_systems(tasksystems_path=tf))
-        for tp in range(313,400) # TODO delete this to through all the tasksets
+        for tp in range(313,400) # TODO delete this to go through all the tasksets
     ]
 
     base_config = {
