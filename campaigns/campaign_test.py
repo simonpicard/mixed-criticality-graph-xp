@@ -22,9 +22,6 @@ from benchkit.campaign import (
 from benchkit.utils.types import PathType
 from benchmarks import MCSBench
 
-# timeout_seconds = 300
-timeout_seconds = 60  # 1m
-
 
 def nb_systems(tasksystems_path: PathType) -> int:
     path = pathlib.Path("..") / tasksystems_path
@@ -70,7 +67,7 @@ def taskset2filename(experiment: str, benchmark: MCSBench) -> str:
     return period_tasket_filename
 
 
-def campaign_state_space():
+def campaign_state_space(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
     taskset_files = [
@@ -132,14 +129,14 @@ def campaign_state_space():
     return campaign01
 
 
-def campaign_state_space_period():
+def campaign_state_space_period(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
     taskset_files = [
         taskset2filename(f, benchmark)
         for f in [
             "statespace-rtss-period-max-periodic",
-            "statespace-rtss-n-tasks-periodic",
+            # "statespace-rtss-n-tasks-periodic",
         ]
     ]
 
@@ -152,26 +149,25 @@ def campaign_state_space_period():
         for tp in range(nb_systems(tasksystems_path=tf))
     ]
 
+    base_config = {
+        "safe_oracles": [],
+        "unsafe_oracles": [],
+        "scheduler": "edfvd",
+        "periodic_tweak": True,
+    }
+
     use_cases = [
-        {
-            "use_case": "BFS, no oracle, periodic",
-            "use_idlesim": False,
-            "unsafe_oracles": [],
-            "scheduler": "edfvd",
-            "safe_oracles": [],
-            "periodic_tweak": False,
-        },
         {
             "use_case": "ACBFS, no oracle, periodic",
             "use_idlesim": True,
-            "unsafe_oracles": [],
-            "scheduler": "edfvd",
-            "safe_oracles": [],
-            "periodic_tweak": True,
+        },
+        {
+            "use_case": "BFS, no oracle, periodic",
+            "use_idlesim": False,
         },
     ]
     variables = [
-        use_case | other_variables
+        base_config | use_case | other_variables
         for use_case in use_cases
         for other_variables in varying_variables
     ]
@@ -192,7 +188,7 @@ def campaign_state_space_period():
     return campaign01
 
 
-def campaign_state_space_bfs():
+def campaign_state_space_bfs(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
     taskset_files = [
@@ -251,7 +247,7 @@ def campaign_state_space_bfs():
     return campaign01
 
 
-def campaign_schedulability():
+def campaign_schedulability(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
 
     taskset_files = [taskset2filename("scheduling-rtss", benchmark)]
@@ -305,7 +301,7 @@ def campaign_schedulability():
     return campaign01
 
 
-def campaign_oracles():
+def campaign_oracles(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
     taskset_files = [taskset2filename("oracles-rtss", benchmark)]
 
@@ -383,7 +379,7 @@ def campaign_oracles():
     return campaign01
 
 
-def campaign_compression_table():
+def campaign_compression_table(timeout_seconds: int):
     benchmark = MCSBench(timeout_seconds=timeout_seconds)
     taskset_files = [taskset2filename("compression-table-rtss", benchmark)]
 
@@ -452,8 +448,8 @@ def campaign_compression_table():
     return campaign01
 
 
-def run_campaign_state_space():
-    campaign01 = campaign_state_space()
+def run_campaign_state_space(timeout_seconds: int):
+    campaign01 = campaign_state_space(timeout_seconds=timeout_seconds)
 
     campaigns = [campaign01]
     suite = CampaignSuite(campaigns=campaigns)
@@ -487,7 +483,16 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     benchmark.prebuild_bench()
     benchmark.build_bench()
 
-    random.shuffle(records)
+    # p = [r for r in records if "period-max" in r["taskset_file"]]
+    # n = [r for r in records if "period-max" not in r["taskset_file"]]
+    # assert len(p) == len(n)
+    # new_records = []
+    # for i in range(len(p)):
+    #     new_records.append(p[i])
+    #     new_records.append(n[i])
+    # records = new_records
+    # random.shuffle(records)
+
     name = campaign.parameters["experiment_name"]
     d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     path = pathlib.Path(f"/tmp/results-{name}-{d}.csv")
@@ -499,20 +504,20 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
 
         # results = []
         for future in concurrent.futures.as_completed(futures):
-            try:
-                result = future.result()
-                # results.append(result)
-                print(f"Result collected: {result}")
-                result_keys = [k for k in result]
-                result_values = [result[k] for k in result_keys]
-                if not path.is_file():
-                    with open(path, "a") as f:
-                        f.write(";".join(map(str, result_keys)) + "\n")
+            # try:
+            result = future.result()
+            # results.append(result)
+            print(f"Result collected: {result}")
+            result_keys = [k for k in result]
+            result_values = [result[k] for k in result_keys]
+            if not path.is_file():
                 with open(path, "a") as f:
-                    f.write(";".join(map(str, result_values)) + "\n")
-                pbar.update(1)
-            except Exception as e:
-                print(f"An error occurred: {e}")
+                    f.write(";".join(map(str, result_keys)) + "\n")
+            with open(path, "a") as f:
+                f.write(";".join(map(str, result_values)) + "\n")
+            pbar.update(1)
+            # except Exception as e:
+            #     print(f"An error occurred: {e}")
 
     # df = pd.DataFrame(results)
     # df.to_csv("/tmp/results.csv", sep=";", index=False)
@@ -601,8 +606,11 @@ def main() -> None:
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
     # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    parallel_runner(campaign=campaign_state_space_period(), nb_cpus=32)
+    # parallel_runner(campaign=campaign_state_space(), nb_cpus=1)
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
+
+    # parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60), nb_cpus=32)
+    parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*5), nb_cpus=64)
 
 
 if __name__ == "__main__":
