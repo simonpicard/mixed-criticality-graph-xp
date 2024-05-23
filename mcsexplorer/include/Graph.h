@@ -18,14 +18,15 @@ class Graph {
 
     Graph(State* initial_state_, std::function<int(State*)> schedule_, std::string graph_output_path_ = "",
           int verbose_ = 0, std::vector<std::function<bool(State*)>> safe_oracles_ = {},
-          std::vector<std::function<bool(State*)>> unsafe_oracles_ = {})
+          std::vector<std::function<bool(State*)>> unsafe_oracles_ = {}, bool periodic_tweak_ = false)
         : initial_state(initial_state_),
           graph_output_path(graph_output_path_),
           plot_graph(graph_output_path_ != ""),
           verbose(verbose_),
           schedule(schedule_),
           safe_oracles(safe_oracles_),
-          unsafe_oracles(unsafe_oracles_){};
+          unsafe_oracles(unsafe_oracles_),
+          periodic_tweak(periodic_tweak_){};
 
     bool is_fail(std::vector<State*> const& states);
     void run_tansition(State* state, int to_run);
@@ -83,6 +84,8 @@ class Graph {
     std::function<int(State*)> schedule;
     std::vector<std::function<bool(State*)>> safe_oracles;
     std::vector<std::function<bool(State*)>> unsafe_oracles;
+
+    bool periodic_tweak;
 
     bool automaton_is_safe;
     bool use_idle_antichain;

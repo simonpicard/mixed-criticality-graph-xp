@@ -19,6 +19,7 @@ struct {
     std::vector<std::string> safe_oracles;
     std::vector<std::string> unsafe_oracles;
     int log_level = -1;
+    bool periodic_tweak = false;
 } CONFIG;
 
 State* read_task_set(std::string const& input_path, int offset = 0) {
@@ -115,6 +116,9 @@ void parse_args(int argc, char** argv) {
             const int log_level = static_cast<int>(std::stoi(log_level_str));
             CONFIG.log_level = log_level;
             i++;
+        } else if ("--periodic-tweak" == argument) {
+            i++;
+            CONFIG.periodic_tweak = true;
         } else {
             i++;
             std::cerr << "Unknown argument: " << argument << std::endl;
@@ -140,6 +144,7 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
     std::cout << "  log level: " << CONFIG.log_level << std::endl;
+    std::cout << "  periodic tweak: " << (CONFIG.periodic_tweak ? "true" : "false") << std::endl;
 
     State* start_state = read_task_set(CONFIG.inputfile_path, CONFIG.taskset_position);
 
@@ -176,7 +181,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    Graph graph(start_state, scheduler, "", CONFIG.log_level, safe_oracles, unsafe_oracles);
+    Graph graph(start_state, scheduler, "", CONFIG.log_level, safe_oracles, unsafe_oracles, CONFIG.periodic_tweak);
 
     int64_t* result;
     if (CONFIG.use_idlesim) {
