@@ -135,8 +135,8 @@ def campaign_state_space_period(timeout_seconds: int):
     taskset_files = [
         taskset2filename(f, benchmark)
         for f in [
-            "statespace-rtss-period-max-periodic",
-            # "statespace-rtss-n-tasks-periodic",
+            "statespace-rtss-period-max",
+            "statespace-rtss-n-tasks",
         ]
     ]
 
@@ -157,10 +157,6 @@ def campaign_state_space_period(timeout_seconds: int):
     }
 
     use_cases = [
-        {
-            "use_case": "ACBFS, no oracle, periodic",
-            "use_idlesim": True,
-        },
         {
             "use_case": "BFS, no oracle, periodic",
             "use_idlesim": False,
@@ -610,7 +606,7 @@ def main() -> None:
     # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
 
     # parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60), nb_cpus=32)
-    parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*5), nb_cpus=64)
+    parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*15), nb_cpus=64)
 
 
 if __name__ == "__main__":
