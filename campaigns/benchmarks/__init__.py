@@ -123,7 +123,7 @@ class MCSBench(Benchmark):
         scheduler: str,
         safe_oracles: List[str],
         unsafe_oracles: List[str],
-        periodic_tweak: bool,
+        periodic_tweak: bool = False,
         **kwargs,
     ) -> str:
         environment = self._preload_env(
