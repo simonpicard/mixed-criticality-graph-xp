@@ -348,8 +348,8 @@ generate-set-statespace-rtss-n-tasks-periodic: $(VENV)
 generate-set-statespace-rtss-period-max-periodic: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
 	-t modular \
-	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.txt \
-	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.csv \
+	-o $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max-periodic.txt \
+	-c $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max-periodic.csv \
 	--probability_of_HI 0.5 \
 	--minimum_period 5 \
 	--utilisation_list 50 \
