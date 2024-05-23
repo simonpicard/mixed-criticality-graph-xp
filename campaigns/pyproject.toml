@@ -1,8 +1,0 @@
-[tool.ruff]
-include = ["*.py"]
-line-length = 120
-target-version = "py311"
-
-[tool.ruff.format]
-# Enable preview features.
-preview = true
