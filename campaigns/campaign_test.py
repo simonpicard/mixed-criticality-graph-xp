@@ -500,20 +500,20 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
 
         # results = []
         for future in concurrent.futures.as_completed(futures):
-            # try:
-            result = future.result()
-            # results.append(result)
-            print(f"Result collected: {result}")
-            result_keys = [k for k in result]
-            result_values = [result[k] for k in result_keys]
-            if not path.is_file():
+            try:
+                result = future.result()
+                # results.append(result)
+                print(f"Result collected: {result}")
+                result_keys = [k for k in result]
+                result_values = [result[k] for k in result_keys]
+                if not path.is_file():
+                    with open(path, "a") as f:
+                        f.write(";".join(map(str, result_keys)) + "\n")
                 with open(path, "a") as f:
-                    f.write(";".join(map(str, result_keys)) + "\n")
-            with open(path, "a") as f:
-                f.write(";".join(map(str, result_values)) + "\n")
-            pbar.update(1)
-            # except Exception as e:
-            #     print(f"An error occurred: {e}")
+                    f.write(";".join(map(str, result_values)) + "\n")
+                pbar.update(1)
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
     # df = pd.DataFrame(results)
     # df.to_csv("/tmp/results.csv", sep=";", index=False)
