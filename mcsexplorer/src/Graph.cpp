@@ -34,12 +34,16 @@ std::vector<State*> Graph::request_transition(State* state) {
     std::vector<State*> new_states;
 
     std::vector<size_t> eligibles_candidates = state->get_eligibles();
+
+    // std::vector<int> eligibles_candidates_int =
+    //     std::vector<int>(eligibles_candidates.begin(), eligibles_candidates.end());
+    // std::vector<std::vector<int>> all_eligibles = std::vector<std::vector<int>>{eligibles_candidates_int};
+
+    // if (!periodic_tweak) {
+    //     all_eligibles = power_set(eligibles_candidates);
+    // }
+
     std::vector<std::vector<int>> all_eligibles = power_set(eligibles_candidates);
-    if (periodic_tweak) {
-        std::vector<int> eligibles_candidates_int =
-            std::vector<int>(eligibles_candidates.begin(), eligibles_candidates.end());
-        all_eligibles = std::vector<std::vector<int>>{eligibles_candidates_int};
-    }
 
     for (std::vector<int> const& current_eligibles : all_eligibles) {
         State* request_state = new State(*state);
@@ -83,7 +87,7 @@ void Graph::handle_run_transition(std::vector<State*> const& states, std::vector
         int to_run = to_runs[i];
 
         run_tansition(state, to_run);
-        log_run(state, is_last_leaf);
+        // log_run(state, is_last_leaf);
     }
 }
 
@@ -106,9 +110,9 @@ std::vector<State*> Graph::handle_completion_transition(std::vector<State*> cons
         }
     }
 
-    for (size_t j = 0; j < all_completion_states.size(); ++j) {
-        log_completion(all_completion_states[j], is_last_leaf, j == all_completion_states.size() - 1);
-    }
+    // for (size_t j = 0; j < all_completion_states.size(); ++j) {
+    //     log_completion(all_completion_states[j], is_last_leaf, j == all_completion_states.size() - 1);
+    // }
 
     return all_completion_states;
 }
@@ -118,41 +122,77 @@ std::vector<State*> Graph::handle_request_transition(State* state, bool is_last_
 
     for (size_t i = 0; i < request_states.size(); ++i) {
         State* request_state = request_states[i];
-        log_request(request_state, is_last_leaf);
+        // log_request(request_state, is_last_leaf);
     }
 
     return request_states;
 }
 
 std::vector<State*> Graph::get_neighbors(std::vector<State*> const& leaf_states) {
-    std::vector<State*> new_states;
+    std::vector<State*> all_neighbors;
 
     for (size_t leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
-        State* current_state = leaf_states[leaf_i];
-        State* original_leaf_state = new State(*current_state);
-
-        // verbose setup
-        bool is_last_leaf = leaf_i == leaf_states.size() - 1;
-        log_start(current_state, is_last_leaf);
-
-        // apply all three transitions
-        std::vector<State*> request_states = handle_request_transition(current_state, is_last_leaf);
-
-        std::vector<int> to_runs = std::vector<int>{};
-        for (State* request_state : request_states) {
-            to_runs.push_back(schedule(request_state));
-        }
-
-        handle_run_transition(request_states, to_runs, is_last_leaf);
-        std::vector<State*> neighbors = handle_completion_transition(request_states, to_runs, is_last_leaf);
-
-        connect_neighbors_graphviz(original_leaf_state, neighbors);
-
-        delete original_leaf_state;
-
-        // add new states
-        new_states.insert(new_states.end(), neighbors.begin(), neighbors.end());
+        std::vector<State*> current_neighbors = get_neighbors_single_state(leaf_states[leaf_i], schedule);
+        all_neighbors.insert(all_neighbors.end(), current_neighbors.begin(), current_neighbors.end());
     }
+
+    return all_neighbors;
+}
+
+std::vector<State*> Graph::get_neighbors_threads(std::vector<State*> const& leaf_states) {
+    std::vector<std::future<std::vector<State*>>> all_futures;
+    std::vector<std::thread> all_threads;
+
+    for (size_t leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
+        // std::packaged_task<std::vector<State*>(State*, bool)> task{get_neighbors_single_state};
+        std::packaged_task<std::vector<State*>()> task(
+            std::bind(get_neighbors_single_state, leaf_states[leaf_i], schedule));
+
+        std::future<std::vector<State*>> result = task.get_future();
+
+        // std::thread task_td(std::move(task), leaf_states[leaf_i], leaf_i == leaf_states.size() - 1);
+        std::thread task_td(std::move(task));
+
+        all_threads.push_back(std::move(task_td));
+        all_futures.push_back(std::move(result));
+    }
+    std::vector<State*> all_neighbors;
+
+    for (size_t i = 0; i < all_threads.size(); ++i) {
+        all_threads[i].join();
+    }
+
+    for (size_t i = 0; i < all_futures.size(); ++i) {
+        std::vector<State*> current_neighbors = all_futures[i].get();
+        all_neighbors.insert(all_neighbors.end(), current_neighbors.begin(), current_neighbors.end());
+    }
+
+    return all_neighbors;
+}
+
+std::vector<State*> Graph::get_neighbors_single_state(State* current_state, std::function<int(State*)> schedule) {
+    bool is_last_leaf = false;
+    std::vector<State*> new_states;
+
+    State* original_leaf_state = new State(*current_state);
+
+    // apply all three transitions
+    std::vector<State*> request_states = handle_request_transition(current_state, is_last_leaf);
+
+    std::vector<int> to_runs = std::vector<int>{};
+    for (State* request_state : request_states) {
+        to_runs.push_back(schedule(request_state));
+    }
+
+    handle_run_transition(request_states, to_runs, is_last_leaf);
+    std::vector<State*> neighbors = handle_completion_transition(request_states, to_runs, is_last_leaf);
+
+    // connect_neighbors_graphviz(original_leaf_state, neighbors);
+
+    delete original_leaf_state;
+
+    // add new states
+    new_states.insert(new_states.end(), neighbors.begin(), neighbors.end());
 
     return new_states;
 }
@@ -205,7 +245,7 @@ int64_t* Graph::bfs() {
 
         handle_safe(leaf_states);
 
-        neighbors = get_neighbors(leaf_states);
+        neighbors = get_neighbors_threads(leaf_states);
 
         automaton_depth++;
         leaf_states.clear();
@@ -273,7 +313,7 @@ int64_t* Graph::acbfs() {
 
         handle_safe(leaf_states);
 
-        neighbors = get_neighbors(leaf_states);
+        neighbors = get_neighbors_threads(leaf_states);
 
         automaton_depth++;
         leaf_states.clear();

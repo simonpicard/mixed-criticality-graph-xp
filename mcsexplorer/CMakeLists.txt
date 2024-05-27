@@ -10,7 +10,7 @@ set(
         "-Wall"
         "-Wextra"
         "-pedantic"
-        "-Werror"
+        # "-Werror"
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)

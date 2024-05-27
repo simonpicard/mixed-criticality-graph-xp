@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <chrono>
 #include <functional>
+#include <future>
 #include <iostream>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -29,19 +31,21 @@ class Graph {
           periodic_tweak(periodic_tweak_){};
 
     bool is_fail(std::vector<State*> const& states);
-    void run_tansition(State* state, int to_run);
-    std::vector<State*> completion_transition(State* state, int to_run);
-    std::vector<State*> request_transition(State* state);
+    static void run_tansition(State* state, int to_run);
+    static std::vector<State*> completion_transition(State* state, int to_run);
+    static std::vector<State*> request_transition(State* state);
 
     bool has_unsafe(std::vector<State*> const& states);
     void handle_safe(std::vector<State*>& states);
 
-    std::vector<State*> handle_request_transition(State* state, bool is_last_leaf);
-    void handle_run_transition(std::vector<State*> const& states, std::vector<int> to_runs, bool is_last_leaf);
-    std::vector<State*> handle_completion_transition(std::vector<State*> const& states, std::vector<int> to_runs,
-                                                     bool is_last_leaf);
+    static std::vector<State*> handle_request_transition(State* state, bool is_last_leaf);
+    static void handle_run_transition(std::vector<State*> const& states, std::vector<int> to_runs, bool is_last_leaf);
+    static std::vector<State*> handle_completion_transition(std::vector<State*> const& states, std::vector<int> to_runs,
+                                                            bool is_last_leaf);
 
     std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
+    std::vector<State*> get_neighbors_threads(std::vector<State*> const& leaf_states);
+    static std::vector<State*> get_neighbors_single_state(State* current_state, std::function<int(State*)> schedule);
 
     void initialize_search(bool use_idle_antichain_current);
     int64_t* finalize_search();
