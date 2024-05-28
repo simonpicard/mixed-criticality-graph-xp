@@ -479,14 +479,6 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
     benchmark.prebuild_bench()
     benchmark.build_bench()
 
-    # p = [r for r in records if "period-max" in r["taskset_file"]]
-    # n = [r for r in records if "period-max" not in r["taskset_file"]]
-    # assert len(p) == len(n)
-    # new_records = []
-    # for i in range(len(p)):
-    #     new_records.append(p[i])
-    #     new_records.append(n[i])
-    # records = new_records
     # random.shuffle(records)
 
     name = campaign.parameters["experiment_name"]
@@ -594,19 +586,16 @@ def parallel_runner(campaign: Campaign, nb_cpus: int) -> None:
 
 
 def main() -> None:
-    # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8) # done
-    # parallel_runner(campaign=campaign_state_space(), nb_cpus=16) # done
-    # parallel_runner(campaign=campaign_schedulability(), nb_cpus=64)
-    # parallel_runner_memctrl(campaign=campaign_schedulability(), nb_cpus=128) # not working yet with memory control
-    # parallel_runner(campaign=campaign_oracles(), nb_cpus=128)
-    # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
 
-    # parallel_runner(campaign=campaign_compression_table(), nb_cpus=128)
-    # parallel_runner(campaign=campaign_state_space(), nb_cpus=1)
-    # parallel_runner(campaign=campaign_state_space_bfs(), nb_cpus=8)
+    min30 = 60*30
+    min15 = 60*15
 
-    # parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60), nb_cpus=32)
-    parallel_runner(campaign=campaign_state_space_period(timeout_seconds=60*15), nb_cpus=64)
+    parallel_runner(campaign=campaign_state_space_bfs(timeout_seconds=min30), nb_cpus=8) # done
+    parallel_runner(campaign=campaign_state_space(timeout_seconds=min15), nb_cpus=16) # done
+    parallel_runner(campaign=campaign_schedulability(timeout_seconds=min15), nb_cpus=64)
+    parallel_runner(campaign=campaign_oracles(timeout_seconds=min15), nb_cpus=128)
+    parallel_runner(campaign=campaign_compression_table(timeout_seconds=min15), nb_cpus=128)
+
 
 
 if __name__ == "__main__":
