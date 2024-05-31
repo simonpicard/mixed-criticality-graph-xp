@@ -4,38 +4,38 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=yes
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        apt-utils \
+    apt-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # General packages & tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        apt-transport-https \
-        build-essential \
-        ca-certificates \
-        curl \
-        file \
-        gdb \
-        git \
-        gnupg \
-        less \
-        libssl-dev \
-        locales \
-        locales-all \
-        lsb-release \
-        ninja-build \
-        software-properties-common \
-        sudo \
-        telnet \
-        tmux \
-        tree \
-        vim \
-        wget \
+    apt-transport-https \
+    build-essential \
+    ca-certificates \
+    curl \
+    file \
+    gdb \
+    git \
+    gnupg \
+    less \
+    libssl-dev \
+    locales \
+    locales-all \
+    lsb-release \
+    ninja-build \
+    software-properties-common \
+    sudo \
+    telnet \
+    tmux \
+    tree \
+    vim \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure perf & valgrind are installed
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        linux-tools-generic \
-        valgrind \
+    linux-tools-generic \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 USER ${USER_NAME}
 
@@ -52,14 +52,16 @@ RUN yes | unminimize
 
 # Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.11 \
-        python3.11-dev \
-        python3.11-venv \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
     && rm -rf /var/lib/apt/lists/*
 
 # Other tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        clang-format \
+    clang-format \
+    htop \
+    libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
@@ -69,14 +71,14 @@ ARG GID
 # Remove group with gid=${GID} if it already exists.
 RUN grep :${GID}: /etc/group && \
     (grep :${GID}: /etc/group | \
-     cut -d ':' -f 1 | \
-     xargs groupdel) || \
+    cut -d ':' -f 1 | \
+    xargs groupdel) || \
     true
 # Remove user with uid:gid=${UID}:${GID} if it already exists.
 RUN grep :${UID}:${GID}: /etc/passwd && \
     (grep :${UID}:${GID}: /etc/passwd | \
-     cut -d ':' -f 1 | \
-     xargs userdel --remove) || \
+    cut -d ':' -f 1 | \
+    xargs userdel --remove) || \
     true
 RUN groupadd -g ${GID} ${USER_NAME}
 RUN adduser --disabled-password --uid $UID --gid $GID --gecos "" ${USER_NAME}
