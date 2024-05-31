@@ -33,6 +33,8 @@ add_executable(edf_safe ${CPP_SOURCES} edf_safe.cpp)
 add_executable(one_system ${CPP_SOURCES} one_system.cpp)
 add_executable(test_simulators ${CPP_SOURCES} tests/test_simulators.cpp)
 
+target_link_libraries(one_system tbb)
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

@@ -128,7 +128,7 @@ std::vector<State*> Graph::handle_request_transition(State* state, bool is_last_
     return request_states;
 }
 
-std::vector<State*> Graph::get_neighbors(std::vector<State*> const& leaf_states) {
+std::vector<State*> Graph::get_neighbors(std::vector<State*> const& leaf_states, std::function<int(State*)> schedule) {
     std::vector<State*> all_neighbors;
 
     for (size_t leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
@@ -140,30 +140,38 @@ std::vector<State*> Graph::get_neighbors(std::vector<State*> const& leaf_states)
 }
 
 std::vector<State*> Graph::get_neighbors_threads(std::vector<State*> const& leaf_states) {
-    std::vector<std::future<std::vector<State*>>> all_futures;
-    std::vector<std::thread> all_threads;
-
-    for (size_t leaf_i = 0; leaf_i < leaf_states.size(); ++leaf_i) {
-        // std::packaged_task<std::vector<State*>(State*, bool)> task{get_neighbors_single_state};
-        std::packaged_task<std::vector<State*>()> task(
-            std::bind(get_neighbors_single_state, leaf_states[leaf_i], schedule));
-
-        std::future<std::vector<State*>> result = task.get_future();
-
-        // std::thread task_td(std::move(task), leaf_states[leaf_i], leaf_i == leaf_states.size() - 1);
-        std::thread task_td(std::move(task));
-
-        all_threads.push_back(std::move(task_td));
-        all_futures.push_back(std::move(result));
-    }
+    std::vector<std::future<std::vector<State*>>> futures;
     std::vector<State*> all_neighbors;
 
-    for (size_t i = 0; i < all_threads.size(); ++i) {
-        all_threads[i].join();
+    int batch_size = 100;
+
+    for (size_t leaf_i = 0; leaf_i < leaf_states.size(); leaf_i += batch_size) {
+        if (futures.size() >= std::thread::hardware_concurrency()) {
+            // if there are more futures than cores, wait for one to finish
+            auto iter = futures.begin();
+            while (iter != futures.end()) {
+                if (iter->wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                    auto current_neighbors = iter->get();
+                    all_neighbors.insert(all_neighbors.end(), current_neighbors.begin(), current_neighbors.end());
+                    iter = futures.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
+        }
+        // create vector of states, from leaf_i to leaf_i + batch_size
+        std::vector<State*> leaf_states_batch = std::vector<State*>{};
+        for (int i = 0; i < batch_size; ++i) {
+            if (leaf_i + i >= leaf_states.size()) break;
+            leaf_states_batch.push_back(leaf_states[leaf_i + i]);
+        }
+        // get neighbors for this batch in a separate thread
+        futures.push_back(std::async(std::launch::async, &Graph::get_neighbors, leaf_states_batch, schedule));
     }
 
-    for (size_t i = 0; i < all_futures.size(); ++i) {
-        std::vector<State*> current_neighbors = all_futures[i].get();
+    // wait for all threads to finish
+    for (auto& future : futures) {
+        auto current_neighbors = future.get();
         all_neighbors.insert(all_neighbors.end(), current_neighbors.begin(), current_neighbors.end());
     }
 

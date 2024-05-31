@@ -4,6 +4,7 @@
 #include "State.h"
 #include <algorithm>
 #include <chrono>
+#include <execution>
 #include <functional>
 #include <future>
 #include <iostream>
@@ -43,7 +44,8 @@ class Graph {
     static std::vector<State*> handle_completion_transition(std::vector<State*> const& states, std::vector<int> to_runs,
                                                             bool is_last_leaf);
 
-    std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states);
+    static std::vector<State*> get_neighbors(std::vector<State*> const& leaf_states,
+                                             std::function<int(State*)> schedule);
     std::vector<State*> get_neighbors_threads(std::vector<State*> const& leaf_states);
     static std::vector<State*> get_neighbors_single_state(State* current_state, std::function<int(State*)> schedule);
 
