@@ -176,6 +176,10 @@ int main(int argc, char** argv) {
             unsafe_oracles.push_back(&UnsafeOracle::over_demand);
         } else if ("hi-over-demand" == unsafe_oracle_str) {
             unsafe_oracles.push_back(&UnsafeOracle::hi_over_demand);
+        } else if ("sum-sorted-laxities" == unsafe_oracle_str) {
+            unsafe_oracles.push_back(&UnsafeOracle::sum_sorted_laxities);
+        } else if ("sum-sorted-worst-laxities" == unsafe_oracle_str) {
+            unsafe_oracles.push_back(&UnsafeOracle::sum_sorted_worst_laxities);
         } else {
             std::cerr << "Bad unsafe oracle: " << unsafe_oracle_str << std::endl;
         }

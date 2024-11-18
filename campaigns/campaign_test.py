@@ -336,9 +336,21 @@ def campaign_oracles(timeout_seconds: int):
         },
         {
             **base_config,
+            "use_case": "Sum-min-laxity",
+            "safe_oracles": [],
+            "unsafe_oracles": ["sum-sorted-laxities"],
+        },
+        {
+            **base_config,
             "use_case": "Negative wost laxity",
             "safe_oracles": [],
             "unsafe_oracles": ["negative-worst-laxity"],
+        },
+        {
+            **base_config,
+            "use_case": "Sum-min-worst-laxity",
+            "safe_oracles": [],
+            "unsafe_oracles": ["sum-sorted-worst-laxities"],
         },
         {
             **base_config,

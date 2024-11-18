@@ -234,6 +234,8 @@ generate-set-statespace-rtss-n-tasks: $(VENV)
 	--n_tasks_step 1 \
 	--sets_per_config 50 \
 	--seed 123
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-n-tasks.txt $(OUTPUT_DIR)/latest-statespace-rtss-n-tasks.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-n-tasks.csv $(OUTPUT_DIR)/latest-statespace-rtss-n-tasks.csv
 
 generate-set-statespace-rtss-period-max: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -247,6 +249,8 @@ generate-set-statespace-rtss-period-max: $(VENV)
 	--max_period_list 50 100 150 200 250 300 350 400 \
 	--sets_per_config 50 \
 	--seed 268
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.txt $(OUTPUT_DIR)/latest-statespace-rtss-period-max.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-period-max.csv $(OUTPUT_DIR)/latest-statespace-rtss-period-max.csv
 
 generate-set-statespace-rtss-utilisation: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -262,6 +266,8 @@ generate-set-statespace-rtss-utilisation: $(VENV)
 	--utilisation_step 10 \
 	--sets_per_config 20 \
 	--seed 3
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-utilisation.txt $(OUTPUT_DIR)/latest-statespace-rtss-utilisation.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-utilisation.csv $(OUTPUT_DIR)/latest-statespace-rtss-utilisation.csv
 
 generate-set-scheduling-rtss: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -277,6 +283,8 @@ generate-set-scheduling-rtss: $(VENV)
 	--utilisation_step 5 \
 	--sets_per_config 1000 \
 	--seed 4
+	cp -f $(OUTPUT_DIR)/$(DT)-scheduling-rtss.txt $(OUTPUT_DIR)/latest-scheduling-rtss.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-scheduling-rtss.csv $(OUTPUT_DIR)/latest-scheduling-rtss.csv
 
 
 
@@ -294,6 +302,8 @@ generate-set-oracles-rtss: $(VENV)
 	--utilisation_step 1 \
 	--sets_per_config 100 \
 	--seed 5
+	cp -f $(OUTPUT_DIR)/$(DT)-oracles-rtss.txt $(OUTPUT_DIR)/latest-oracles-rtss.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-oracles-rtss.csv $(OUTPUT_DIR)/latest-oracles-rtss.csv
 
 generate-set-statespace-rtss-bfs: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -311,6 +321,8 @@ generate-set-statespace-rtss-bfs: $(VENV)
 	--max_period_step 5 \
 	--sets_per_config 10 \
 	--seed 654
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-bfs.txt $(OUTPUT_DIR)/latest-statespace-rtss-bfs.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-statespace-rtss-bfs.csv $(OUTPUT_DIR)/latest-statespace-rtss-bfs.csv
 
 generate-set-compression-table-rtss: $(VENV)
 	$(VENV_PYTHON) $(GENERATOR_EXP) \
@@ -326,5 +338,7 @@ generate-set-compression-table-rtss: $(VENV)
 	--utilisation_step 1 \
 	--sets_per_config 100 \
 	--seed 7
+	cp -f $(OUTPUT_DIR)/$(DT)-compression-table-rtss.txt $(OUTPUT_DIR)/latest-compression-table-rtss.txt
+	cp -f $(OUTPUT_DIR)/$(DT)-compression-table-rtss.csv $(OUTPUT_DIR)/latest-compression-table-rtss.csv
 
 generate-set-rtss-all: generate-set-statespace-rtss-n-tasks generate-set-statespace-rtss-period-max generate-set-statespace-rtss-utilisation generate-set-scheduling-rtss generate-set-oracles-rtss generate-set-compression-table-rtss

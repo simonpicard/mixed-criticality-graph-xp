@@ -315,21 +315,25 @@ void dev_main() {
 
     // State* s = new State(std::vector<Job*>{j, j2});
     State* s = new State(std::vector<Job*>{
-        new Job(11, 11, HI, std::vector<int>{2, 3}),
-        new Job(12, 12, LO, std::vector<int>{6, 6}),
-        new Job(3, 3, HI, std::vector<int>{1, 2}),
+        new Job(4, 3, HI, std::vector<int>{2, 3}),
+        // new Job(3, 3, LO, std::vector<int>{2, 2}),
     });
+
+    std::cout << s->str() << std::endl;
 
     std::vector<std::function<bool(State*)>> safe_oracles, unsafe_oracles;
 
     safe_oracles = {&SafeOracle::all_idle_hi};
-    unsafe_oracles = {&UnsafeOracle::hi_over_demand};
+    unsafe_oracles = {&UnsafeOracle::laxity};
 
-    Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
-    g.acbfs();
+    // Graph g(s, &Scheduler::lwlf, "./test.dot", 3, safe_oracles, unsafe_oracles);
+    Graph g(s, &Scheduler::edfvd, "./pres_small.dot", 3);
+    // Graph g(s, &Scheduler::lwlf, "./pres.dot", 3);
+    g.bfs();
 }
 
 int main(int argc, char** argv) {
+    std::cout << "Hello" << std::endl;
     if (argc == 1) {
         dev_main();
     } else if (argc >= 4) {
