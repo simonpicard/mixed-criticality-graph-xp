@@ -68,6 +68,7 @@ docker build \
   --build-arg=GID="${gid}" \
   --build-arg=IMAGE_VENV="${IMAGE_VENV}" \
   --tag "${image_name}" \
+  --platform linux/amd64 \
   .
 
 if [ "x0x" = "x${DOCKER_ROOTLESS}x" ]
